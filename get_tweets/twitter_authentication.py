@@ -15,29 +15,48 @@ class TwitterAuthentication:
         """Loads app and user credentials from the filesystem."""
         
         # Consumer credentials are stored in a manually edited JSON file and are
-        # already expected to exist
+        # expected to already exist
         try:
             with open(self.CONSUMER_CREDENTIALS_FILE, 'r') as f:
                 self.consumer_credentials = json.load(f)
             print('Consumer credentials loaded.')
         except FileNotFoundError:
-            print('Consumer credentials file not found in ' \
-                  '\'{0}\'.'.format(self.CONSUMER_CREDENTIALS_FILE))
+            print('Consumer credentials file not found in \'{}\'.'.format(
+                self.CONSUMER_CREDENTIALS_FILE))
             return
             
         # User OAuth token and token secret are stored in an automatically 
-        # created JSON file. If it doesn't exist they can be generated and saved 
-        # there.
+        # created JSON file. If it doesn't exist, they will be generated and 
+        # saved there.
         try:
             with open(self.USER_CREDENTIALS_FILE, 'r') as f:
                 self.user_credentials = json.load(f)
             print('User credentials loaded.')
         except FileNotFoundError:
-            twitter = Twython(self.consumer_credentials['consumer_key'], 
-                              self.consumer_credentials['consumer_secret'])
+            auth_session = Twython(
+                self.consumer_credentials['consumer_key'], 
+                self.consumer_credentials['consumer_secret']
+            )
+                              
+            authentication_tokens = auth_session.get_authentication_tokens()
+            
+            print('Accept the request from this URL: {}'.format(
+                authentication_tokens['auth_url']
+            ))
+
+            pin = input('Enter the PIN code: ')
+            
+            credentials_session = Twython(
+                self.consumer_credentials['consumer_key'], 
+                self.consumer_credentials['consumer_secret'],
+                authentication_tokens['oauth_token'],
+                authentication_tokens['oauth_token_secret']
+            )
+            
             with open(self.USER_CREDENTIALS_FILE, 'w') as f:
-                json.dump(twitter.get_authentication_tokens(), f)
-            print('User credentials generated.')
+                json.dump(credentials_session.get_authorized_tokens(pin), f)
+            
+            print('User credentials saved.')
             
     def get_credentials(self):
         """
