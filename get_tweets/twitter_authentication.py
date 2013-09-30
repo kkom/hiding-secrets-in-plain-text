@@ -33,12 +33,13 @@ class TwitterAuthentication:
                 self.user_credentials = json.load(f)
             print('User credentials loaded.')
         except FileNotFoundError:
-            auth_session = Twython(
+            authentication_session = Twython(
                 self.consumer_credentials['consumer_key'], 
                 self.consumer_credentials['consumer_secret']
             )
                               
-            authentication_tokens = auth_session.get_authentication_tokens()
+            authentication_tokens = \
+                authentication_session.get_authentication_tokens()
             
             print('Accept the request from this URL: {}'.format(
                 authentication_tokens['auth_url']
@@ -53,8 +54,13 @@ class TwitterAuthentication:
                 authentication_tokens['oauth_token_secret']
             )
             
+            self.user_credentials = \
+                credentials_session.get_authorized_tokens(pin)
+                
+            print('User credentials generated.')
+            
             with open(self.USER_CREDENTIALS_FILE, 'w') as f:
-                json.dump(credentials_session.get_authorized_tokens(pin), f)
+                json.dump(self.user_credentials, f)
             
             print('User credentials saved.')
             
@@ -68,6 +74,3 @@ class TwitterAuthentication:
                 self.consumer_credentials['consumer_secret'],
                 self.user_credentials['oauth_token'],
                 self.user_credentials['oauth_token_secret'])
-
-if __name__ == "__main__":
-    ta = TwitterAuthentication()
