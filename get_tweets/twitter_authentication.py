@@ -1,6 +1,5 @@
 """Generate OAuth tokens for the app."""
 
-import argparse
 import json
 
 from twython import Twython
