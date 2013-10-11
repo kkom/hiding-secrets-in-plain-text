@@ -23,8 +23,6 @@ def hexfloat_to_bin(h):
                               
     hexfloat_representation = hexfloat_pattern.match(h)
     
-    print(h)
-    
     s = hexfloat_representation.group('sign')
     i = BitArray('0x' + hexfloat_representation.group('integer')).bin
     f = BitArray('0x' + hexfloat_representation.group('fraction')).bin
