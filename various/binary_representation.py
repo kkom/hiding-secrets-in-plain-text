@@ -22,7 +22,10 @@ def hexfloat_to_bin(h):
     """, re.X | re.I)    
                               
     hexfloat_representation = hexfloat_pattern.match(h)
-        
+    
+    print(h)
+    
+    s = hexfloat_representation.group('sign')
     i = BitArray('0x' + hexfloat_representation.group('integer')).bin
     f = BitArray('0x' + hexfloat_representation.group('fraction')).bin
     e = int(hexfloat_representation.group('exponent'))
@@ -35,7 +38,12 @@ def hexfloat_to_bin(h):
       full = ''.join(['0'] * abs(point)) + full
       point = 0
     
-    return '{i}.{f}'.format(i=full[:point], f=full[point:]).strip('0')
+    b = '{i}.{f}'.format(i=full[:point], f=full[point:]).strip('0')
+    
+    if s:
+        b = s + b
+        
+    return b
 
 def num_to_bin(x):
     """
