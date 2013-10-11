@@ -5,30 +5,7 @@ Shows the binary representation of a Python float in computer memory.
 import binascii
 import re
 
-def hex_to_bin(h):
-    """
-    Converts a hex string to the corresponding binary string. I.e. performs the
-    F -> 1111, E -> 1110, etc. substitution.
-    
-    Based on: http://stackoverflow.com/a/1427846/907505
-    """
-    
-    def byte_to_binary(n):
-        return ''.join(str((n & (1 << i)) and 1) for i in reversed(range(8)))
-
-    l = len(h)
-    
-    even_up = l % 2 == 1
-    
-    if even_up:
-      h = h.rjust(l+1,'0')
-    
-    bin_str = ''.join(byte_to_binary(b) for b in binascii.unhexlify(h))
-    
-    if even_up:
-      return bin_str[4:]
-    else:
-      return bin_str
+from bitstring import BitArray
 
 def hexfloat_to_bin(h):
     """
@@ -38,7 +15,7 @@ def hexfloat_to_bin(h):
     
     hexfloat_pattern = re.compile(r"""
       (?P<sign>[\+\-])?             # sign as + or -
-      0x                            # constant part of the representation
+      0x                            # the hexadecimal prefix
       (?P<integer>[0-9a-f]+)        # integer part written in hex
       (\.(?P<fraction>[0-9a-f]+))?  # fractional part written in hex
       (p(?P<exponent>[\+\-]\d+))?   # binary exponent written in decimal
@@ -46,8 +23,8 @@ def hexfloat_to_bin(h):
                               
     hexfloat_representation = hexfloat_pattern.match(h)
         
-    i = hex_to_bin(hexfloat_representation.group('integer'))
-    f = hex_to_bin(hexfloat_representation.group('fraction'))
+    i = BitArray('0x' + hexfloat_representation.group('integer')).bin
+    f = BitArray('0x' + hexfloat_representation.group('fraction')).bin
     e = int(hexfloat_representation.group('exponent'))
     
     full = i + f
