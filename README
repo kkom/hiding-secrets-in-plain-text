@@ -1,0 +1,19 @@
+STEGANOGRAPHY - HIDING SECRETS IN PLAIN TEXT
+
+Project author: Konrad Komorowski (kk454@cam.ac.uk, konrad@komorowski.me)
+
+Project supervisor: Dr Jossy Sayir (jossy.sayir@eng.cam.ac.uk)
+
+- - -
+
+Needed 3rd party tools:
+
+Intepreters:
+
+Python 3.3
+
+Libraries:
+
+twython (https://github.com/ryanmcgrath/twython) - make sure to install the 
+python3 version, for example using instructions from:
+http://iainhunter.wordpress.com/2012/11/08/howto-install-python3-pip3-tornado-on-mac/
