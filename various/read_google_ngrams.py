@@ -18,7 +18,7 @@ print("Reading from: {path}".format(**locals()))
 with urllib.request.urlopen(path) as f:
     with gzip.GzipFile(fileobj=f) as g:
         for line in g:
-            if i % J == 0:
+            if i % I == 0:
                 l = line.decode("utf-8").split()
                 print("{i}: {l}".format(**locals()))
             i += 1
