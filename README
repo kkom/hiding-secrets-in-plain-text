@@ -16,4 +16,5 @@ Make sure to install the  python3 version, for example using instructions from
 http://iainhunter.wordpress.com/2012/11/08/howto-install-python3-pip3-tornado-on-mac/
 
 bitstring (http://pythonhosted.org/bitstring/)
+sympy (http://sympy.org/)
 twython (https://github.com/ryanmcgrath/twython)
