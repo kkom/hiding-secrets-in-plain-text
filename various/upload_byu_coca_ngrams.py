@@ -69,6 +69,11 @@ class MDaviesNgramUpload:
         )
         
         self.conn.commit()
+
+        print("Succesfully dumped data to a temporary table \"{schema}\".\"raw_{table}\".".format(
+            schema=self.settings["schema"],
+            table=self.table
+        ))
         
     def cumulate_data(self):
         self.cur.execute("""
@@ -82,9 +87,6 @@ class MDaviesNgramUpload:
             c1 bigint,
             c2 bigint
           );
-          
-          ALTER TABLE "{schema}"."{table}"
-            OWNER TO {owner};
           
           INSERT INTO
             "{schema}"."{table}"
@@ -120,12 +122,16 @@ class MDaviesNgramUpload:
                 word_column_defs=self.word_column_defs,
                 pos_column_defs=self.pos_column_defs,
                 word_column_names=self.word_column_names,
-                pos_column_names=self.pos_column_names,
-                owner=self.settings["owner"]
+                pos_column_names=self.pos_column_names
             )
         )
         
         self.conn.commit()
+
+        print("Succesfully saved data to table \"{schema}\".\"{table}\".".format(
+            schema=self.settings["schema"],
+            table=self.table
+        ))
 
 settings = {
     "database": "steganography",
@@ -148,10 +154,8 @@ settings["file"] = args.file
 settings["n"] = args.n
 settings["dataset"] = args.dataset
 
-print(settings)
-
 d = MDaviesNgramUpload(settings)
 d.connect()
-#d.dump_data()
-#d.cumulate_data()
-#d.disconnect()
+d.dump_data()
+d.cumulate_data()
+d.disconnect()
