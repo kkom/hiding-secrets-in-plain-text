@@ -12,9 +12,7 @@ import argparse
 
 import psycopg2
 
-class MDaviesNgramUpload:
-    """Uploads n-grams from the BYU COCA database."""
-
+class ByuCocaNgramUpload:
     def __init__(self, settings,):
         self.settings = settings
         
@@ -70,7 +68,8 @@ class MDaviesNgramUpload:
         
         self.conn.commit()
 
-        print("Succesfully dumped data to a temporary table \"{schema}\".\"raw_{table}\".".format(
+        print("Succesfully dumped data to a temporary table "
+              "\"{schema}\".\"raw_{table}\".".format(
             schema=self.settings["schema"],
             table=self.table
         ))
@@ -128,7 +127,8 @@ class MDaviesNgramUpload:
         
         self.conn.commit()
 
-        print("Succesfully saved data to table \"{schema}\".\"{table}\".".format(
+        print("Succesfully saved data to table "
+              "\"{schema}\".\"{table}\".".format(
             schema=self.settings["schema"],
             table=self.table
         ))
@@ -154,7 +154,7 @@ settings["file"] = args.file
 settings["n"] = args.n
 settings["dataset"] = args.dataset
 
-d = MDaviesNgramUpload(settings)
+d = ByuCocaNgramUpload(settings)
 d.connect()
 d.dump_data()
 d.cumulate_data()
