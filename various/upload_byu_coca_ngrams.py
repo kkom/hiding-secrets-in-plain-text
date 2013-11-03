@@ -16,16 +16,18 @@ class ByuCocaNgramUpload:
     def __init__(self, settings,):
         self.settings = settings
         
-        n = int(self.settings["n"])
+        self.N = int(self.settings["n"])
         
-        self.word_columns = tuple("w{}".format(i) for i in range(1,n+1))
-        self.pos_columns = tuple("pos{}".format(i) for i in range(1,n+1))
+        self.word_columns = tuple("w{}".format(i) for i in range(1,self.N+1))
+        self.pos_columns = tuple("pos{}".format(i) for i in range(1,self.N+1))
         self.word_column_names = ",".join(self.word_columns)
         self.pos_column_names = ",".join(self.pos_columns)
         self.word_column_defs = ",".join(map(lambda x: x + " text",
                                          self.word_columns))
         self.pos_column_defs = ",".join(map(lambda x: x + " text", 
                                         self.pos_columns))
+        self.lowercase_word_column_names = ",".join(map(
+            lambda x: "lower({})".format(x), self.word_columns))
         
         self.table = "{n}gram_{dataset}".format(**self.settings)
     
@@ -132,6 +134,44 @@ class ByuCocaNgramUpload:
             schema=self.settings["schema"],
             table=self.table
         ))
+    
+    def marginalize_ngrams(self):
+    """
+    Creates N tables of marginalised and lowercase ngrams with n in {1, ..., N}.
+    
+    The marginalisation procedure is naive and inexact: (n-1)-gram statistic is
+    constructed from (n)-grams by marginalising those whose FIRST (n-1) words
+    match the (n-1)-gram exactly.
+    """
+    
+        self.cur.execute("""
+          DROP TABLE IF EXISTS "{schema}"."{table}_{N}";
+          
+          CREATE TABLE "{schema}"."{table}_{N}" (
+            i integer primary key,
+            {word_column_defs},
+            p integer,
+            c1 bigint,
+            c2 bigint
+          );
+          
+          INSERT INTO
+            "{schema}"."{table}_{N}"
+          SELECT
+            {lowercase_word_column_names},
+            p,
+            c1,
+            c2
+          FROM
+            "{schema}"."{table}";
+        """.format(
+                schema=self.settings["schema"],
+                table=self.table,
+                N=self.N,
+                word_column_defs=self.word_column_defs,
+                lowercase_word_column_names=self.lowercase_word_column_names
+            )
+        )
 
 settings = {
     "database": "steganography",
@@ -156,6 +196,7 @@ settings["dataset"] = args.dataset
 
 d = ByuCocaNgramUpload(settings)
 d.connect()
-d.dump_data()
-d.cumulate_data()
+#d.dump_data()
+#d.cumulate_data()
+d.marginalize_ngrams()
 d.disconnect()
