@@ -24,30 +24,32 @@ BeginPackage["RationalArithmeticCoding`"]
 RationalACEncoder::usage="RationalACEncoder[S,p,c1] encodes a sequence of symbols S. Functions p[s,S] and c1[s,S] are conditional probability mass functions of the symbol s given preceding sequence S."
 
 RationalACDecoder::usage=
-"RationalACEncoder[v,\[Psi],stop,p,c1] decodes an interval v into a sequence of symbols. Function \[Psi][v,S] gives the next symbol given current rescaled interval and preceding symbols sequence S. Function stop[S,v] decides whether a sequence S with rescaled interval v should be terminated. Functions p[s,S] and c1[s,S] are conditional probability mass functions of the symbol s given preceding sequence S."
+"RationalACEncoder[v,\[Psi],stop,p,c1] decodes an interval v into a sequence of symbols. Function \[Psi][v,S] gives the next symbol given current rescaled interval and preceding symbols sequence S. Function stop[v,S] decides whether a sequence S with rescaled interval v should be terminated. Functions p[s,S] and c1[s,S] are conditional probability mass functions of the symbol s given preceding sequence S."
 
 Begin["`Private`"]
 
 RationalACEncoder[sequence_,p_,c1_]:=Module[
 {\[CapitalPhi]},
-\[CapitalPhi][{}]=({
- {0},
- {1}
+\[CapitalPhi][{}]={0,1};
+\[CapitalPhi][S_]:=\[CapitalPhi][S]=\[CapitalPhi][Most[S]].({
+ {1, 0},
+ {c1[Last[S],Most[S]], p[Last[S],Most[S]]}
 });
-\[CapitalPhi][S_]:=\[CapitalPhi][S]=({
- {1, c1[Last[S],Most[S]]},
- {0, p[Last[S],Most[S]]}
-}).\[CapitalPhi][Most[S]];
 \[CapitalPhi][sequence]
 ]
+
 RationalACDecoder[interval_,\[Psi]_,stop_,p_,c1_]:=Module[
 {\[CapitalPsi],rescale},
-rescale[v_,s_,S_]:=(v-c1[s,S])/p[s,S];
-\[CapitalPsi][v_]:=\[CapitalPsi][{\[Psi][v,{}]},rescale[v,\[Psi][v,{}],{}]];
-\[CapitalPsi][S_,v_]:=\[CapitalPsi][S,v]=If[
-stop[Last[S],v],
+rescale[v_,s_,S_]:={(First[v]-c1[s,S])/p[s,S],Last[v]/p[s,S]};
+\[CapitalPsi][v_]:=\[CapitalPsi][
+rescale[v,\[Psi][v,{}],{}],
+{\[Psi][v,{}]}
+];
+\[CapitalPsi][v_,S_]:=\[CapitalPsi][v,S]=
+If[
+stop[v,S],
 S,
-\[CapitalPsi][Append[S,\[Psi][v,S]],rescale[v,\[Psi][v,S],S]]
+\[CapitalPsi][rescale[v,\[Psi][v,S],S],Append[S,\[Psi][v,S]]]
 ];
 \[CapitalPsi][interval]
 ]
