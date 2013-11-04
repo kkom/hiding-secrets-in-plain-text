@@ -20,7 +20,7 @@ given preceding sequence S.\>\""}],
    RowBox[{"RationalACDecoder", "::", "usage"}], "=", "\[IndentingNewLine]", 
    "\"\<RationalACEncoder[v,\[Psi],stop,p,c1] decodes an interval v into a \
 sequence of symbols. Function \[Psi][v,S] gives the next symbol given current \
-rescaled interval and preceding symbols sequence S. Function stop[S,v] \
+rescaled interval and preceding symbols sequence S. Function stop[v,S] \
 decides whether a sequence S with rescaled interval v should be terminated. \
 Functions p[s,S] and c1[s,S] are conditional probability mass functions of \
 the symbol s given preceding sequence S.\>\""}], 
@@ -29,41 +29,40 @@ the symbol s given preceding sequence S.\>\""}],
   RowBox[{"Begin", "[", "\"\<`Private`\>\"", "]"}], 
   "\[IndentingNewLine]"}], "\[IndentingNewLine]", 
  RowBox[{
-  RowBox[{"RationalACEncoder", "[", 
-   RowBox[{"sequence_", ",", "p_", ",", "c1_"}], "]"}], ":=", 
-  RowBox[{"Module", "[", "\[IndentingNewLine]", 
-   RowBox[{
-    RowBox[{"{", "\[CapitalPhi]", "}"}], ",", "\[IndentingNewLine]", 
+  RowBox[{
+   RowBox[{"RationalACEncoder", "[", 
+    RowBox[{"sequence_", ",", "p_", ",", "c1_"}], "]"}], ":=", 
+   RowBox[{"Module", "[", "\[IndentingNewLine]", 
     RowBox[{
+     RowBox[{"{", "\[CapitalPhi]", "}"}], ",", "\[IndentingNewLine]", 
      RowBox[{
-      RowBox[{"\[CapitalPhi]", "[", 
-       RowBox[{"{", "}"}], "]"}], "=", 
-      RowBox[{"(", GridBox[{
-         {"0"},
-         {"1"}
-        }], ")"}]}], ";", "\[IndentingNewLine]", 
-     RowBox[{
-      RowBox[{"\[CapitalPhi]", "[", "S_", "]"}], ":=", 
       RowBox[{
-       RowBox[{"\[CapitalPhi]", "[", "S", "]"}], "=", 
+       RowBox[{"\[CapitalPhi]", "[", 
+        RowBox[{"{", "}"}], "]"}], "=", 
+       RowBox[{"{", 
+        RowBox[{"0", ",", "1"}], "}"}]}], ";", "\[IndentingNewLine]", 
+      RowBox[{
+       RowBox[{"\[CapitalPhi]", "[", "S_", "]"}], ":=", 
        RowBox[{
-        RowBox[{"(", GridBox[{
-           {"1", 
-            RowBox[{"c1", "[", 
-             RowBox[{
-              RowBox[{"Last", "[", "S", "]"}], ",", 
-              RowBox[{"Most", "[", "S", "]"}]}], "]"}]},
-           {"0", 
-            RowBox[{"p", "[", 
-             RowBox[{
-              RowBox[{"Last", "[", "S", "]"}], ",", 
-              RowBox[{"Most", "[", "S", "]"}]}], "]"}]}
-          }], ")"}], ".", 
-        RowBox[{"\[CapitalPhi]", "[", 
-         RowBox[{"Most", "[", "S", "]"}], "]"}]}]}]}], ";", 
-     "\[IndentingNewLine]", 
-     RowBox[{"\[CapitalPhi]", "[", "sequence", "]"}]}]}], 
-   "\[IndentingNewLine]", "]"}]}], "\[IndentingNewLine]", 
+        RowBox[{"\[CapitalPhi]", "[", "S", "]"}], "=", 
+        RowBox[{
+         RowBox[{"\[CapitalPhi]", "[", 
+          RowBox[{"Most", "[", "S", "]"}], "]"}], ".", 
+         RowBox[{"(", GridBox[{
+            {"1", "0"},
+            {
+             RowBox[{"c1", "[", 
+              RowBox[{
+               RowBox[{"Last", "[", "S", "]"}], ",", 
+               RowBox[{"Most", "[", "S", "]"}]}], "]"}], 
+             RowBox[{"p", "[", 
+              RowBox[{
+               RowBox[{"Last", "[", "S", "]"}], ",", 
+               RowBox[{"Most", "[", "S", "]"}]}], "]"}]}
+           }], ")"}]}]}]}], ";", "\[IndentingNewLine]", 
+      RowBox[{"\[CapitalPhi]", "[", "sequence", "]"}]}]}], 
+    "\[IndentingNewLine]", "]"}]}], 
+  "\[IndentingNewLine]"}], "\[IndentingNewLine]", 
  RowBox[{
   RowBox[{
    RowBox[{"RationalACDecoder", "[", 
@@ -79,48 +78,56 @@ the symbol s given preceding sequence S.\>\""}],
       RowBox[{
        RowBox[{"rescale", "[", 
         RowBox[{"v_", ",", "s_", ",", "S_"}], "]"}], ":=", 
-       FractionBox[
-        RowBox[{"v", "-", 
-         RowBox[{"c1", "[", 
-          RowBox[{"s", ",", "S"}], "]"}]}], 
-        RowBox[{"p", "[", 
-         RowBox[{"s", ",", "S"}], "]"}]]}], ";", "\[IndentingNewLine]", 
+       RowBox[{"{", 
+        RowBox[{
+         FractionBox[
+          RowBox[{
+           RowBox[{"First", "[", "v", "]"}], "-", 
+           RowBox[{"c1", "[", 
+            RowBox[{"s", ",", "S"}], "]"}]}], 
+          RowBox[{"p", "[", 
+           RowBox[{"s", ",", "S"}], "]"}]], ",", 
+         FractionBox[
+          RowBox[{"Last", "[", "v", "]"}], 
+          RowBox[{"p", "[", 
+           RowBox[{"s", ",", "S"}], "]"}]]}], "}"}]}], ";", 
+      "\[IndentingNewLine]", 
       RowBox[{
        RowBox[{"\[CapitalPsi]", "[", "v_", "]"}], ":=", 
-       RowBox[{"\[CapitalPsi]", "[", 
+       RowBox[{"\[CapitalPsi]", "[", "\[IndentingNewLine]", 
         RowBox[{
-         RowBox[{"{", 
-          RowBox[{"\[Psi]", "[", 
-           RowBox[{"v", ",", 
-            RowBox[{"{", "}"}]}], "]"}], "}"}], ",", 
          RowBox[{"rescale", "[", 
           RowBox[{"v", ",", 
            RowBox[{"\[Psi]", "[", 
             RowBox[{"v", ",", 
              RowBox[{"{", "}"}]}], "]"}], ",", 
-           RowBox[{"{", "}"}]}], "]"}]}], "]"}]}], ";", "\[IndentingNewLine]", 
+           RowBox[{"{", "}"}]}], "]"}], ",", "\[IndentingNewLine]", 
+         RowBox[{"{", 
+          RowBox[{"\[Psi]", "[", 
+           RowBox[{"v", ",", 
+            RowBox[{"{", "}"}]}], "]"}], "}"}]}], "\[IndentingNewLine]", 
+        "]"}]}], ";", "\[IndentingNewLine]", 
       RowBox[{
        RowBox[{"\[CapitalPsi]", "[", 
-        RowBox[{"S_", ",", "v_"}], "]"}], ":=", 
+        RowBox[{"v_", ",", "S_"}], "]"}], ":=", 
        RowBox[{
         RowBox[{"\[CapitalPsi]", "[", 
-         RowBox[{"S", ",", "v"}], "]"}], "=", 
+         RowBox[{"v", ",", "S"}], "]"}], "=", "\[IndentingNewLine]", 
         RowBox[{"If", "[", "\[IndentingNewLine]", 
          RowBox[{
           RowBox[{"stop", "[", 
-           RowBox[{
-            RowBox[{"Last", "[", "S", "]"}], ",", "v"}], "]"}], ",", 
-          "\[IndentingNewLine]", "S", ",", "\[IndentingNewLine]", 
+           RowBox[{"v", ",", "S"}], "]"}], ",", "\[IndentingNewLine]", "S", 
+          ",", "\[IndentingNewLine]", 
           RowBox[{"\[CapitalPsi]", "[", 
            RowBox[{
-            RowBox[{"Append", "[", 
-             RowBox[{"S", ",", 
-              RowBox[{"\[Psi]", "[", 
-               RowBox[{"v", ",", "S"}], "]"}]}], "]"}], ",", 
             RowBox[{"rescale", "[", 
              RowBox[{"v", ",", 
               RowBox[{"\[Psi]", "[", 
-               RowBox[{"v", ",", "S"}], "]"}], ",", "S"}], "]"}]}], "]"}]}], 
+               RowBox[{"v", ",", "S"}], "]"}], ",", "S"}], "]"}], ",", 
+            RowBox[{"Append", "[", 
+             RowBox[{"S", ",", 
+              RowBox[{"\[Psi]", "[", 
+               RowBox[{"v", ",", "S"}], "]"}]}], "]"}]}], "]"}]}], 
          "\[IndentingNewLine]", "]"}]}]}], ";", "\[IndentingNewLine]", 
       RowBox[{"\[CapitalPsi]", "[", "interval", "]"}]}]}], 
     "\[IndentingNewLine]", "]"}]}], 
@@ -133,7 +140,7 @@ the symbol s given preceding sequence S.\>\""}],
 },
 AutoGeneratedPackage->Automatic,
 WindowSize->{740, 624},
-WindowMargins->{{Automatic, 91}, {17, Automatic}},
+WindowMargins->{{Automatic, 199}, {Automatic, 20}},
 FrontEndVersion->"9.0 for Mac OS X x86 (32-bit, 64-bit Kernel) (January 25, \
 2013)",
 StyleDefinitions->"Default.nb"
