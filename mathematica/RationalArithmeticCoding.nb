@@ -11,48 +11,118 @@ Cell[BoxData[{
  RowBox[{
   RowBox[{
    RowBox[{"RationalACEncoder", "::", "usage"}], "=", 
-   "\"\<RationalACEncoder[S,p,c] encodes a sequence of integer choices S \
-using the conditional marginal and cumulative distributions p and c.\>\""}], 
+   "\"\<RationalACEncoder[S,p,c1] encodes a sequence of symbols S. Functions \
+p[s,S] and c1[s,S] are conditional probability mass functions of the symbol s \
+given preceding sequence S.\>\""}], 
+  "\[IndentingNewLine]"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"RationalACDecoder", "::", "usage"}], "=", "\[IndentingNewLine]", 
+   "\"\<RationalACEncoder[v,\[Psi],stop,p,c1] decodes an interval v into a \
+sequence of symbols. Function \[Psi][v,S] gives the next symbol given current \
+rescaled interval and preceding symbols sequence S. Function stop[S,v] \
+decides whether a sequence S with rescaled interval v should be terminated. \
+Functions p[s,S] and c1[s,S] are conditional probability mass functions of \
+the symbol s given preceding sequence S.\>\""}], 
   "\[IndentingNewLine]"}], "\[IndentingNewLine]", 
  RowBox[{
   RowBox[{"Begin", "[", "\"\<`Private`\>\"", "]"}], 
   "\[IndentingNewLine]"}], "\[IndentingNewLine]", 
  RowBox[{
+  RowBox[{"RationalACEncoder", "[", 
+   RowBox[{"sequence_", ",", "p_", ",", "c1_"}], "]"}], ":=", 
+  RowBox[{"Module", "[", "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"{", "\[CapitalPhi]", "}"}], ",", "\[IndentingNewLine]", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"\[CapitalPhi]", "[", 
+       RowBox[{"{", "}"}], "]"}], "=", 
+      RowBox[{"(", GridBox[{
+         {"0"},
+         {"1"}
+        }], ")"}]}], ";", "\[IndentingNewLine]", 
+     RowBox[{
+      RowBox[{"\[CapitalPhi]", "[", "S_", "]"}], ":=", 
+      RowBox[{
+       RowBox[{"\[CapitalPhi]", "[", "S", "]"}], "=", 
+       RowBox[{
+        RowBox[{"(", GridBox[{
+           {"1", 
+            RowBox[{"c1", "[", 
+             RowBox[{
+              RowBox[{"Last", "[", "S", "]"}], ",", 
+              RowBox[{"Most", "[", "S", "]"}]}], "]"}]},
+           {"0", 
+            RowBox[{"p", "[", 
+             RowBox[{
+              RowBox[{"Last", "[", "S", "]"}], ",", 
+              RowBox[{"Most", "[", "S", "]"}]}], "]"}]}
+          }], ")"}], ".", 
+        RowBox[{"\[CapitalPhi]", "[", 
+         RowBox[{"Most", "[", "S", "]"}], "]"}]}]}]}], ";", 
+     "\[IndentingNewLine]", 
+     RowBox[{"\[CapitalPhi]", "[", "sequence", "]"}]}]}], 
+   "\[IndentingNewLine]", "]"}]}], "\[IndentingNewLine]", 
+ RowBox[{
   RowBox[{
-   RowBox[{"RationalACEncoder", "[", 
-    RowBox[{"sequence_", ",", "p_", ",", "c_"}], "]"}], ":=", 
+   RowBox[{"RationalACDecoder", "[", 
+    RowBox[{
+    "interval_", ",", "\[Psi]_", ",", "stop_", ",", "p_", ",", "c1_"}], "]"}],
+    ":=", 
    RowBox[{"Module", "[", "\[IndentingNewLine]", 
     RowBox[{
-     RowBox[{"{", "\[CapitalPhi]", "}"}], ",", "\[IndentingNewLine]", 
+     RowBox[{"{", 
+      RowBox[{"\[CapitalPsi]", ",", "rescale"}], "}"}], ",", 
+     "\[IndentingNewLine]", 
      RowBox[{
       RowBox[{
-       RowBox[{"\[CapitalPhi]", "[", 
-        RowBox[{"{", "}"}], "]"}], "=", 
-       RowBox[{"(", GridBox[{
-          {"0"},
-          {"1"}
-         }], ")"}]}], ";", "\[IndentingNewLine]", 
+       RowBox[{"rescale", "[", 
+        RowBox[{"v_", ",", "s_", ",", "S_"}], "]"}], ":=", 
+       FractionBox[
+        RowBox[{"v", "-", 
+         RowBox[{"c1", "[", 
+          RowBox[{"s", ",", "S"}], "]"}]}], 
+        RowBox[{"p", "[", 
+         RowBox[{"s", ",", "S"}], "]"}]]}], ";", "\[IndentingNewLine]", 
       RowBox[{
-       RowBox[{"\[CapitalPhi]", "[", "S_", "]"}], ":=", 
-       RowBox[{
-        RowBox[{"\[CapitalPhi]", "[", "S", "]"}], "=", 
+       RowBox[{"\[CapitalPsi]", "[", "v_", "]"}], ":=", 
+       RowBox[{"\[CapitalPsi]", "[", 
         RowBox[{
-         RowBox[{"(", GridBox[{
-            {"1", 
-             RowBox[{"c", "[", 
-              RowBox[{
-               RowBox[{"Last", "[", "S", "]"}], ",", 
-               RowBox[{"Most", "[", "S", "]"}]}], "]"}]},
-            {"0", 
-             RowBox[{"p", "[", 
-              RowBox[{
-               RowBox[{"Last", "[", "S", "]"}], ",", 
-               RowBox[{"Most", "[", "S", "]"}]}], "]"}]}
-           }], ")"}], ".", 
-         RowBox[{"\[CapitalPhi]", "[", 
-          RowBox[{"Most", "[", "S", "]"}], "]"}]}]}]}], ";", 
-      "\[IndentingNewLine]", 
-      RowBox[{"\[CapitalPhi]", "[", "sequence", "]"}]}]}], 
+         RowBox[{"{", 
+          RowBox[{"\[Psi]", "[", 
+           RowBox[{"v", ",", 
+            RowBox[{"{", "}"}]}], "]"}], "}"}], ",", 
+         RowBox[{"rescale", "[", 
+          RowBox[{"v", ",", 
+           RowBox[{"\[Psi]", "[", 
+            RowBox[{"v", ",", 
+             RowBox[{"{", "}"}]}], "]"}], ",", 
+           RowBox[{"{", "}"}]}], "]"}]}], "]"}]}], ";", "\[IndentingNewLine]", 
+      RowBox[{
+       RowBox[{"\[CapitalPsi]", "[", 
+        RowBox[{"S_", ",", "v_"}], "]"}], ":=", 
+       RowBox[{
+        RowBox[{"\[CapitalPsi]", "[", 
+         RowBox[{"S", ",", "v"}], "]"}], "=", 
+        RowBox[{"If", "[", "\[IndentingNewLine]", 
+         RowBox[{
+          RowBox[{"stop", "[", 
+           RowBox[{
+            RowBox[{"Last", "[", "S", "]"}], ",", "v"}], "]"}], ",", 
+          "\[IndentingNewLine]", "S", ",", "\[IndentingNewLine]", 
+          RowBox[{"\[CapitalPsi]", "[", 
+           RowBox[{
+            RowBox[{"Append", "[", 
+             RowBox[{"S", ",", 
+              RowBox[{"\[Psi]", "[", 
+               RowBox[{"v", ",", "S"}], "]"}]}], "]"}], ",", 
+            RowBox[{"rescale", "[", 
+             RowBox[{"v", ",", 
+              RowBox[{"\[Psi]", "[", 
+               RowBox[{"v", ",", "S"}], "]"}], ",", "S"}], "]"}]}], "]"}]}], 
+         "\[IndentingNewLine]", "]"}]}]}], ";", "\[IndentingNewLine]", 
+      RowBox[{"\[CapitalPsi]", "[", "interval", "]"}]}]}], 
     "\[IndentingNewLine]", "]"}]}], 
   "\[IndentingNewLine]"}], "\[IndentingNewLine]", 
  RowBox[{
@@ -63,7 +133,7 @@ using the conditional marginal and cumulative distributions p and c.\>\""}],
 },
 AutoGeneratedPackage->Automatic,
 WindowSize->{740, 624},
-WindowMargins->{{Automatic, 167}, {Automatic, 14}},
+WindowMargins->{{Automatic, 91}, {17, Automatic}},
 FrontEndVersion->"9.0 for Mac OS X x86 (32-bit, 64-bit Kernel) (January 25, \
 2013)",
 StyleDefinitions->"Default.nb"
