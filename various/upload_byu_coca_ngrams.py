@@ -112,16 +112,6 @@ class ByuCocaNgramUpload:
             ON "{schema}"."{table}"
             USING btree (i)
             WITH(fillfactor = 100);
-            
-          CREATE UNIQUE INDEX
-            ON "{schema}"."{table}"
-            USING btree (c1)
-            WITH(fillfactor = 100);
-            
-          CREATE UNIQUE INDEX
-            ON "{schema}"."{table}"
-            USING btree (c2)
-            WITH(fillfactor = 100);
         """.format(
                 schema=self.settings["schema"],
                 table=self.table,
@@ -311,9 +301,9 @@ settings["dataset"] = args.dataset
 
 d = ByuCocaNgramUpload(settings)
 d.connect()
-#d.dump_data()
-#d.cumulate_data()
+d.dump_data()
+d.cumulate_data()
 d.marginalize_ngrams()
 d.disconnect()
 
-print("Finished uploading date, remember to run VACUUM to analyse the tables.")
+print("Finished uploading data, remember to run VACUUM to analyse the tables.")
