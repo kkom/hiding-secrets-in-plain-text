@@ -20,16 +20,21 @@ class ByuCocaNgramUpload:
         
         self.word_columns = tuple("w{}".format(i) for i in range(1,self.N+1))
         self.pos_columns = tuple("pos{}".format(i) for i in range(1,self.N+1))
-        self.word_column_names = ",".join(self.word_columns)
+        self.word_column_names = self.gen_word_column_names(self.N)
         self.pos_column_names = ",".join(self.pos_columns)
-        self.word_column_defs = ",".join(map(lambda x: x + " text",
-                                         self.word_columns))
+        self.word_column_defs = self.gen_word_column_defs(self.N)
         self.pos_column_defs = ",".join(map(lambda x: x + " text", 
                                         self.pos_columns))
         self.lowercase_word_column_names = ",".join(map(
             lambda x: "lower({})".format(x), self.word_columns))
         
         self.table = "{n}gram_{dataset}".format(**self.settings)
+        
+    def gen_word_column_names(self, n):
+        return ",".join(self.word_columns[0:n])
+        
+    def gen_word_column_defs(self, n):
+        return ",".join(map(lambda x: x + " text", self.word_columns[0:n]))
     
     def connect(self):
         self.conn = psycopg2.connect(database=self.settings["database"])
@@ -103,17 +108,17 @@ class ByuCocaNgramUpload:
             
           DROP TABLE "{schema}"."raw_{table}";
             
-          CREATE UNIQUE INDEX "{schema}_{table}_i"
+          CREATE UNIQUE INDEX
             ON "{schema}"."{table}"
             USING btree (i)
             WITH(fillfactor = 100);
             
-          CREATE UNIQUE INDEX "{schema}_{table}_c1"
+          CREATE UNIQUE INDEX
             ON "{schema}"."{table}"
             USING btree (c1)
             WITH(fillfactor = 100);
             
-          CREATE UNIQUE INDEX "{schema}_{table}_c2"
+          CREATE UNIQUE INDEX
             ON "{schema}"."{table}"
             USING btree (c2)
             WITH(fillfactor = 100);
@@ -136,19 +141,20 @@ class ByuCocaNgramUpload:
         ))
     
     def marginalize_ngrams(self):
-    """
-    Creates N tables of marginalised and lowercase ngrams with n in {1, ..., N}.
+        """
+        Creates N tables of marginalised and lowercase ngrams with n in
+        {1, ..., N}.
     
-    The marginalisation procedure is naive and inexact: (n-1)-gram statistic is
-    constructed from (n)-grams by marginalising those whose FIRST (n-1) words
-    match the (n-1)-gram exactly.
-    """
-    
+        The marginalisation procedure is naive and inexact: (n-1)-gram statistic
+        is constructed from (n)-grams by marginalising those whose FIRST (n-1)
+        words match the (n-1)-gram exactly.
+        """
+        
         self.cur.execute("""
           DROP TABLE IF EXISTS "{schema}"."{table}_{N}";
           
           CREATE TABLE "{schema}"."{table}_{N}" (
-            i integer primary key,
+            i serial primary key,
             {word_column_defs},
             p integer,
             c1 bigint,
@@ -156,22 +162,131 @@ class ByuCocaNgramUpload:
           );
           
           INSERT INTO
-            "{schema}"."{table}_{N}"
+            "{schema}"."{table}_{N}" ( {word_column_names}, p, c1, c2 )
           SELECT
-            {lowercase_word_column_names},
-            p,
-            c1,
-            c2
+            {lowercase_word_column_names}, p, c1, c2
           FROM
-            "{schema}"."{table}";
+            "{schema}"."{table}"
+          ORDER BY
+            i ASC;
+          
+          CREATE UNIQUE INDEX ON "{schema}"."{table}_{N}"
+            USING btree (i)
+            WITH(fillfactor = 100);
+            
+          CREATE INDEX ON "{schema}"."{table}_{N}"
+            USING btree ({conditional_column_names})
+            WITH (fillfactor = 100);
+                
+          CREATE INDEX ON "{schema}"."{table}_{N}"
+            USING btree ({word_column_names})
+            WITH (fillfactor = 100);
+            
+          CREATE UNIQUE INDEX ON "{schema}"."{table}_{N}"
+            USING btree (c1)
+            WITH(fillfactor = 100);
+            
+          CREATE UNIQUE INDEX ON "{schema}"."{table}_{N}"
+            USING btree (c2)
+            WITH(fillfactor = 100);
         """.format(
                 schema=self.settings["schema"],
                 table=self.table,
                 N=self.N,
+                word_column_names=self.word_column_names,
                 word_column_defs=self.word_column_defs,
-                lowercase_word_column_names=self.lowercase_word_column_names
+                lowercase_word_column_names=self.lowercase_word_column_names,
+                conditional_column_names=self.gen_word_column_names(self.N-1)
             )
         )
+        
+        self.conn.commit()
+        
+        print("Succesfully saved data to table "
+              "\"{schema}\".\"{table}_{N}\".".format(
+            schema=self.settings["schema"],
+            table=self.table,
+            N=self.N,
+        ))
+        
+        for n in range(self.N-1,0,-1):
+            self.cur.execute("""
+              DROP TABLE IF EXISTS "{schema}"."{table}_{n}";
+        
+              CREATE TABLE "{schema}"."{table}_{n}" (
+                i serial primary key,
+                {word_column_defs},
+                p integer,
+                c1 bigint,
+                c2 bigint
+              );
+        
+              INSERT INTO
+                "{schema}"."{table}_{n}" ( {word_column_names}, p, c1, c2 )
+              SELECT
+                {word_column_names}, p, c1, c2
+              FROM
+                (
+                  SELECT
+                    min(i) AS i,
+                    {word_column_names},
+                    sum(p) AS p,
+                    min(c1) AS c1,
+                    max(c2) AS c2
+                  FROM
+                    "{schema}"."{table}_{N}"
+                  GROUP BY
+                    {word_column_names}
+                ) tmp
+              ORDER BY
+                i ASC;
+          
+              CREATE UNIQUE INDEX ON "{schema}"."{table}_{n}"
+                USING btree (i)
+                WITH(fillfactor = 100);
+                
+              CREATE INDEX ON "{schema}"."{table}_{n}"
+                USING btree ({word_column_names})
+                WITH (fillfactor = 100);
+            
+              CREATE UNIQUE INDEX ON "{schema}"."{table}_{n}"
+                USING btree (c1)
+                WITH(fillfactor = 100);
+            
+              CREATE UNIQUE INDEX ON "{schema}"."{table}_{n}"
+                USING btree (c2)
+                WITH(fillfactor = 100);
+            """.format(
+                    schema=self.settings["schema"],
+                    table=self.table,
+                    n=n,
+                    N=n+1,
+                    word_column_names=self.gen_word_column_names(n),
+                    word_column_defs=self.gen_word_column_defs(n)
+                )
+            )
+            
+            if n > 1:
+                self.cur.execute("""
+                  CREATE INDEX ON "{schema}"."{table}_{n}"
+                    USING btree ({conditional_column_names})
+                    WITH (fillfactor = 100);
+                """.format(
+                        schema=self.settings["schema"],
+                        table=self.table,
+                        n=n,
+                        conditional_column_names=self.gen_word_column_names(n-1)
+                    )
+                )
+            
+            self.conn.commit()
+        
+            print("Succesfully saved data to table "
+                  "\"{schema}\".\"{table}_{n}\".".format(
+                schema=self.settings["schema"],
+                table=self.table,
+                n=n,
+            ))
 
 settings = {
     "database": "steganography",
@@ -200,3 +315,5 @@ d.connect()
 #d.cumulate_data()
 d.marginalize_ngrams()
 d.disconnect()
+
+print("Finished uploading date, remember to run VACUUM to analyse the tables.")
