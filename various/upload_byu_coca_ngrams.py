@@ -277,6 +277,38 @@ class ByuCocaNgramUpload:
                 table=self.table,
                 n=n,
             ))
+            
+        self.cur.execute("""
+          DROP TABLE IF EXISTS "{schema}"."{table}_0";
+    
+          CREATE TABLE "{schema}"."{table}_0" (
+            i serial primary key,
+            p integer,
+            c1 bigint,
+            c2 bigint
+          );
+          
+          INSERT INTO
+            "{schema}"."{table}_0" ( p, c1, c2 )
+          SELECT
+            sum(p) AS p,
+            min(c1) AS c1,
+            max(c2) AS c2
+          FROM
+            "{schema}"."{table}_1";
+        """.format(
+                schema=self.settings["schema"],
+                table=self.table
+            )
+        )
+
+        self.conn.commit()
+    
+        print("Succesfully saved data to table "
+              "\"{schema}\".\"{table}_0\".".format(
+            schema=self.settings["schema"],
+            table=self.table
+        ))
 
 settings = {
     "database": "steganography",
