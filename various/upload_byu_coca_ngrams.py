@@ -25,7 +25,9 @@ class ByuCocaNgramUpload:
         self.word_column_defs = self.gen_word_column_defs(self.N)
         self.pos_column_defs = ",".join(map(lambda x: x + " text", 
                                         self.pos_columns))
-        self.lowercase_word_column_names = ",".join(map(
+        self.lowercase_word_columns_as_normal_columns = ",".join(map(
+            lambda x: "lower({x}) AS {x}".format(x=x), self.word_columns))
+        self.lowercase_word_columns = ",".join(map(
             lambda x: "lower({})".format(x), self.word_columns))
         
         self.table = "{n}gram_{dataset}".format(**self.settings)
@@ -154,9 +156,20 @@ class ByuCocaNgramUpload:
           INSERT INTO
             "{schema}"."{table}_{N}" ( {word_column_names}, p, c1, c2 )
           SELECT
-            {lowercase_word_column_names}, p, c1, c2
+            {word_column_names}, p, c1, c2
           FROM
-            "{schema}"."{table}"
+            (
+              SELECT
+                min(i) AS i,
+                {lowercase_word_columns_as_normal_columns},
+                sum(p) AS p,
+                min(c1) AS c1,
+                max(c2) AS c2
+              FROM
+                "{schema}"."{table}"
+              GROUP BY
+                {lowercase_word_columns}
+            ) tmp
           ORDER BY
             i ASC;
           
@@ -185,7 +198,9 @@ class ByuCocaNgramUpload:
                 N=self.N,
                 word_column_names=self.word_column_names,
                 word_column_defs=self.word_column_defs,
-                lowercase_word_column_names=self.lowercase_word_column_names,
+                lowercase_word_columns_as_normal_columns=\
+                    self.lowercase_word_columns_as_normal_columns,
+                lowercase_word_columns=self.lowercase_word_columns,
                 conditional_column_names=self.gen_word_column_names(self.N-1)
             )
         )
