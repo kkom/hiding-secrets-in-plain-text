@@ -125,10 +125,10 @@ Cell[BoxData[{
    "**)"}]}], "\[IndentingNewLine]", 
  RowBox[{
   RowBox[{
-   RowBox[{"p", "[", 
+   RowBox[{"pLetters", "[", 
     RowBox[{"m_", ",", "S_"}], "]"}], ":=", 
    RowBox[{
-    RowBox[{"p", "[", 
+    RowBox[{"pLetters", "[", 
      RowBox[{"m", ",", "S"}], "]"}], "=", 
     RowBox[{
      RowBox[{"relativeFrequencies", "[", 
@@ -141,31 +141,32 @@ Cell[BoxData[{
     " ", "symbols"}], " ", "**)"}]}], "\[IndentingNewLine]", 
  RowBox[{
   RowBox[{
-   RowBox[{"c1", "[", 
-    RowBox[{"1", ",", "S_"}], "]"}], "=", "0"}], ";"}], "\[IndentingNewLine]", 
+   RowBox[{"c1Letters", "[", 
+    RowBox[{"1", ",", "S_"}], "]"}], ":=", "0"}], 
+  ";"}], "\[IndentingNewLine]", 
  RowBox[{
-  RowBox[{"c1", "[", 
+  RowBox[{"c1Letters", "[", 
    RowBox[{"m_", ",", "S_"}], "]"}], ":=", 
   RowBox[{
-   RowBox[{"c1", "[", 
+   RowBox[{"c1Letters", "[", 
     RowBox[{"m", ",", "S"}], "]"}], "=", 
    RowBox[{
-    RowBox[{"c1", "[", 
+    RowBox[{"c1Letters", "[", 
      RowBox[{
       RowBox[{"m", "-", "1"}], ",", "S"}], "]"}], "+", 
-    RowBox[{"p", "[", 
+    RowBox[{"pLetters", "[", 
      RowBox[{
       RowBox[{"m", "-", "1"}], ",", "S"}], "]"}]}]}]}], "\[IndentingNewLine]", 
  RowBox[{
-  RowBox[{"c2", "[", 
+  RowBox[{"c2Letters", "[", 
    RowBox[{"m_", ",", "S_"}], "]"}], ":=", 
   RowBox[{
-   RowBox[{"c2", "[", 
+   RowBox[{"c2Letters", "[", 
     RowBox[{"m", ",", "S"}], "]"}], "=", 
    RowBox[{
-    RowBox[{"c1", "[", 
+    RowBox[{"c1Letters", "[", 
      RowBox[{"m", ",", "S"}], "]"}], "+", 
-    RowBox[{"p", "[", 
+    RowBox[{"pLetters", "[", 
      RowBox[{"m", ",", "S"}], "]"}]}]}]}]}], "Input"],
 
 Cell[CellGroupData[{
@@ -202,12 +203,12 @@ Cell[BoxData[
          RowBox[{
           RowBox[{
            RowBox[{
-            RowBox[{"c1", "[", 
+            RowBox[{"c1Letters", "[", 
              RowBox[{"#1", ",", "S"}], "]"}], "\[LessEqual]", 
             RowBox[{"First", "[", "v", "]"}]}], "&&", 
            RowBox[{
             RowBox[{"Total", "[", "v", "]"}], "\[LessEqual]", 
-            RowBox[{"c2", "[", 
+            RowBox[{"c2Letters", "[", 
              RowBox[{"#1", ",", "S"}], "]"}]}]}], "&"}], ",", 
          "\[IndentingNewLine]", 
          RowBox[{"(*", 
@@ -246,8 +247,17 @@ Cell[BoxData[
           RowBox[{"Characters", "[", "string", "]"}]}], "]"}]}], " ", ";", 
        "\[IndentingNewLine]", 
        RowBox[{"RationalACEncoder", "[", 
-        RowBox[{"S", ",", "p", ",", "c1"}], "]"}]}]}], "\[IndentingNewLine]", 
-     "]"}]}], "\[IndentingNewLine]", "\[IndentingNewLine]", 
+        RowBox[{"S", ",", "pLetters", ",", "c1Letters"}], "]"}]}]}], 
+     "\[IndentingNewLine]", "]"}]}], "\[IndentingNewLine]", 
+   RowBox[{"N", "[", 
+    RowBox[{"-", 
+     RowBox[{"Log", "[", 
+      RowBox[{"2", ",", 
+       RowBox[{"Last", "[", "v", "]"}]}], "]"}]}], "]"}], 
+   "\[IndentingNewLine]", "\[IndentingNewLine]", 
+   RowBox[{"(*", 
+    RowBox[{"*", " ", "Try", " ", "the", " ", "decoder"}], " ", "**)"}], 
+   "\[IndentingNewLine]", 
    RowBox[{"decodedString", "=", 
     RowBox[{"Module", "[", 
      RowBox[{
@@ -255,8 +265,9 @@ Cell[BoxData[
       RowBox[{
        RowBox[{"S", "=", 
         RowBox[{"RationalACDecoder", "[", 
-         RowBox[{"v", ",", "\[Psi]", ",", "stop", ",", "p", ",", "c1"}], 
-         "]"}]}], ";", "\[IndentingNewLine]", 
+         RowBox[{
+         "v", ",", "\[Psi]", ",", "stop", ",", "pLetters", ",", "c1Letters"}],
+          "]"}]}], ";", "\[IndentingNewLine]", 
        RowBox[{"StringJoin", "[", 
         RowBox[{"Map", "[", 
          RowBox[{"l", ",", "S"}], "]"}], "]"}]}]}], "\[IndentingNewLine]", 
@@ -272,12 +283,14 @@ Cell[BoxData[
    FractionBox["15584350661031059361147904", 
     "474447104687195014866953327918775506953125"]}], "}"}]], "Output"],
 
+Cell[BoxData["54.756998726003566`"], "Output"],
+
 Cell[BoxData["\<\"HELLO WORLD.\"\>"], "Output"]
 }, Open  ]]
 },
 WindowSize->{970, 665},
 WindowMargins->{{150, Automatic}, {0, Automatic}},
-FrontEndVersion->"9.0 for Mac OS X x86 (32-bit, 64-bit Kernel) (January 25, \
+FrontEndVersion->"10.0 for Mac OS X x86 (32-bit, 64-bit Kernel) (October 16, \
 2013)",
 StyleDefinitions->"Default.nb"
 ]
