@@ -28,6 +28,10 @@ ByuCocaSuperintervalQuery::usage="Later"
 
 Begin["`Private`"]
 
+(* used for ensuring that input to a function is always a list *)
+makeList[x_List]:=x;
+makeList[x_]:={x};
+
 genConnection[host_,credentials_]:=genConnection[host,credentials]=
 OpenSQLConnection[
 JDBC["PostgreSQL",host],
@@ -35,13 +39,14 @@ JDBC["PostgreSQL",host],
 "Password"->Last[credentials]
 ];
 
-genTableName[dataset_,fullN_,n_]:=genTableName[dataset,fullN,n]=
+genTableName[dataset_,NFull_,n_]:=genTableName[dataset,NFull,n]=
 "byu_coca_corpus."<>
-"\""<>ToString[fullN]<>"gram_"<>dataset<>
+"\""<>ToString[NFull]<>"gram_"<>dataset<>
 "_"<>ToString[n]<>"\"";
 
 genColumnNames[n_]:=genColumnNames[n]=Map["w"<>ToString[#1]&,Range[n]];
 
+(* generic function to select rows from a table *)
 selectRows[conn_,table_,cols_,cFuns_,cCols_,cVals_]:=
 selectRows[conn,table,cols,cFuns,cCols,cVals]=
 SQLSelect[
@@ -51,50 +56,66 @@ cols,
 Apply[And, MapThread[#1[SQLColumn[#2],#3]&,{cFuns,cCols,cVals}]]
 ];
 
-selectSequenceStatRow[conn_,dataset_,fullN_,S_]:=selectRows[
+(* selects p, c1 & c2 columns for a given sequence *)
+selectSequenceStats[conn_,dataset_,NFull_,S_]:=selectRows[
 conn,
-genTableName[dataset,fullN,Length[S]],
+genTableName[dataset,NFull,Length[S]],
 {"p","c1","c2"},
 Table[Equal,{Length[S]}],
 genColumnNames[Length[S]],
 S
 ];
 
-getSequenceStat[{},_]:=Throw["Sequence doesn't exist."];
+(* gets specified statistics for a row assumed to represent a single sequence, throws exceptions if 0 or more than 1 row is given *)
+getSequenceStat[{},_]:=Throw[Null,"No rows"];
 getSequenceStat[rows_List,i_]:=If[
 Length[rows]==1,
 Flatten[rows][[i]],
-Throw["Fetched more than one row corresponding to a sequence."]
+Throw[Null,"Multiple rows"]
 ];
 
-cutSequences[s_,S_,fullN_,]:={
-Take[s,-Min[Length[s],fullN]],
-Take[S,-Min[Length[S],fullN-Length[s]]]
-};
+(* cuts condition part of the query to match order of the model *)
+fitS[S_,NFull_]:=Take[S,-Min[Length[S],NFull-1]];
+fitS[s_,S_,NFull_]:=
+If[
+Length[s]>NFull,
+Throw[Null,"Cannot submit query of order higher than the model."],
+Take[S,-Min[Length[S],NFull]]
+]
 
-makeList[x_List]:=x;
-makeList[x_]:={x};
+(* queries database directly for a conditional probability of a sequence, will throw exceptions if the respective n-grams aren't in the database *)
+rawP[conn_,dataset_,NFull_,s_,S_,_]:=getSequenceStat[selectSequenceStats[conn,dataset,NFull,Join[S,s]],1]/getSequenceStat[selectSequenceStats[conn,dataset,NFull,S],1];
 
-p[conn_,dataset_,fullN_,s_,S_]:=
-Module[{sCut,SCut},
-{sCut,SCut}=cutSequences[makeList[s],makeList[S],fullN];
-getSequenceStat[selectSequenceStatRow[conn,dataset,fullN,Join[SCut,sCut]],1]/getSequenceStat[selectSequenceStatRow[conn,dataset,fullN,SCut],1]
-];
-
-c[conn_,dataset_,fullN_,s_,S_,cIndex_]:=Module[{sCut,SCut,C1,P,c},
-{sCut,SCut}=cutSequences[makeList[s],makeList[S],fullN];
-{P,C1}=getSequenceStat[selectSequenceStatRow[conn,dataset,fullN,SCut],{1,2}];
-c=getSequenceStat[selectSequenceStatRow[conn,dataset,fullN,Join[SCut,sCut]],cIndex+1];
+(* queries database directly for a comulative conditional probability of a sequence, will throw exceptions if the respective n-grams aren't in the database *)
+rawC[conn_,dataset_,NFull_,s_,S_,cIndex_]:=
+Module[{C1,P,c},
+{P,C1}=getSequenceStat[selectSequenceStats[conn,dataset,NFull,S],{1,2}];
+c=getSequenceStat[selectSequenceStats[conn,dataset,NFull,Join[S,s]],cIndex+1];
 (c-C1)/P
 ];
 
-getWord[{}]:=Null;
+(* queries database for a given conditional probability, reduces the context if necessary *)
+statQuery[conn_,dataset_,NFull_,s_,S_,rawFun_,cIndex_:Null]:=Catch[
+rawFun[conn,dataset,NFull,s,S,cIndex],
+"No rows",
+Function[{value,tag},
+If[Length[S]==0,
+Throw[Null,"Cannot decrease order of the query condition any more."],
+statQuery[conn,dataset,NFull,s,Rest[S],rawFun,cIndex]
+]
+]
+];
+
+(* final conditional probability functions with automatically reduced context *)
+p[conn_,dataset_,NFull_,s_,S_]:=statQuery[conn,dataset,NFull,s,S,rawP,Null]
+c1[conn_,dataset_,NFull_,s_,S_]:=statQuery[conn,dataset,NFull,s,S,rawC,1]
+c2[conn_,dataset_,NFull_,s_,S_]:=statQuery[conn,dataset,NFull,s,S,rawC,2]
+
+(*getWord[{}]:=Null;
 getWord[rows_List]:=BlockRandom[
 SeedRandom[10];
 First[RandomChoice[rows]]
 ];
-
-(*getWord[rows_List]:=First[RandomChoice[rows]];*)
 
 getSuperinterval[conn_,table_,col_,c1_,c2_]:=
 getWord[selectRows[
@@ -120,47 +141,77 @@ conn,table,{col,"c1"},
 {LessEqual,GreaterEqual},{"c1","c2"},{c2,c2}
 ]];
 
-checkPrevious[conn_,dataset_,fullN_,SCut_]:=
-checkPrevious[conn,dataset,fullN,SCut,selectSequenceStatRow[conn,dataset,fullN,SCut]];
-checkPrevious[conn_,dataset_,fullN_,SCut_,{}]:=
-checkPrevious[conn,dataset,fullN,Rest[SCut]];
-checkPrevious[conn_,dataset_,fullN_,SCut_,result_]:=result;
+checkPrevious[conn_,dataset_,NFull_,SCut_]:=
+checkPrevious[conn,dataset,NFull,SCut,selectSequenceStats[conn,dataset,NFull,SCut]];
+checkPrevious[conn_,dataset_,NFull_,SCut_,{}]:=
+checkPrevious[conn,dataset,NFull,Rest[SCut]];
+checkPrevious[conn_,dataset_,NFull_,SCut_,result_]:=result;
 
-\[Psi][conn_,dataset_,fullN_,v_,S_]:=
-Module[{table,col,SCut,P,C1,c1,c2,s,statRow},
-SCut=Take[S,-Min[Length[S],fullN-1]];
-table=genTableName[dataset,fullN,Length[SCut]+1];
+rawMatchingIntervalQuery[conn_,dataset_,NFull_,v_,S_]:=Module[{},
+table=genTableName[dataset,NFull,Length[S]+1];
 col="w"<>ToString[Length[SCut]+1];
 
-(* dirty hack *)
 
-statRow=checkPrevious[conn,dataset,fullN,SCut];
+];
+
+\[Psi][conn_,dataset_,NFull_,v_,S_]:=Module[{table,col,P,C1,c1,c2,s,statRow},
+table=genTableName[dataset,NFull,Length[S]+1];
+col="w"<>ToString[Length[SCut]+1];
+
+statRow=checkPrevious[conn,dataset,NFull,S];
 Print[statRow];
 
 {P,C1}=getSequenceStat[statRow,{1,2}];
 {c1,c2}={Floor[C1+P*First[v]],Ceiling[C1+P*Total[v]]};
 
 s=getSuperinterval[conn,table,col,c1,c2];
-If[s==Null,s=getSubinterval[conn,table,col,c1,c2]];
-
-If[s==Null,Throw["Couldn't find a superinterval."]];
+If[s\[Equal]Null,s=getSubinterval[conn,table,col,c1,c2]];
+If[s\[Equal]Null,Throw["Couldn't find a superinterval."]];
 
 Print[Append[S,s]];
 
 s
+]*)
+
+ByuCocaPQuery[host_,credentials_,dataset_,NFull_]:=Function[{s,S},
+p[
+genConnection[host,credentials],
+dataset,
+NFull,
+makeList[s],
+fitS[makeList[s],makeList[S],NFull]
 ]
+];
 
-ByuCocaPQuery[host_,credentials_,dataset_,fullN_]:=
-Function[{s,S},p[genConnection[host,credentials],dataset,fullN,s,S]];
+ByuCocaC1Query[host_,credentials_,dataset_,NFull_]:=Function[{s,S},
+c1[
+genConnection[host,credentials],
+dataset,
+NFull,
+makeList[s],
+fitS[makeList[s],makeList[S],NFull]
+]
+];
 
-ByuCocaC1Query[host_,credentials_,dataset_,fullN_]:=
-Function[{s,S},c[genConnection[host,credentials],dataset,fullN,s,S,1]];
+ByuCocaC2Query[host_,credentials_,dataset_,NFull_]:=Function[{s,S},
+c2[
+genConnection[host,credentials],
+dataset,
+NFull,
+makeList[s],
+fitS[makeList[s],makeList[S],NFull]
+]
+];
 
-ByuCocaC2Query[host_,credentials_,dataset_,fullN_]:=
-Function[{s,S},c[genConnection[host,credentials],dataset,fullN,s,S,2]];
-
-ByuCocaSuperintervalQuery[host_,credentials_,dataset_,fullN_]:=
-Function[{v,S},\[Psi][genConnection[host,credentials],dataset,fullN,v,S]];
+(*ByuCocaSuperintervalQuery[host_,credentials_,dataset_,NFull_]:=Function[{v,S},
+SuperintervalQuery[
+genConnection[host,credentials],
+dataset,
+NFull,
+v,
+fitS[S,NFull]
+]
+];*)
 
 End[]
 
