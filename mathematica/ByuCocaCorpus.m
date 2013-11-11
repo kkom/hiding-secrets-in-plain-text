@@ -35,67 +35,132 @@ JDBC["PostgreSQL",host],
 "Password"->Last[credentials]
 ];
 
-genTableName[dataset_,N_,n_]:=genTableName[dataset,N,n]=
+genTableName[dataset_,fullN_,n_]:=genTableName[dataset,fullN,n]=
 "byu_coca_corpus."<>
-"\""<>ToString[N]<>"gram_"<>dataset<>
+"\""<>ToString[fullN]<>"gram_"<>dataset<>
 "_"<>ToString[n]<>"\"";
 
 genColumnNames[n_]:=genColumnNames[n]=Map["w"<>ToString[#1]&,Range[n]];
 
-selectRows[conn_,table_,cond_,cols_,vals_]:=
-selectRows[conn,table,cond,cols,vals]=
+selectRows[conn_,table_,cols_,cFuns_,cCols_,cVals_]:=
+selectRows[conn,table,cols,cFuns,cCols,cVals]=
 SQLSelect[
 conn,
 table,
-{"p","c1","c2"},
-Apply[And, MapThread[#1[SQLColumn[#2],#3]&,{cond,cols,vals}]]
+cols,
+Apply[And, MapThread[#1[SQLColumn[#2],#3]&,{cFuns,cCols,cVals}]]
 ];
 
-selectSequenceStatRow[conn_,dataset_,N_,S_]:=selectRows[
+selectSequenceStatRow[conn_,dataset_,fullN_,S_]:=selectRows[
 conn,
-genTableName[dataset,N,Length[S]],
+genTableName[dataset,fullN,Length[S]],
+{"p","c1","c2"},
 Table[Equal,{Length[S]}],
 genColumnNames[Length[S]],
 S
 ];
 
-getSequenceStat[$Failed,_]:=Throw["Failed to select database rows."];
-getSequenceStat[{},1]:=0;
-getSequenceStat[{},2|3]:=Throw["Sequence doesn't exist."];
+getSequenceStat[{},_]:=Throw["Sequence doesn't exist."];
 getSequenceStat[rows_List,i_]:=If[
 Length[rows]==1,
 Flatten[rows][[i]],
 Throw["Fetched more than one row corresponding to a sequence."]
 ];
 
-cutSequences[s_,S_,N_]:={
-Take[s,-Min[Length[s],N]],
-Take[S,-Min[Length[S],N-Length[s]]]
+cutSequences[s_,S_,fullN_,]:={
+Take[s,-Min[Length[s],fullN]],
+Take[S,-Min[Length[S],fullN-Length[s]]]
 };
 
 makeList[x_List]:=x;
 makeList[x_]:={x};
 
-p[conn_,dataset_,N_,s_,S_]:=Module[{sCut,SCut},
-{sCut,SCut}=cutSequences[makeList[s],makeList[S],N];
-getSequenceStat[selectSequenceStatRow[conn,dataset,N,Join[SCut,sCut]],1]/getSequenceStat[selectSequenceStatRow[conn,dataset,N,SCut],1]
+p[conn_,dataset_,fullN_,s_,S_]:=
+Module[{sCut,SCut},
+{sCut,SCut}=cutSequences[makeList[s],makeList[S],fullN];
+getSequenceStat[selectSequenceStatRow[conn,dataset,fullN,Join[SCut,sCut]],1]/getSequenceStat[selectSequenceStatRow[conn,dataset,fullN,SCut],1]
 ];
 
-c[conn_,dataset_,N_,s_,S_,cIndex_]:=Module[{sCut,SCut,C1,P,c},
-{sCut,SCut}=cutSequences[makeList[s],makeList[S],N];
-{P,C1}=getSequenceStat[selectSequenceStatRow[conn,dataset,N,SCut],{1,2}];
-c=getSequenceStat[selectSequenceStatRow[conn,dataset,N,Join[SCut,sCut]],cIndex+1];
+c[conn_,dataset_,fullN_,s_,S_,cIndex_]:=Module[{sCut,SCut,C1,P,c},
+{sCut,SCut}=cutSequences[makeList[s],makeList[S],fullN];
+{P,C1}=getSequenceStat[selectSequenceStatRow[conn,dataset,fullN,SCut],{1,2}];
+c=getSequenceStat[selectSequenceStatRow[conn,dataset,fullN,Join[SCut,sCut]],cIndex+1];
 (c-C1)/P
 ];
 
-ByuCocaPQuery[host_,credentials_,dataset_,N_]:=
-Function[{s,S},p[genConnection[host,credentials],dataset,N,s,S]];
+getWord[{}]:=Null;
+getWord[rows_List]:=BlockRandom[
+SeedRandom[10];
+First[RandomChoice[rows]]
+];
 
-ByuCocaC1Query[host_,credentials_,dataset_,N_]:=
-Function[{s,S},c[genConnection[host,credentials],dataset,N,s,S,1]];
+(*getWord[rows_List]:=First[RandomChoice[rows]];*)
 
-ByuCocaC2Query[host_,credentials_,dataset_,N_]:=
-Function[{s,S},c[genConnection[host,credentials],dataset,N,s,S,2]];
+getSuperinterval[conn_,table_,col_,c1_,c2_]:=
+getWord[selectRows[
+conn,table,col,
+{LessEqual,GreaterEqual},{"c1","c2"},{c1,c2}
+]];
+
+getSubinterval[conn_,table_,col_,c1_,c2_]:=
+getWord[selectRows[
+conn,table,col,
+{GreaterEqual,LessEqual},{"c1","c2"},{c1,c2}
+]];
+
+getPreinterval[conn_,table_,col_,c1_]:=
+Flatten[selectRows[
+conn,table,{col,"c2"},
+{LessEqual,GreaterEqual},{"c1","c2"},{c1,c1}
+]];
+
+getPostinterval[conn_,table_,col_,c2_]:=
+Flatten[selectRows[
+conn,table,{col,"c1"},
+{LessEqual,GreaterEqual},{"c1","c2"},{c2,c2}
+]];
+
+checkPrevious[conn_,dataset_,fullN_,SCut_]:=
+checkPrevious[conn,dataset,fullN,SCut,selectSequenceStatRow[conn,dataset,fullN,SCut]];
+checkPrevious[conn_,dataset_,fullN_,SCut_,{}]:=
+checkPrevious[conn,dataset,fullN,Rest[SCut]];
+checkPrevious[conn_,dataset_,fullN_,SCut_,result_]:=result;
+
+\[Psi][conn_,dataset_,fullN_,v_,S_]:=
+Module[{table,col,SCut,P,C1,c1,c2,s,statRow},
+SCut=Take[S,-Min[Length[S],fullN-1]];
+table=genTableName[dataset,fullN,Length[SCut]+1];
+col="w"<>ToString[Length[SCut]+1];
+
+(* dirty hack *)
+
+statRow=checkPrevious[conn,dataset,fullN,SCut];
+Print[statRow];
+
+{P,C1}=getSequenceStat[statRow,{1,2}];
+{c1,c2}={Floor[C1+P*First[v]],Ceiling[C1+P*Total[v]]};
+
+s=getSuperinterval[conn,table,col,c1,c2];
+If[s==Null,s=getSubinterval[conn,table,col,c1,c2]];
+
+If[s==Null,Throw["Couldn't find a superinterval."]];
+
+Print[Append[S,s]];
+
+s
+]
+
+ByuCocaPQuery[host_,credentials_,dataset_,fullN_]:=
+Function[{s,S},p[genConnection[host,credentials],dataset,fullN,s,S]];
+
+ByuCocaC1Query[host_,credentials_,dataset_,fullN_]:=
+Function[{s,S},c[genConnection[host,credentials],dataset,fullN,s,S,1]];
+
+ByuCocaC2Query[host_,credentials_,dataset_,fullN_]:=
+Function[{s,S},c[genConnection[host,credentials],dataset,fullN,s,S,2]];
+
+ByuCocaSuperintervalQuery[host_,credentials_,dataset_,fullN_]:=
+Function[{v,S},\[Psi][genConnection[host,credentials],dataset,fullN,v,S]];
 
 End[]
 

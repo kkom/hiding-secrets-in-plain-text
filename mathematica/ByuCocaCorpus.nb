@@ -48,15 +48,15 @@ Cell[BoxData[{
   RowBox[{
    RowBox[{
     RowBox[{"genTableName", "[", 
-     RowBox[{"dataset_", ",", "N_", ",", "n_"}], "]"}], ":=", 
+     RowBox[{"dataset_", ",", "fullN_", ",", "n_"}], "]"}], ":=", 
     RowBox[{
      RowBox[{"genTableName", "[", 
-      RowBox[{"dataset", ",", "N", ",", "n"}], "]"}], "=", 
+      RowBox[{"dataset", ",", "fullN", ",", "n"}], "]"}], "=", 
      "\[IndentingNewLine]", 
      RowBox[{
      "\"\<byu_coca_corpus.\>\"", "<>", "\[IndentingNewLine]", "\"\<\\\"\>\"", 
       "<>", 
-      RowBox[{"ToString", "[", "N", "]"}], "<>", "\"\<gram_\>\"", "<>", 
+      RowBox[{"ToString", "[", "fullN", "]"}], "<>", "\"\<gram_\>\"", "<>", 
       "dataset", "<>", "\[IndentingNewLine]", "\"\<_\>\"", "<>", 
       RowBox[{"ToString", "[", "n", "]"}], "<>", "\"\<\\\"\>\""}]}]}], ";"}], 
   "\[IndentingNewLine]"}], "\[IndentingNewLine]", 
@@ -78,18 +78,17 @@ Cell[BoxData[{
    RowBox[{
     RowBox[{"selectRows", "[", 
      RowBox[{
-     "conn_", ",", "table_", ",", "cond_", ",", "cols_", ",", "vals_"}], 
-     "]"}], ":=", "\[IndentingNewLine]", 
+     "conn_", ",", "table_", ",", "cols_", ",", "cFuns_", ",", "cCols_", ",", 
+      "cVals_"}], "]"}], ":=", "\[IndentingNewLine]", 
     RowBox[{
      RowBox[{"selectRows", "[", 
-      RowBox[{"conn", ",", "table", ",", "cond", ",", "cols", ",", "vals"}], 
-      "]"}], "=", "\[IndentingNewLine]", 
+      RowBox[{
+      "conn", ",", "table", ",", "cols", ",", "cFuns", ",", "cCols", ",", 
+       "cVals"}], "]"}], "=", "\[IndentingNewLine]", 
      RowBox[{"SQLSelect", "[", "\[IndentingNewLine]", 
       RowBox[{
-      "conn", ",", "\[IndentingNewLine]", "table", ",", "\[IndentingNewLine]", 
-       RowBox[{"{", 
-        RowBox[{"\"\<p\>\"", ",", "\"\<c1\>\"", ",", "\"\<c2\>\""}], "}"}], 
-       ",", "\[IndentingNewLine]", 
+      "conn", ",", "\[IndentingNewLine]", "table", ",", "\[IndentingNewLine]",
+        "cols", ",", "\[IndentingNewLine]", 
        RowBox[{"Apply", "[", 
         RowBox[{"And", ",", " ", 
          RowBox[{"MapThread", "[", 
@@ -100,20 +99,23 @@ Cell[BoxData[{
               RowBox[{"SQLColumn", "[", "#2", "]"}], ",", "#3"}], "]"}], 
             "&"}], ",", 
            RowBox[{"{", 
-            RowBox[{"cond", ",", "cols", ",", "vals"}], "}"}]}], "]"}]}], 
+            RowBox[{"cFuns", ",", "cCols", ",", "cVals"}], "}"}]}], "]"}]}], 
         "]"}]}], "\[IndentingNewLine]", "]"}]}]}], ";"}], 
   "\[IndentingNewLine]"}], "\[IndentingNewLine]", 
  RowBox[{
   RowBox[{
    RowBox[{
     RowBox[{"selectSequenceStatRow", "[", 
-     RowBox[{"conn_", ",", "dataset_", ",", "N_", ",", "S_"}], "]"}], ":=", 
+     RowBox[{"conn_", ",", "dataset_", ",", "fullN_", ",", "S_"}], "]"}], ":=", 
     RowBox[{"selectRows", "[", "\[IndentingNewLine]", 
      RowBox[{"conn", ",", "\[IndentingNewLine]", 
       RowBox[{"genTableName", "[", 
-       RowBox[{"dataset", ",", "N", ",", 
+       RowBox[{"dataset", ",", "fullN", ",", 
         RowBox[{"Length", "[", "S", "]"}]}], "]"}], ",", 
       "\[IndentingNewLine]", 
+      RowBox[{"{", 
+       RowBox[{"\"\<p\>\"", ",", "\"\<c1\>\"", ",", "\"\<c2\>\""}], "}"}], 
+      ",", "\[IndentingNewLine]", 
       RowBox[{"Table", "[", 
        RowBox[{"Equal", ",", 
         RowBox[{"{", 
@@ -126,21 +128,8 @@ Cell[BoxData[{
  RowBox[{
   RowBox[{
    RowBox[{"getSequenceStat", "[", 
-    RowBox[{"$Failed", ",", "_"}], "]"}], ":=", 
-   RowBox[{"Throw", "[", "\"\<Failed to select database rows.\>\"", "]"}]}], 
-  ";"}], "\[IndentingNewLine]", 
- RowBox[{
-  RowBox[{
-   RowBox[{"getSequenceStat", "[", 
     RowBox[{
-     RowBox[{"{", "}"}], ",", "1"}], "]"}], ":=", "0"}], 
-  ";"}], "\[IndentingNewLine]", 
- RowBox[{
-  RowBox[{
-   RowBox[{"getSequenceStat", "[", 
-    RowBox[{
-     RowBox[{"{", "}"}], ",", 
-     RowBox[{"2", "|", "3"}]}], "]"}], ":=", 
+     RowBox[{"{", "}"}], ",", "_"}], "]"}], ":=", 
    RowBox[{"Throw", "[", "\"\<Sequence doesn't exist.\>\"", "]"}]}], 
   ";"}], "\[IndentingNewLine]", 
  RowBox[{
@@ -165,7 +154,7 @@ Cell[BoxData[{
   RowBox[{
    RowBox[{
     RowBox[{"cutSequences", "[", 
-     RowBox[{"s_", ",", "S_", ",", "N_"}], "]"}], ":=", 
+     RowBox[{"s_", ",", "S_", ",", "fullN_", ","}], "]"}], ":=", 
     RowBox[{"{", "\[IndentingNewLine]", 
      RowBox[{
       RowBox[{"Take", "[", 
@@ -173,15 +162,15 @@ Cell[BoxData[{
         RowBox[{"-", 
          RowBox[{"Min", "[", 
           RowBox[{
-           RowBox[{"Length", "[", "s", "]"}], ",", "N"}], "]"}]}]}], "]"}], 
-      ",", "\[IndentingNewLine]", 
+           RowBox[{"Length", "[", "s", "]"}], ",", "fullN"}], "]"}]}]}], 
+       "]"}], ",", "\[IndentingNewLine]", 
       RowBox[{"Take", "[", 
        RowBox[{"S", ",", 
         RowBox[{"-", 
          RowBox[{"Min", "[", 
           RowBox[{
            RowBox[{"Length", "[", "S", "]"}], ",", 
-           RowBox[{"N", "-", 
+           RowBox[{"fullN", "-", 
             RowBox[{"Length", "[", "s", "]"}]}]}], "]"}]}]}], "]"}]}], 
      "\[IndentingNewLine]", "}"}]}], ";"}], 
   "\[IndentingNewLine]"}], "\[IndentingNewLine]", 
@@ -199,8 +188,8 @@ Cell[BoxData[{
   RowBox[{
    RowBox[{
     RowBox[{"p", "[", 
-     RowBox[{"conn_", ",", "dataset_", ",", "N_", ",", "s_", ",", "S_"}], 
-     "]"}], ":=", 
+     RowBox[{"conn_", ",", "dataset_", ",", "fullN_", ",", "s_", ",", "S_"}], 
+     "]"}], ":=", "\[IndentingNewLine]", 
     RowBox[{"Module", "[", 
      RowBox[{
       RowBox[{"{", 
@@ -212,27 +201,27 @@ Cell[BoxData[{
         RowBox[{"cutSequences", "[", 
          RowBox[{
           RowBox[{"makeList", "[", "s", "]"}], ",", 
-          RowBox[{"makeList", "[", "S", "]"}], ",", "N"}], "]"}]}], ";", 
+          RowBox[{"makeList", "[", "S", "]"}], ",", "fullN"}], "]"}]}], ";", 
        "\[IndentingNewLine]", 
        FractionBox[
         RowBox[{"getSequenceStat", "[", 
          RowBox[{
           RowBox[{"selectSequenceStatRow", "[", 
-           RowBox[{"conn", ",", "dataset", ",", "N", ",", 
+           RowBox[{"conn", ",", "dataset", ",", "fullN", ",", 
             RowBox[{"Join", "[", 
              RowBox[{"SCut", ",", "sCut"}], "]"}]}], "]"}], ",", "1"}], "]"}], 
         RowBox[{"getSequenceStat", "[", 
          RowBox[{
           RowBox[{"selectSequenceStatRow", "[", 
-           RowBox[{"conn", ",", "dataset", ",", "N", ",", "SCut"}], "]"}], 
-          ",", "1"}], "]"}]]}]}], "\[IndentingNewLine]", "]"}]}], ";"}], 
+           RowBox[{"conn", ",", "dataset", ",", "fullN", ",", "SCut"}], "]"}],
+           ",", "1"}], "]"}]]}]}], "\[IndentingNewLine]", "]"}]}], ";"}], 
   "\[IndentingNewLine]"}], "\[IndentingNewLine]", 
  RowBox[{
   RowBox[{
    RowBox[{
     RowBox[{"c", "[", 
      RowBox[{
-     "conn_", ",", "dataset_", ",", "N_", ",", "s_", ",", "S_", ",", 
+     "conn_", ",", "dataset_", ",", "fullN_", ",", "s_", ",", "S_", ",", 
       "cIndex_"}], "]"}], ":=", 
     RowBox[{"Module", "[", 
      RowBox[{
@@ -246,7 +235,7 @@ Cell[BoxData[{
         RowBox[{"cutSequences", "[", 
          RowBox[{
           RowBox[{"makeList", "[", "s", "]"}], ",", 
-          RowBox[{"makeList", "[", "S", "]"}], ",", "N"}], "]"}]}], ";", 
+          RowBox[{"makeList", "[", "S", "]"}], ",", "fullN"}], "]"}]}], ";", 
        "\[IndentingNewLine]", 
        RowBox[{
         RowBox[{"{", 
@@ -254,8 +243,8 @@ Cell[BoxData[{
         RowBox[{"getSequenceStat", "[", 
          RowBox[{
           RowBox[{"selectSequenceStatRow", "[", 
-           RowBox[{"conn", ",", "dataset", ",", "N", ",", "SCut"}], "]"}], 
-          ",", 
+           RowBox[{"conn", ",", "dataset", ",", "fullN", ",", "SCut"}], "]"}],
+           ",", 
           RowBox[{"{", 
            RowBox[{"1", ",", "2"}], "}"}]}], "]"}]}], ";", 
        "\[IndentingNewLine]", 
@@ -263,7 +252,7 @@ Cell[BoxData[{
         RowBox[{"getSequenceStat", "[", 
          RowBox[{
           RowBox[{"selectSequenceStatRow", "[", 
-           RowBox[{"conn", ",", "dataset", ",", "N", ",", 
+           RowBox[{"conn", ",", "dataset", ",", "fullN", ",", 
             RowBox[{"Join", "[", 
              RowBox[{"SCut", ",", "sCut"}], "]"}]}], "]"}], ",", 
           RowBox[{"cIndex", "+", "1"}]}], "]"}]}], ";", "\[IndentingNewLine]", 
@@ -272,9 +261,212 @@ Cell[BoxData[{
    ";"}], "\[IndentingNewLine]"}], "\[IndentingNewLine]", 
  RowBox[{
   RowBox[{
+   RowBox[{"getWord", "[", 
+    RowBox[{"{", "}"}], "]"}], ":=", "Null"}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{
+    RowBox[{"getWord", "[", "rows_List", "]"}], ":=", 
+    RowBox[{"BlockRandom", "[", "\[IndentingNewLine]", 
+     RowBox[{
+      RowBox[{"SeedRandom", "[", "10", "]"}], ";", "\[IndentingNewLine]", 
+      RowBox[{"First", "[", 
+       RowBox[{"RandomChoice", "[", "rows", "]"}], "]"}]}], 
+     "\[IndentingNewLine]", "]"}]}], ";"}], "\[IndentingNewLine]", 
+  "\[IndentingNewLine]", 
+  RowBox[{"(*", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"getWord", "[", "rows_List", "]"}], ":=", 
+     RowBox[{"First", "[", 
+      RowBox[{"RandomChoice", "[", "rows", "]"}], "]"}]}], ";"}], "*)"}], 
+  "\[IndentingNewLine]"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{
+    RowBox[{"getSuperinterval", "[", 
+     RowBox[{"conn_", ",", "table_", ",", "col_", ",", "c1_", ",", "c2_"}], 
+     "]"}], ":=", "\[IndentingNewLine]", 
+    RowBox[{"getWord", "[", 
+     RowBox[{"selectRows", "[", "\[IndentingNewLine]", 
+      RowBox[{"conn", ",", "table", ",", "col", ",", "\[IndentingNewLine]", 
+       RowBox[{"{", 
+        RowBox[{"LessEqual", ",", "GreaterEqual"}], "}"}], ",", 
+       RowBox[{"{", 
+        RowBox[{"\"\<c1\>\"", ",", "\"\<c2\>\""}], "}"}], ",", 
+       RowBox[{"{", 
+        RowBox[{"c1", ",", "c2"}], "}"}]}], "\[IndentingNewLine]", "]"}], 
+     "]"}]}], ";"}], "\[IndentingNewLine]"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{
+    RowBox[{"getSubinterval", "[", 
+     RowBox[{"conn_", ",", "table_", ",", "col_", ",", "c1_", ",", "c2_"}], 
+     "]"}], ":=", "\[IndentingNewLine]", 
+    RowBox[{"getWord", "[", 
+     RowBox[{"selectRows", "[", "\[IndentingNewLine]", 
+      RowBox[{"conn", ",", "table", ",", "col", ",", "\[IndentingNewLine]", 
+       RowBox[{"{", 
+        RowBox[{"GreaterEqual", ",", "LessEqual"}], "}"}], ",", 
+       RowBox[{"{", 
+        RowBox[{"\"\<c1\>\"", ",", "\"\<c2\>\""}], "}"}], ",", 
+       RowBox[{"{", 
+        RowBox[{"c1", ",", "c2"}], "}"}]}], "\[IndentingNewLine]", "]"}], 
+     "]"}]}], ";"}], "\[IndentingNewLine]"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{
+    RowBox[{"getPreinterval", "[", 
+     RowBox[{"conn_", ",", "table_", ",", "col_", ",", "c1_"}], "]"}], ":=", 
+    "\[IndentingNewLine]", 
+    RowBox[{"Flatten", "[", 
+     RowBox[{"selectRows", "[", "\[IndentingNewLine]", 
+      RowBox[{"conn", ",", "table", ",", 
+       RowBox[{"{", 
+        RowBox[{"col", ",", "\"\<c2\>\""}], "}"}], ",", "\[IndentingNewLine]", 
+       RowBox[{"{", 
+        RowBox[{"LessEqual", ",", "GreaterEqual"}], "}"}], ",", 
+       RowBox[{"{", 
+        RowBox[{"\"\<c1\>\"", ",", "\"\<c2\>\""}], "}"}], ",", 
+       RowBox[{"{", 
+        RowBox[{"c1", ",", "c1"}], "}"}]}], "\[IndentingNewLine]", "]"}], 
+     "]"}]}], ";"}], "\[IndentingNewLine]"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{
+    RowBox[{"getPostinterval", "[", 
+     RowBox[{"conn_", ",", "table_", ",", "col_", ",", "c2_"}], "]"}], ":=", 
+    "\[IndentingNewLine]", 
+    RowBox[{"Flatten", "[", 
+     RowBox[{"selectRows", "[", "\[IndentingNewLine]", 
+      RowBox[{"conn", ",", "table", ",", 
+       RowBox[{"{", 
+        RowBox[{"col", ",", "\"\<c1\>\""}], "}"}], ",", "\[IndentingNewLine]", 
+       RowBox[{"{", 
+        RowBox[{"LessEqual", ",", "GreaterEqual"}], "}"}], ",", 
+       RowBox[{"{", 
+        RowBox[{"\"\<c1\>\"", ",", "\"\<c2\>\""}], "}"}], ",", 
+       RowBox[{"{", 
+        RowBox[{"c2", ",", "c2"}], "}"}]}], "\[IndentingNewLine]", "]"}], 
+     "]"}]}], ";"}], "\[IndentingNewLine]"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"checkPrevious", "[", 
+    RowBox[{"conn_", ",", "dataset_", ",", "fullN_", ",", "SCut_"}], "]"}], ":=",
+    "\[IndentingNewLine]", 
+   RowBox[{"checkPrevious", "[", 
+    RowBox[{"conn", ",", "dataset", ",", "fullN", ",", "SCut", ",", 
+     RowBox[{"selectSequenceStatRow", "[", 
+      RowBox[{"conn", ",", "dataset", ",", "fullN", ",", "SCut"}], "]"}]}], 
+    "]"}]}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"checkPrevious", "[", 
+    RowBox[{"conn_", ",", "dataset_", ",", "fullN_", ",", "SCut_", ",", 
+     RowBox[{"{", "}"}]}], "]"}], ":=", "\[IndentingNewLine]", 
+   RowBox[{"checkPrevious", "[", 
+    RowBox[{"conn", ",", "dataset", ",", "fullN", ",", 
+     RowBox[{"Rest", "[", "SCut", "]"}]}], "]"}]}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{
+    RowBox[{"checkPrevious", "[", 
+     RowBox[{
+     "conn_", ",", "dataset_", ",", "fullN_", ",", "SCut_", ",", "result_"}], 
+     "]"}], ":=", "result"}], ";"}], 
+  "\[IndentingNewLine]"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"\[Psi]", "[", 
+    RowBox[{"conn_", ",", "dataset_", ",", "fullN_", ",", "v_", ",", "S_"}], 
+    "]"}], ":=", "\[IndentingNewLine]", 
+   RowBox[{"Module", "[", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{
+      "table", ",", "col", ",", "SCut", ",", "P", ",", "C1", ",", "c1", ",", 
+       "c2", ",", "s", ",", "statRow"}], "}"}], ",", "\[IndentingNewLine]", 
+     RowBox[{
+      RowBox[{"SCut", "=", 
+       RowBox[{"Take", "[", 
+        RowBox[{"S", ",", 
+         RowBox[{"-", 
+          RowBox[{"Min", "[", 
+           RowBox[{
+            RowBox[{"Length", "[", "S", "]"}], ",", 
+            RowBox[{"fullN", "-", "1"}]}], "]"}]}]}], "]"}]}], ";", 
+      "\[IndentingNewLine]", 
+      RowBox[{"table", "=", 
+       RowBox[{"genTableName", "[", 
+        RowBox[{"dataset", ",", "fullN", ",", 
+         RowBox[{
+          RowBox[{"Length", "[", "SCut", "]"}], "+", "1"}]}], "]"}]}], ";", 
+      "\[IndentingNewLine]", 
+      RowBox[{"col", "=", 
+       RowBox[{"\"\<w\>\"", "<>", 
+        RowBox[{"ToString", "[", 
+         RowBox[{
+          RowBox[{"Length", "[", "SCut", "]"}], "+", "1"}], "]"}]}]}], ";", 
+      "\[IndentingNewLine]", "\[IndentingNewLine]", 
+      RowBox[{"(*", " ", 
+       RowBox[{"dirty", " ", "hack"}], " ", "*)"}], "\[IndentingNewLine]", 
+      "\[IndentingNewLine]", 
+      RowBox[{"statRow", "=", 
+       RowBox[{"checkPrevious", "[", 
+        RowBox[{"conn", ",", "dataset", ",", "fullN", ",", "SCut"}], "]"}]}], 
+      ";", "\[IndentingNewLine]", 
+      RowBox[{"Print", "[", "statRow", "]"}], ";", "\[IndentingNewLine]", 
+      "\[IndentingNewLine]", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{"P", ",", "C1"}], "}"}], "=", 
+       RowBox[{"getSequenceStat", "[", 
+        RowBox[{"statRow", ",", 
+         RowBox[{"{", 
+          RowBox[{"1", ",", "2"}], "}"}]}], "]"}]}], ";", 
+      "\[IndentingNewLine]", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{"c1", ",", "c2"}], "}"}], "=", 
+       RowBox[{"{", 
+        RowBox[{
+         RowBox[{"Floor", "[", 
+          RowBox[{"C1", "+", 
+           RowBox[{"P", "*", 
+            RowBox[{"First", "[", "v", "]"}]}]}], "]"}], ",", 
+         RowBox[{"Ceiling", "[", 
+          RowBox[{"C1", "+", 
+           RowBox[{"P", "*", 
+            RowBox[{"Total", "[", "v", "]"}]}]}], "]"}]}], "}"}]}], ";", 
+      "\[IndentingNewLine]", "\[IndentingNewLine]", 
+      RowBox[{"s", "=", 
+       RowBox[{"getSuperinterval", "[", 
+        RowBox[{"conn", ",", "table", ",", "col", ",", "c1", ",", "c2"}], 
+        "]"}]}], ";", "\[IndentingNewLine]", 
+      RowBox[{"If", "[", 
+       RowBox[{
+        RowBox[{"s", "\[Equal]", "Null"}], ",", 
+        RowBox[{"s", "=", 
+         RowBox[{"getSubinterval", "[", 
+          RowBox[{"conn", ",", "table", ",", "col", ",", "c1", ",", "c2"}], 
+          "]"}]}]}], "]"}], ";", "\[IndentingNewLine]", "\[IndentingNewLine]", 
+      RowBox[{"If", "[", 
+       RowBox[{
+        RowBox[{"s", "\[Equal]", "Null"}], ",", 
+        RowBox[{
+        "Throw", "[", "\"\<Couldn't find a superinterval.\>\"", "]"}]}], 
+       "]"}], ";", "\[IndentingNewLine]", "\[IndentingNewLine]", 
+      RowBox[{"Print", "[", 
+       RowBox[{"Append", "[", 
+        RowBox[{"S", ",", "s"}], "]"}], "]"}], ";", "\[IndentingNewLine]", 
+      "\[IndentingNewLine]", "s"}]}], "\[IndentingNewLine]", "]"}]}], 
+  "\[IndentingNewLine]"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
    RowBox[{
     RowBox[{"ByuCocaPQuery", "[", 
-     RowBox[{"host_", ",", "credentials_", ",", "dataset_", ",", "N_"}], 
+     RowBox[{"host_", ",", "credentials_", ",", "dataset_", ",", "fullN_"}], 
      "]"}], ":=", "\[IndentingNewLine]", 
     RowBox[{"Function", "[", 
      RowBox[{
@@ -284,13 +476,13 @@ Cell[BoxData[{
        RowBox[{
         RowBox[{"genConnection", "[", 
          RowBox[{"host", ",", "credentials"}], "]"}], ",", "dataset", ",", 
-        "N", ",", "s", ",", "S"}], "]"}]}], "]"}]}], ";"}], 
+        "fullN", ",", "s", ",", "S"}], "]"}]}], "]"}]}], ";"}], 
   "\[IndentingNewLine]"}], "\[IndentingNewLine]", 
  RowBox[{
   RowBox[{
    RowBox[{
     RowBox[{"ByuCocaC1Query", "[", 
-     RowBox[{"host_", ",", "credentials_", ",", "dataset_", ",", "N_"}], 
+     RowBox[{"host_", ",", "credentials_", ",", "dataset_", ",", "fullN_"}], 
      "]"}], ":=", "\[IndentingNewLine]", 
     RowBox[{"Function", "[", 
      RowBox[{
@@ -300,13 +492,13 @@ Cell[BoxData[{
        RowBox[{
         RowBox[{"genConnection", "[", 
          RowBox[{"host", ",", "credentials"}], "]"}], ",", "dataset", ",", 
-        "N", ",", "s", ",", "S", ",", "1"}], "]"}]}], "]"}]}], ";"}], 
+        "fullN", ",", "s", ",", "S", ",", "1"}], "]"}]}], "]"}]}], ";"}], 
   "\[IndentingNewLine]"}], "\[IndentingNewLine]", 
  RowBox[{
   RowBox[{
    RowBox[{
     RowBox[{"ByuCocaC2Query", "[", 
-     RowBox[{"host_", ",", "credentials_", ",", "dataset_", ",", "N_"}], 
+     RowBox[{"host_", ",", "credentials_", ",", "dataset_", ",", "fullN_"}], 
      "]"}], ":=", "\[IndentingNewLine]", 
     RowBox[{"Function", "[", 
      RowBox[{
@@ -316,17 +508,33 @@ Cell[BoxData[{
        RowBox[{
         RowBox[{"genConnection", "[", 
          RowBox[{"host", ",", "credentials"}], "]"}], ",", "dataset", ",", 
-        "N", ",", "s", ",", "S", ",", "2"}], "]"}]}], "]"}]}], ";"}], 
+        "fullN", ",", "s", ",", "S", ",", "2"}], "]"}]}], "]"}]}], ";"}], 
   "\[IndentingNewLine]"}], "\[IndentingNewLine]", 
  RowBox[{
-  RowBox[{"End", "[", "]"}], "\n"}], "\[IndentingNewLine]", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"ByuCocaSuperintervalQuery", "[", 
+     RowBox[{"host_", ",", "credentials_", ",", "dataset_", ",", "fullN_"}], 
+     "]"}], ":=", "\[IndentingNewLine]", 
+    RowBox[{"Function", "[", 
+     RowBox[{
+      RowBox[{"{", 
+       RowBox[{"v", ",", "S"}], "}"}], ",", 
+      RowBox[{"\[Psi]", "[", 
+       RowBox[{
+        RowBox[{"genConnection", "[", 
+         RowBox[{"host", ",", "credentials"}], "]"}], ",", "dataset", ",", 
+        "fullN", ",", "v", ",", "S"}], "]"}]}], "]"}]}], ";"}], 
+  "\[IndentingNewLine]"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"End", "[", "]"}], "\[IndentingNewLine]"}], "\n", 
  RowBox[{"EndPackage", "[", "]"}]}], "Input",
  InitializationCell->True]
 }, Open  ]]
 },
 AutoGeneratedPackage->Automatic,
 WindowSize->{866, 628},
-WindowMargins->{{Automatic, 4}, {Automatic, 0}},
+WindowMargins->{{Automatic, 61}, {Automatic, 27}},
 FrontEndVersion->"10.0 for Mac OS X x86 (32-bit, 64-bit Kernel) (October 16, \
 2013)",
 StyleDefinitions->"Default.nb"
