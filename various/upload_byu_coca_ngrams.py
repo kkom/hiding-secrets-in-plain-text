@@ -29,6 +29,8 @@ class ByuCocaNgramUpload:
             lambda x: "lower({x}) AS {x}".format(x=x), self.word_columns))
         self.lowercase_word_columns = ",".join(map(
             lambda x: "lower({})".format(x), self.word_columns))
+        self.q_condition = " AND ".join(map(
+            lambda x: "{} != 'q!'".format(x), self.word_columns)) 
         
         self.table = "{n}gram_{dataset}".format(**self.settings)
         
@@ -106,7 +108,9 @@ class ByuCocaNgramUpload:
             sum(p) OVER (ORDER BY i) - p AS c1,
             sum(p) OVER (ORDER BY i) AS c2
           FROM
-            "{schema}"."raw_{table}";
+            "{schema}"."raw_{table}"
+          WHERE
+            {q_condition};
             
           DROP TABLE "{schema}"."raw_{table}";
             
@@ -120,7 +124,8 @@ class ByuCocaNgramUpload:
                 word_column_defs=self.word_column_defs,
                 pos_column_defs=self.pos_column_defs,
                 word_column_names=self.word_column_names,
-                pos_column_names=self.pos_column_names
+                pos_column_names=self.pos_column_names,
+                q_condition=self.q_condition
             )
         )
         
