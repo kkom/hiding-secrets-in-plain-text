@@ -9,6 +9,8 @@ beginning or end of an n-gram.
 import argparse
 import string
 
+from unidecode import unidecode
+
 def update_ngrams(hist, N, text):
     """Write docs here."""
         
@@ -23,7 +25,7 @@ def update_ngrams(hist, N, text):
         for r in f:
             (b,k) = new_buffer()
             
-            for l in r.lower():
+            for l in unidecode(r).lower():
                 if l in all:
                     if l in whitespace:
                         l = ' '

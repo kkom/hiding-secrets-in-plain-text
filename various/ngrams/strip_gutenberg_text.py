@@ -5,6 +5,7 @@ e-book. Normally used for preparing the text to build a histogram of n-grams.
 
 import argparse
 import os
+import re
 
 # Define and use the parser
 parser = argparse.ArgumentParser(
@@ -16,6 +17,12 @@ parser.add_argument("-s", "--suffix", default=" (stripped)", required=False,
 parser.add_argument("input", nargs='+', help="source text files")
 args = parser.parse_args()
 
+# Prepare the patterns
+start = re.compile('^.*\*{3}start.*project.*gutenberg.*e.*book.*\*{3}.*$',
+    flags=re.IGNORECASE)
+end = re.compile('^.*\*{3}end.*project.*gutenberg.*e.*book.*\*{3}.*$',
+    flags=re.IGNORECASE)
+
 # Strip the start and end notices
 for text in args.input:
     (name, ext) = os.path.splitext(text)
@@ -23,11 +30,11 @@ for text in args.input:
     with open(text, 'r') as f1:
         with open("{n}{s}{e}".format(n=name,s=args.suffix,e=ext), 'w') as f2:
             for r in f1:
-                if r[:41] == "*** START OF THIS PROJECT GUTENBERG EBOOK":
+                if start.search(r):
                     break
             
             for r in f1:
-                if r[:39] == "*** END OF THIS PROJECT GUTENBERG EBOOK":
+                if end.search(r):
                     break
             
                 f2.write(r)
