@@ -169,8 +169,6 @@ Cell[BoxData[{
     RowBox[{"pLetters", "[", 
      RowBox[{"m", ",", "S"}], "]"}]}]}]}]}], "Input"],
 
-Cell[CellGroupData[{
-
 Cell[BoxData[
  RowBox[{
   RowBox[{"(*", 
@@ -235,7 +233,16 @@ Cell[BoxData[
     RowBox[{"*", " ", "Try", " ", "the", " ", "encoder"}], " ", "**)"}], 
    "\[IndentingNewLine]", 
    RowBox[{"string", "=", "\"\<HELLO WORLD.\>\""}], "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"encoder", "=", 
+     RowBox[{"RationalACEncoder", "[", 
+      RowBox[{"pLetters", ",", "c1Letters"}], "]"}]}], ";"}], 
    "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"decoder", "=", 
+     RowBox[{"RationalACDecoder", "[", 
+      RowBox[{"\[Psi]", ",", "stop", ",", "pLetters", ",", "c1Letters"}], 
+      "]"}]}], ";"}], "\[IndentingNewLine]", "\[IndentingNewLine]", 
    RowBox[{"v", "=", 
     RowBox[{"Module", "[", 
      RowBox[{
@@ -246,9 +253,8 @@ Cell[BoxData[
          RowBox[{"i", ",", 
           RowBox[{"Characters", "[", "string", "]"}]}], "]"}]}], " ", ";", 
        "\[IndentingNewLine]", 
-       RowBox[{"RationalACEncoder", "[", 
-        RowBox[{"S", ",", "pLetters", ",", "c1Letters"}], "]"}]}]}], 
-     "\[IndentingNewLine]", "]"}]}], "\[IndentingNewLine]", 
+       RowBox[{"encoder", "[", "S", "]"}]}]}], "\[IndentingNewLine]", "]"}]}],
+    "\[IndentingNewLine]", 
    RowBox[{"N", "[", 
     RowBox[{"-", 
      RowBox[{"Log", "[", 
@@ -264,29 +270,11 @@ Cell[BoxData[
       RowBox[{"{", "S", "}"}], ",", "\[IndentingNewLine]", 
       RowBox[{
        RowBox[{"S", "=", 
-        RowBox[{"RationalACDecoder", "[", 
-         RowBox[{
-         "v", ",", "\[Psi]", ",", "stop", ",", "pLetters", ",", "c1Letters"}],
-          "]"}]}], ";", "\[IndentingNewLine]", 
+        RowBox[{"decoder", "[", "v", "]"}]}], ";", "\[IndentingNewLine]", 
        RowBox[{"StringJoin", "[", 
         RowBox[{"Map", "[", 
          RowBox[{"l", ",", "S"}], "]"}], "]"}]}]}], "\[IndentingNewLine]", 
-     "]"}]}]}]}]], "Input"],
-
-Cell[BoxData["\<\"HELLO WORLD.\"\>"], "Output"],
-
-Cell[BoxData[
- RowBox[{"{", 
-  RowBox[{
-   FractionBox["660086028675680638021884609029453616468184", 
-    "2372235523435975074334766639593877534765625"], ",", 
-   FractionBox["15584350661031059361147904", 
-    "474447104687195014866953327918775506953125"]}], "}"}]], "Output"],
-
-Cell[BoxData["54.756998726003566`"], "Output"],
-
-Cell[BoxData["\<\"HELLO WORLD.\"\>"], "Output"]
-}, Open  ]]
+     "]"}]}]}]}]], "Input"]
 },
 WindowSize->{970, 665},
 WindowMargins->{{150, Automatic}, {0, Automatic}},
