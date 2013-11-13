@@ -21,10 +21,14 @@
 
 BeginPackage["ByuCocaCorpus`",{"DatabaseLink`"}]
 
-ByuCocaPQuery::usage="Later"
-ByuCocaC1Query::usage="Later"
-ByuCocaC2Query::usage="Later"
-ByuCocaSuperintervalQuery::usage="Later"
+ByuCocaPQuery::usage=
+"ByuCocaPQuery[host,credentials,dataset,NFull] generates a function p[s,S] which gives the probability of occurence of a sequence s given a preceding sequence S. The conditional or context S is automatically reduced until there is a match."
+ByuCocaC1Query::usage=
+"ByuCocaPQuery[host,credentials,dataset,NFull] generates a function c1[s,S] which gives the cumulative (excluding the event) probability of occurence of a sequence s given a preceding sequence S. The conditional or context S is automatically reduced until there is a match."
+ByuCocaC2Query::usage=
+"ByuCocaPQuery[host,credentials,dataset,NFull] generates a function c1[s,S] which gives the cumulative (including the event) probability of occurence of a sequence s given a preceding sequence S. The conditional or context S is automatically reduced until there is a match."
+ByuCocaMatchingIntervalQuery::usage=
+"ByuCocaMatchingIntervalQuery[host,credentials,dataset,NFull] generates a function matchingIntervalQuery[v,S] which given an interval v and a preceding sequence S returns the next decoded symbol s. The symbol corresponds to whichever of the current interval is found first: a superinterval, an arbitrary subinterval, or a pre/post interval (depending on which one contains a larger portion of the search interval)."
 
 Begin["`Private`"]
 
@@ -41,8 +45,7 @@ JDBC["PostgreSQL",host],
 
 genTableName[dataset_,NFull_,n_]:=genTableName[dataset,NFull,n]=
 "byu_coca_corpus."<>
-"\""<>ToString[NFull]<>"gram_"<>dataset<>
-"_"<>ToString[n]<>"\"";
+"\""<>ToString[NFull]<>"gram_"<>dataset<>"_"<>ToString[n]<>"\"";
 
 genColumnNames[n_]:=genColumnNames[n]=Map["w"<>ToString[#1]&,Range[n]];
 
@@ -57,7 +60,8 @@ Apply[And, MapThread[#1[SQLColumn[#2],#3]&,{cFuns,cCols,cVals}]]
 ];
 
 (* selects p, c1 & c2 columns for a given sequence *)
-selectSequenceStats[conn_,dataset_,NFull_,S_]:=selectRows[
+selectSequenceStats[conn_,dataset_,NFull_,S_]:=
+selectRows[
 conn,
 genTableName[dataset,NFull,Length[S]],
 {"p","c1","c2"},
@@ -66,7 +70,7 @@ genColumnNames[Length[S]],
 S
 ];
 
-(* gets specified statistics for a row assumed to represent a single sequence, throws exceptions if 0 or more than 1 row is given *)
+(* gets specified statistics for a row assumed to represent statistics of a single sequence, throws exceptions if isn't given a single row *)
 getSequenceStat[{},_]:=Throw[Null,"No rows"];
 getSequenceStat[rows_List,i_]:=If[
 Length[rows]==1,
@@ -74,13 +78,13 @@ Flatten[rows][[i]],
 Throw[Null,"Multiple rows"]
 ];
 
-(* cuts condition part of the query to match order of the model *)
+(* cuts conditional part of the query to match order of the model *)
 fitS[S_,NFull_]:=Take[S,-Min[Length[S],NFull-1]];
 fitS[s_,S_,NFull_]:=
 If[
 Length[s]>NFull,
 Throw[Null,"Cannot submit query of order higher than the model."],
-Take[S,-Min[Length[S],NFull]]
+Take[S,-Min[Length[S],NFull-Length[s]]]
 ]
 
 (* queries database directly for a conditional probability of a sequence, will throw exceptions if the respective n-grams aren't in the database *)
@@ -95,36 +99,37 @@ c=getSequenceStat[selectSequenceStats[conn,dataset,NFull,Join[S,s]],cIndex+1];
 ];
 
 (* queries database for a given conditional probability, reduces the context if necessary *)
-statQuery[conn_,dataset_,NFull_,s_,S_,rawFun_,cIndex_:Null]:=Catch[
+probabilityQuery[conn_,dataset_,NFull_,s_,S_,rawFun_,cIndex_:Null]:=
+probabilityQuery[conn,dataset,NFull,s,S,rawFun,cIndex]=
+Catch[
 rawFun[conn,dataset,NFull,s,S,cIndex],
 "No rows",
 Function[{value,tag},
 If[Length[S]==0,
 Throw[Null,"Cannot decrease order of the query condition any more."],
-statQuery[conn,dataset,NFull,s,Rest[S],rawFun,cIndex]
+probabilityQuery[conn,dataset,NFull,s,Rest[S],rawFun,cIndex]
 ]
 ]
 ];
 
 (* final conditional probability functions with automatically reduced context *)
-p[conn_,dataset_,NFull_,s_,S_]:=statQuery[conn,dataset,NFull,s,S,rawP,Null]
-c1[conn_,dataset_,NFull_,s_,S_]:=statQuery[conn,dataset,NFull,s,S,rawC,1]
-c2[conn_,dataset_,NFull_,s_,S_]:=statQuery[conn,dataset,NFull,s,S,rawC,2]
+p[conn_,dataset_,NFull_,s_,S_]:=probabilityQuery[conn,dataset,NFull,s,S,rawP,Null]
+c1[conn_,dataset_,NFull_,s_,S_]:=probabilityQuery[conn,dataset,NFull,s,S,rawC,1]
+c2[conn_,dataset_,NFull_,s_,S_]:=probabilityQuery[conn,dataset,NFull,s,S,rawC,2]
 
-(*getWord[{}]:=Null;
-getWord[rows_List]:=BlockRandom[
-SeedRandom[10];
-First[RandomChoice[rows]]
-];
+(* get the actual word from a super-/subinterval query *)
+(* select first row for consistency in the subinterval case, I am not completely sure of the repercussions of this arbitrary choice, it should be more elegant to select a deterministic random row based on for example S *)
+getIntervalWord[{}]:=Null;
+getIntervalWord[rows_List]:=First[First[rows]];
 
 getSuperinterval[conn_,table_,col_,c1_,c2_]:=
-getWord[selectRows[
+getIntervalWord[selectRows[
 conn,table,col,
 {LessEqual,GreaterEqual},{"c1","c2"},{c1,c2}
 ]];
 
 getSubinterval[conn_,table_,col_,c1_,c2_]:=
-getWord[selectRows[
+getIntervalWord[selectRows[
 conn,table,col,
 {GreaterEqual,LessEqual},{"c1","c2"},{c1,c2}
 ]];
@@ -132,46 +137,63 @@ conn,table,col,
 getPreinterval[conn_,table_,col_,c1_]:=
 Flatten[selectRows[
 conn,table,{col,"c2"},
-{LessEqual,GreaterEqual},{"c1","c2"},{c1,c1}
+{Less,Greater},{"c1","c2"},{c1,c1}
 ]];
 
 getPostinterval[conn_,table_,col_,c2_]:=
 Flatten[selectRows[
 conn,table,{col,"c1"},
-{LessEqual,GreaterEqual},{"c1","c2"},{c2,c2}
+{Less,Greater},{"c1","c2"},{c2,c2}
 ]];
 
-checkPrevious[conn_,dataset_,NFull_,SCut_]:=
-checkPrevious[conn,dataset,NFull,SCut,selectSequenceStats[conn,dataset,NFull,SCut]];
-checkPrevious[conn_,dataset_,NFull_,SCut_,{}]:=
-checkPrevious[conn,dataset,NFull,Rest[SCut]];
-checkPrevious[conn_,dataset_,NFull_,SCut_,result_]:=result;
+rawMatchingIntervalQuery[conn_,dataset_,NFull_,v_,S_]:=Module[
+{table,col,P,C1,C2,c1,c2,cMid,s},
 
-rawMatchingIntervalQuery[conn_,dataset_,NFull_,v_,S_]:=Module[{},
 table=genTableName[dataset,NFull,Length[S]+1];
-col="w"<>ToString[Length[SCut]+1];
+col="w"<>ToString[Length[S]+1];
 
-
-];
-
-\[Psi][conn_,dataset_,NFull_,v_,S_]:=Module[{table,col,P,C1,c1,c2,s,statRow},
-table=genTableName[dataset,NFull,Length[S]+1];
-col="w"<>ToString[Length[SCut]+1];
-
-statRow=checkPrevious[conn,dataset,NFull,S];
-Print[statRow];
-
-{P,C1}=getSequenceStat[statRow,{1,2}];
+(* calculate what cumulative frequencies range the new word needs to be around/inside/on the border of *)
+{P,C1,C2}=getSequenceStat[selectSequenceStats[conn,dataset,NFull,S],{1,2,3}];
 {c1,c2}={Floor[C1+P*First[v]],Ceiling[C1+P*Total[v]]};
 
-s=getSuperinterval[conn,table,col,c1,c2];
-If[s\[Equal]Null,s=getSubinterval[conn,table,col,c1,c2]];
-If[s\[Equal]Null,Throw["Couldn't find a superinterval."]];
+(* This step is needed when we are in the process of getting *inside* the interval.
 
-Print[Append[S,s]];
+Imagine the following situation
+
+1. Found the last superinterval around the scaled interval, no proper subinterval yet
+2. In order to find a subinterval first need to choose a pre/post interval
+3. Pre/post interval will partly span outside of the interval as well as at least half of its inside
+4. Notice that superinterval search will always fail in this case, but subinterval search might find a subinterval outside of the actual scaled interval
+5. For this reason we modify the search interval to be a maximal subinterval of the scaled interval
+*)
+{c1,c2}={Max[c1,C1],Min[c2,C2]};
+
+s=getSuperinterval[conn,table,col,c1,c2];
+If[s==Null,s=getSubinterval[conn,table,col,c1,c2]];
+If[s==Null,
+{s,cMid}=getPreinterval[conn,table,col,c1];
+If[cMid-c1<c2-cMid,
+{s,cMid}=getPostinterval[conn,table,col,c2];
+]
+];
+
+If[s==Null,Throw[Null,"Couldn't match an interval. This isn't supposed to happen - fix the program."]];
 
 s
-]*)
+];
+
+matchingIntervalQuery[conn_,dataset_,NFull_,v_,S_]:=
+matchingIntervalQuery[conn,dataset,NFull,v,S]=
+Catch[
+rawMatchingIntervalQuery[conn,dataset,NFull,v,S],
+"No rows",
+Function[{value,tag},
+If[Length[S]==0,
+Throw[Null,"Cannot decrease order of the interval matching context any more. This isn't supposed to happen - fix the program."],
+matchingIntervalQuery[conn,dataset,NFull,v,Rest[S]]
+]
+]
+];
 
 ByuCocaPQuery[host_,credentials_,dataset_,NFull_]:=Function[{s,S},
 p[
@@ -203,15 +225,15 @@ fitS[makeList[s],makeList[S],NFull]
 ]
 ];
 
-(*ByuCocaSuperintervalQuery[host_,credentials_,dataset_,NFull_]:=Function[{v,S},
-SuperintervalQuery[
+ByuCocaMatchingIntervalQuery[host_,credentials_,dataset_,NFull_]:=Function[{v,S},
+matchingIntervalQuery[
 genConnection[host,credentials],
 dataset,
 NFull,
 v,
 fitS[S,NFull]
 ]
-];*)
+];
 
 End[]
 
