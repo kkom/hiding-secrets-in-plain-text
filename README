@@ -18,3 +18,4 @@ http://iainhunter.wordpress.com/2012/11/08/howto-install-python3-pip3-tornado-on
 bitstring (http://pythonhosted.org/bitstring/)
 sympy (http://sympy.org/)
 twython (https://github.com/ryanmcgrath/twython)
+unidecode (https://pypi.python.org/pypi/Unidecode)
