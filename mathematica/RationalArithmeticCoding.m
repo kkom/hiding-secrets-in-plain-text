@@ -21,14 +21,14 @@
 
 BeginPackage["RationalArithmeticCoding`"]
 
-RationalACEncoder::usage="RationalACEncoder[S,p,c1] encodes a sequence of symbols S. Functions p[s,S] and c1[s,S] are conditional probability mass functions of the symbol s given preceding sequence S."
+RationalACEncoder::usage="RationalACEncoder[p,c1] generates a Rational Arithmetic Coding sequence encoder. Functions p[s,S] and c1[s,S] are conditional probability mass functions of the symbol s given preceding sequence S."
 
 RationalACDecoder::usage=
-"RationalACEncoder[v,\[Psi],stop,p,c1] decodes an interval v into a sequence of symbols. Function \[Psi][v,S] gives the next symbol given current rescaled interval and preceding symbols sequence S. Function stop[v,S] decides whether a sequence S with rescaled interval v should be terminated. Functions p[s,S] and c1[s,S] are conditional probability mass functions of the symbol s given preceding sequence S."
+"RationalACEncoder[matchingInterval,stop,p,c1] generates a Rational Arithmetic Coding interval decoder. Function \[Psi][v,S] gives the next symbol given current rescaled interval and preceding symbols sequence S. Function stop[v,S] decides whether a sequence S with rescaled interval v should be terminated. Functions p[s,S] and c1[s,S] are conditional probability mass functions of the symbol s given preceding sequence S."
 
 Begin["`Private`"]
 
-RationalACEncoder[sequence_,p_,c1_]:=Module[
+encoder[sequence_,p_,c1_]:=Module[
 {\[CapitalPhi]},
 \[CapitalPhi][{}]={0,1};
 \[CapitalPhi][S_]:=\[CapitalPhi][S]=\[CapitalPhi][Most[S]].({
@@ -38,7 +38,7 @@ RationalACEncoder[sequence_,p_,c1_]:=Module[
 \[CapitalPhi][sequence]
 ]
 
-RationalACDecoder[interval_,\[Psi]_,stop_,p_,c1_]:=Module[
+decoder[interval_,\[Psi]_,stop_,p_,c1_]:=Module[
 {\[CapitalPsi],rescale},
 rescale[v_,s_,S_]:={(First[v]-c1[s,S])/p[s,S],Last[v]/p[s,S]};
 \[CapitalPsi][v_]:=\[CapitalPsi][
@@ -53,6 +53,9 @@ S,
 ];
 \[CapitalPsi][interval]
 ]
+
+RationalACEncoder[p_,c1_]:=Function[{S},encoder[S,p,c1]]
+RationalACDecoder[matchingInterval_,stop_,p_,c1_]:=Function[{v},decoder[v,matchingInterval,stop,p,c1]]
 
 End[]
 
