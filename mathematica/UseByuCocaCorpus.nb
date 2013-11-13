@@ -1,0 +1,251 @@
+Notebook[{
+
+Cell[CellGroupData[{
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"SetDirectory", "[", 
+   RowBox[{"NotebookDirectory", "[", "]"}], "]"}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{"<<", "ByuCocaCorpus`"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"<<", "RationalArithmeticCoding`"}], "\[IndentingNewLine]", 
+  "\[IndentingNewLine]", 
+  RowBox[{"(*", " ", 
+   RowBox[{
+   "Set", " ", "up", " ", "the", " ", "BYU", " ", "ngram", " ", "language", 
+    " ", "model"}], " ", "*)"}]}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"host", "=", "\"\<localhost/steganography\>\""}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"credentials", "=", 
+   RowBox[{"{", 
+    RowBox[{"\"\<kk454\>\"", ",", "\"\<\>\""}], "}"}]}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"dataset", "=", "\"\<1m_sample\>\""}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"NFull", "=", "5"}], ";"}], 
+  "\[IndentingNewLine]"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"pBYU", "=", 
+   RowBox[{"ByuCocaPQuery", "[", 
+    RowBox[{"host", ",", "credentials", ",", "dataset", ",", "NFull"}], 
+    "]"}]}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"c1BYU", "=", 
+   RowBox[{"ByuCocaC1Query", "[", 
+    RowBox[{"host", ",", "credentials", ",", "dataset", ",", "NFull"}], 
+    "]"}]}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"c2BYU", "=", 
+   RowBox[{"ByuCocaC2Query", "[", 
+    RowBox[{"host", ",", "credentials", ",", "dataset", ",", "NFull"}], 
+    "]"}]}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"matchingIntervalBYU", "=", 
+    RowBox[{"ByuCocaMatchingIntervalQuery", "[", 
+     RowBox[{"host", ",", "credentials", ",", "dataset", ",", "NFull"}], 
+     "]"}]}], ";"}], "\[IndentingNewLine]", "\[IndentingNewLine]", 
+  RowBox[{"(*", " ", 
+   RowBox[{"Generate", " ", "the", " ", "RAC", " ", "coders"}], " ", 
+   "*)"}]}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"stop", "[", 
+    RowBox[{"v_", ",", "S_"}], "]"}], ":=", 
+   RowBox[{
+    RowBox[{"(", 
+     RowBox[{
+      RowBox[{
+       RowBox[{"First", "[", "v", "]"}], "\[LessEqual]", "0"}], "&&", 
+      RowBox[{
+       RowBox[{"Total", "[", "v", "]"}], "\[GreaterEqual]", "1"}]}], ")"}], "||", 
+    RowBox[{"MemberQ", "[", 
+     RowBox[{"S", ",", "\"\<q!\>\""}], "]"}]}]}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"encode", "=", 
+   RowBox[{"RationalACEncoder", "[", 
+    RowBox[{"pBYU", ",", "c1BYU"}], "]"}]}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"decode", "=", 
+    RowBox[{"RationalACDecoder", "[", 
+     RowBox[{"matchingIntervalBYU", ",", "stop", ",", "pBYU", ",", "c1BYU"}], 
+     "]"}]}], ";"}], "\[IndentingNewLine]", "\[IndentingNewLine]", 
+  RowBox[{"(*", " ", 
+   RowBox[{"Test", " ", "the", " ", "coders"}], " ", 
+   "*)"}]}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"testCoders", "[", "v1_", "]"}], ":=", 
+   RowBox[{"Module", "[", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{"v2", ",", "S2", ",", "S3", ",", "reprSequence"}], "}"}], ",", 
+     "\[IndentingNewLine]", 
+     RowBox[{
+      RowBox[{
+       RowBox[{"reprSequence", "[", "S_", "]"}], ":=", 
+       RowBox[{"StringJoin", "[", 
+        RowBox[{"Riffle", "[", 
+         RowBox[{"S", ",", "\"\< \>\""}], "]"}], "]"}]}], ";", 
+      "\[IndentingNewLine]", "\[IndentingNewLine]", 
+      RowBox[{"(*", " ", 
+       RowBox[{
+       "Come", " ", "up", " ", "with", " ", "an", " ", "arbitrary", " ", 
+        "interval", " ", "to", " ", "decode"}], " ", "*)"}], 
+      "\[IndentingNewLine]", 
+      RowBox[{"Print", "[", 
+       RowBox[{"{", 
+        RowBox[{"\"\<Source interval\>\"", ",", 
+         RowBox[{"N", "[", "v1", "]"}]}], "}"}], "]"}], ";", 
+      "\[IndentingNewLine]", 
+      RowBox[{"Print", "[", 
+       RowBox[{"{", 
+        RowBox[{"\"\<Source interval entropy\>\"", ",", 
+         RowBox[{"N", "[", 
+          RowBox[{"Log", "[", 
+           RowBox[{"2", ",", 
+            RowBox[{"Last", "[", "v1", "]"}]}], "]"}], "]"}]}], "}"}], "]"}], 
+      ";", "\[IndentingNewLine]", "\[IndentingNewLine]", 
+      RowBox[{"(*", " ", 
+       RowBox[{"Decode", " ", "interval", " ", "v1", " ", "into", " ", "S2"}],
+        " ", "*)"}], "\[IndentingNewLine]", 
+      RowBox[{"S2", "=", 
+       RowBox[{"decode", "[", "v1", "]"}]}], ";", "\[IndentingNewLine]", 
+      RowBox[{"Print", "[", 
+       RowBox[{"{", 
+        RowBox[{"\"\<Decoded sequence\>\"", ",", 
+         RowBox[{"reprSequence", "[", "S2", "]"}]}], "}"}], "]"}], ";", 
+      "\[IndentingNewLine]", "\[IndentingNewLine]", 
+      RowBox[{"(*", " ", 
+       RowBox[{
+        RowBox[{"Encode", " ", "S2"}], ",", " ", 
+        RowBox[{
+         RowBox[{"i", ".", "e", ".", " ", "check"}], " ", "what", " ", "is", 
+         " ", "the", " ", "exact", " ", "interval", " ", "v2", " ", 
+         "represented", " ", "by", " ", "S2"}]}], " ", "*)"}], 
+      "\[IndentingNewLine]", 
+      RowBox[{"v2", "=", 
+       RowBox[{"encode", "[", "S2", "]"}]}], ";", "\[IndentingNewLine]", 
+      RowBox[{"Print", "[", 
+       RowBox[{"{", 
+        RowBox[{"\"\<Decoded sequence interval\>\"", ",", 
+         RowBox[{"N", "[", "v2", "]"}]}], "}"}], "]"}], ";", 
+      "\[IndentingNewLine]", 
+      RowBox[{"Print", "[", 
+       RowBox[{"{", 
+        RowBox[{"\"\<Decoded sequence entropy\>\"", ",", 
+         RowBox[{"N", "[", 
+          RowBox[{"Log", "[", 
+           RowBox[{"2", ",", 
+            RowBox[{"Last", "[", "v2", "]"}]}], "]"}], "]"}]}], "}"}], "]"}], 
+      ";", "\[IndentingNewLine]", "\[IndentingNewLine]", 
+      RowBox[{"(*", " ", 
+       RowBox[{
+        RowBox[{
+        "Check", " ", "that", " ", "v2", " ", "is", " ", "a", " ", 
+         "subinterval", " ", "of", " ", "v1"}], ",", " ", 
+        RowBox[{
+         RowBox[{"i", ".", "e", ".", " ", "it"}], " ", "unambiguously", " ", 
+         "represents", " ", "it"}]}], " ", "*)"}], "\[IndentingNewLine]", 
+      RowBox[{"Print", "[", 
+       RowBox[{"{", 
+        RowBox[{
+        "\"\<Decoded sequence interval is a subinterval of the source \
+interval\>\"", ",", "\[IndentingNewLine]", 
+         RowBox[{
+          RowBox[{
+           RowBox[{"First", "[", "v2", "]"}], "\[GreaterEqual]", 
+           RowBox[{"First", "[", "v1", "]"}]}], "&&", 
+          RowBox[{
+           RowBox[{"Total", "[", "v2", "]"}], "\[LessEqual]", 
+           RowBox[{"Total", "[", "v1", "]"}]}]}]}], "}"}], "]"}], ";", 
+      "\[IndentingNewLine]", "\[IndentingNewLine]", 
+      RowBox[{"(*", " ", 
+       RowBox[{
+       "Decode", " ", "v2", " ", "into", " ", "S3", " ", "to", " ", "check", 
+        " ", "that", " ", "the", " ", "encoder", " ", "and", " ", "decoder", 
+        " ", "are", " ", "equivalent"}], " ", "*)"}], "\[IndentingNewLine]", 
+      RowBox[{"S3", "=", 
+       RowBox[{"decode", "[", "v2", "]"}]}], ";", "\[IndentingNewLine]", 
+      RowBox[{"Print", "[", 
+       RowBox[{"{", 
+        RowBox[{"\"\<Consistent coders\>\"", ",", 
+         RowBox[{"S3", "\[Equal]", "S2"}]}], "}"}], "\[IndentingNewLine]", 
+       "]"}], ";"}]}], "\[IndentingNewLine]", "]"}]}], "\[IndentingNewLine]", 
+  "\[IndentingNewLine]", 
+  RowBox[{"(*", " ", 
+   RowBox[{
+   "Example", " ", "test", " ", "of", " ", "rational", " ", "arithmetic", " ",
+     "coders", " ", "and", " ", "the", " ", "BYU", " ", "COCA", " ", 
+    "corpus"}], " ", "*)"}]}], "\[IndentingNewLine]", 
+ RowBox[{"testCoders", "[", 
+  RowBox[{"{", 
+   RowBox[{
+    FractionBox["324", "624"], ",", 
+    SuperscriptBox["2", 
+     RowBox[{"-", "256"}]]}], "}"}], "]"}]}], "Input"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{"\<\"Source interval\"\>", ",", 
+   RowBox[{"{", 
+    RowBox[{"0.5192307692307693`", ",", "8.636168555094445`*^-78"}], "}"}]}], 
+  "}"}]], "Print"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{"\<\"Source interval entropy\"\>", ",", 
+   RowBox[{"-", "256.`"}]}], "}"}]], "Print"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{"\<\"Decoded sequence\"\>", 
+   ",", "\<\"or maybe it was the other way around and around in a state of \
+shock and substance abuse at columbia university in new york city is not \
+likely to be able to get it all out on the table in the first place and i \
+will always be there for you and your children and your grandchildren being \
+out of touch with a number of his career as a journalist and as a source of \
+cheap labor assistants and childbirth educators in the field of health care \
+and education for all handicapped children who do n't have health insurance \
+or pay a penalty to the attacking team to accomplish that feat move out of \
+the way of life in the city of miami school of medicine and author of the \
+book of job and family services and\"\>"}], "}"}]], "Print"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{"\<\"Decoded sequence interval\"\>", ",", 
+   RowBox[{"{", 
+    RowBox[{"0.5192307692307693`", ",", "1.0842739751381463`*^-79"}], "}"}]}],
+   "}"}]], "Print"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{"\<\"Decoded sequence entropy\"\>", ",", 
+   RowBox[{"-", "262.31559015211155`"}]}], "}"}]], "Print"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{"\<\"Decoded sequence interval is a subinterval of the source \
+interval\"\>", ",", "True"}], "}"}]], "Print"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{"\<\"Consistent coders\"\>", ",", "True"}], "}"}]], "Print"]
+}, Open  ]]
+}, Open  ]]
+},
+WindowSize->{1064, 559},
+WindowMargins->{{11, Automatic}, {47, Automatic}},
+FrontEndVersion->"10.0 for Mac OS X x86 (32-bit, 64-bit Kernel) (October 16, \
+2013)",
+StyleDefinitions->"Default.nb"
+]
+
