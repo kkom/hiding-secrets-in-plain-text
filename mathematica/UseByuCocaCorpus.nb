@@ -107,11 +107,12 @@ Cell[BoxData[{
       RowBox[{"Print", "[", 
        RowBox[{"{", 
         RowBox[{"\"\<Source interval entropy\>\"", ",", 
-         RowBox[{"N", "[", 
-          RowBox[{"Log", "[", 
-           RowBox[{"2", ",", 
-            RowBox[{"Last", "[", "v1", "]"}]}], "]"}], "]"}]}], "}"}], "]"}], 
-      ";", "\[IndentingNewLine]", "\[IndentingNewLine]", 
+         RowBox[{"-", 
+          RowBox[{"N", "[", 
+           RowBox[{"Log", "[", 
+            RowBox[{"2", ",", 
+             RowBox[{"Last", "[", "v1", "]"}]}], "]"}], "]"}]}]}], "}"}], 
+       "]"}], ";", "\[IndentingNewLine]", "\[IndentingNewLine]", 
       RowBox[{"(*", " ", 
        RowBox[{"Decode", " ", "interval", " ", "v1", " ", "into", " ", "S2"}],
         " ", "*)"}], "\[IndentingNewLine]", 
@@ -140,11 +141,12 @@ Cell[BoxData[{
       RowBox[{"Print", "[", 
        RowBox[{"{", 
         RowBox[{"\"\<Decoded sequence entropy\>\"", ",", 
-         RowBox[{"N", "[", 
-          RowBox[{"Log", "[", 
-           RowBox[{"2", ",", 
-            RowBox[{"Last", "[", "v2", "]"}]}], "]"}], "]"}]}], "}"}], "]"}], 
-      ";", "\[IndentingNewLine]", "\[IndentingNewLine]", 
+         RowBox[{"-", 
+          RowBox[{"N", "[", 
+           RowBox[{"Log", "[", 
+            RowBox[{"2", ",", 
+             RowBox[{"Last", "[", "v2", "]"}]}], "]"}], "]"}]}]}], "}"}], 
+       "]"}], ";", "\[IndentingNewLine]", "\[IndentingNewLine]", 
       RowBox[{"(*", " ", 
        RowBox[{
         RowBox[{
@@ -208,28 +210,28 @@ Cell[BoxData[
 Cell[BoxData[
  RowBox[{"{", 
   RowBox[{"\<\"Decoded sequence\"\>", 
-   ",", "\<\"or maybe it was the other way around and around in a state of \
-shock and substance abuse at columbia university in new york city is not \
-likely to be able to get it all out on the table in the first place and i \
-will always be there for you and your children and your grandchildren being \
-out of touch with a number of his career as a journalist and as a source of \
-cheap labor assistants and childbirth educators in the field of health care \
-and education for all handicapped children who do n't have health insurance \
-or pay a penalty to the attacking team to accomplish that feat move out of \
-the way of life in the city of miami school of medicine and author of the \
-book of job and family services and\"\>"}], "}"}]], "Print"],
+   ",", "\<\"much more in tune with the spirit of the city in the early \
+morning hours and hours and hours and hours of tv a day goes by that we do \
+n't have a place to go for a ride on the back of the house was the only one \
+of the many things i want to say this is going to be the future of the city \
+of new orleans is going to be a major part of this is the fact that it comes \
+from the heart of the village and the relationship between the two of them \
+were in the presence of others in order to be effective and efficient use of \
+resources and the will to be smart about it because so many people have been \
+killed in the past three years has been in the past and are\"\>"}], 
+  "}"}]], "Print"],
 
 Cell[BoxData[
  RowBox[{"{", 
   RowBox[{"\<\"Decoded sequence interval\"\>", ",", 
    RowBox[{"{", 
-    RowBox[{"0.5192307692307693`", ",", "1.0842739751381463`*^-79"}], "}"}]}],
-   "}"}]], "Print"],
+    RowBox[{"0.5192307692307692`", ",", "8.201050295070654`*^-80"}], "}"}]}], 
+  "}"}]], "Print"],
 
 Cell[BoxData[
  RowBox[{"{", 
   RowBox[{"\<\"Decoded sequence entropy\"\>", ",", 
-   RowBox[{"-", "262.31559015211155`"}]}], "}"}]], "Print"],
+   RowBox[{"-", "262.7184389058366`"}]}], "}"}]], "Print"],
 
 Cell[BoxData[
  RowBox[{"{", 
@@ -243,7 +245,7 @@ Cell[BoxData[
 }, Open  ]]
 },
 WindowSize->{1064, 559},
-WindowMargins->{{11, Automatic}, {47, Automatic}},
+WindowMargins->{{107, Automatic}, {54, Automatic}},
 FrontEndVersion->"10.0 for Mac OS X x86 (32-bit, 64-bit Kernel) (October 16, \
 2013)",
 StyleDefinitions->"Default.nb"
