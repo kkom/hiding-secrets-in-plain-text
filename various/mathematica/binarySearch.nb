@@ -1,0 +1,78 @@
+Notebook[{
+
+Cell[CellGroupData[{
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{
+   RowBox[{"l", "=", 
+    RowBox[{"Sort", "[", 
+     RowBox[{"RandomInteger", "[", 
+      RowBox[{"10000", ",", "1000"}], "]"}], "]"}]}], ";"}], 
+  "\[IndentingNewLine]"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"binarySearch", "[", 
+   RowBox[{"l_", ",", "k_"}], "]"}], ":=", 
+  RowBox[{"binarySearch", "[", 
+   RowBox[{"l", ",", "k", ",", "1", ",", 
+    RowBox[{"Length", "[", "l", "]"}]}], "]"}]}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{
+    RowBox[{"binarySearch", "[", 
+     RowBox[{"l_", ",", "k_", ",", "imin_", ",", "imax_"}], "]"}], ":=", 
+    RowBox[{"If", "[", "\[IndentingNewLine]", 
+     RowBox[{
+      RowBox[{
+       RowBox[{"imin", "\[Equal]", "imax"}], "&&", 
+       RowBox[{
+        RowBox[{"l", "[", 
+         RowBox[{"[", "imin", "]"}], "]"}], "\[NotEqual]", "k"}]}], ",", 
+      "\[IndentingNewLine]", "None", ",", "\[IndentingNewLine]", 
+      RowBox[{"Module", "[", "\[IndentingNewLine]", 
+       RowBox[{
+        RowBox[{"{", 
+         RowBox[{"imid", ",", "lmid"}], "}"}], ",", "\[IndentingNewLine]", 
+        RowBox[{
+         RowBox[{"imid", "=", 
+          RowBox[{"Round", "[", 
+           FractionBox[
+            RowBox[{"imin", "+", "imax"}], "2"], "]"}]}], ";", 
+         "\[IndentingNewLine]", 
+         RowBox[{"lmid", "=", 
+          RowBox[{"l", "[", 
+           RowBox[{"[", "imid", "]"}], "]"}]}], ";", "\[IndentingNewLine]", 
+         RowBox[{"If", "[", 
+          RowBox[{
+           RowBox[{"k", "<", "lmid"}], ",", "\[IndentingNewLine]", 
+           RowBox[{"binarySearch", "[", 
+            RowBox[{"l", ",", "k", ",", "imin", ",", 
+             RowBox[{"Min", "[", 
+              RowBox[{"imid", ",", 
+               RowBox[{"imax", "-", "1"}]}], "]"}]}], "]"}], ",", 
+           "\[IndentingNewLine]", 
+           RowBox[{"If", "[", "\[IndentingNewLine]", 
+            RowBox[{
+             RowBox[{"k", ">", "lmid"}], ",", "\[IndentingNewLine]", 
+             RowBox[{"binarySearch", "[", 
+              RowBox[{"l", ",", "k", ",", 
+               RowBox[{"Max", "[", 
+                RowBox[{
+                 RowBox[{"imin", "+", "1"}], ",", "imid"}], "]"}], ",", 
+               "imax"}], "]"}], ",", "\[IndentingNewLine]", "imid"}], 
+            "\[IndentingNewLine]", "]"}]}], "\[IndentingNewLine]", "]"}]}]}], 
+       "\[IndentingNewLine]", "]"}]}], "\[IndentingNewLine]", "]"}]}], ";"}], 
+  "\[IndentingNewLine]"}], "\[IndentingNewLine]", 
+ RowBox[{"binarySearch", "[", 
+  RowBox[{"l", ",", 
+   RowBox[{"RandomChoice", "[", "l", "]"}]}], "]"}]}], "Input"],
+
+Cell[BoxData["486"], "Output"]
+}, Open  ]]
+},
+WindowSize->{740, 583},
+WindowMargins->{{20, Automatic}, {Automatic, 44}},
+FrontEndVersion->"10.0 for Mac OS X x86 (32-bit, 64-bit Kernel) (October 16, \
+2013)",
+StyleDefinitions->"Default.nb"
+]
+
