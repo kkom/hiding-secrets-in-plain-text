@@ -1,0 +1,56 @@
+Notebook[{
+Cell[BoxData[
+ RowBox[{"Do", "[", "\[IndentingNewLine]", "\[IndentingNewLine]", 
+  RowBox[{
+   RowBox[{"Scan", "[", "\[IndentingNewLine]", 
+    RowBox[{
+     RowBox[{
+      RowBox[{
+       RowBox[{
+        RowBox[{"ngram", "[", 
+         RowBox[{"i", ",", 
+          RowBox[{"First", "[", "#", "]"}]}], "]"}], "=", 
+        RowBox[{"Last", "[", "#", "]"}]}], ";"}], "&"}], ",", 
+     "\[IndentingNewLine]", 
+     RowBox[{"Import", "[", 
+      RowBox[{
+       RowBox[{"\"\</Users/kkom/Desktop/ngrams_\>\"", "<>", 
+        RowBox[{"ToString", "[", "i", "]"}]}], ",", "\"\<TSV\>\""}], "]"}]}], 
+    "\[IndentingNewLine]", "]"}], ",", "\[IndentingNewLine]", 
+   "\[IndentingNewLine]", 
+   RowBox[{"{", 
+    RowBox[{"i", ",", "3"}], "}"}]}], "\[IndentingNewLine]", "]"}]], "Input"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"ngram", "[", 
+  RowBox[{"2", ",", "\"\<ab\>\""}], "]"}]], "Input"],
+
+Cell[BoxData["1423"], "Output"]
+}, Open  ]],
+
+Cell[BoxData[
+ RowBox[{"(*", " ", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"count", "[", "ngram", "]"}], " ", "=", " ", 
+    RowBox[{
+    "number", " ", "of", " ", "times", " ", "a", " ", "certain", " ", "ngram",
+      " ", "was", " ", "seen"}]}], ",", " ", 
+   RowBox[{
+    RowBox[{"marginalCount", "[", "ngram", "]"}], " ", "=", " ", 
+    RowBox[{
+    "number", " ", "of", " ", "times", " ", "\"\<ngram + any letter\>\"", " ",
+      "was", " ", "seen"}]}]}], " ", "*)"}]], "Input"],
+
+Cell[BoxData[""], "Input"]
+},
+WindowSize->{740, 583},
+WindowMargins->{{132, Automatic}, {Automatic, 24}},
+ShowSelection->True,
+FrontEndVersion->"10.0 for Mac OS X x86 (32-bit, 64-bit Kernel) (October 16, \
+2013)",
+StyleDefinitions->"Default.nb"
+]
+
