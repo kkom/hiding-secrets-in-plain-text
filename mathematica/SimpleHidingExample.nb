@@ -1,0 +1,492 @@
+Notebook[{
+
+Cell[CellGroupData[{
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"SetDirectory", "[", 
+   RowBox[{"NotebookDirectory", "[", "]"}], "]"}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{"<<", "RationalArithmeticCoding`"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"<<", "ByuCocaCorpus`"}], "\[IndentingNewLine]", 
+  "\[IndentingNewLine]", 
+  RowBox[{"(*", " ", 
+   RowBox[{
+   "Create", " ", "a", " ", "very", " ", "simple", " ", "model", " ", "of", 
+    " ", "the", " ", "English", " ", "language"}], " ", 
+   "*)"}]}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"alphabet", "=", 
+   RowBox[{"{", 
+    RowBox[{
+    "\"\<A\>\"", ",", "\"\<B\>\"", ",", "\"\<C\>\"", ",", "\"\<D\>\"", ",", 
+     "\"\<E\>\"", ",", "\"\<F\>\"", ",", "\"\<G\>\"", ",", "\"\<H\>\"", ",", 
+     "\"\<I\>\"", ",", "\"\<J\>\"", ",", "\"\<K\>\"", ",", "\"\<L\>\"", ",", 
+     "\"\<M\>\"", ",", "\"\<N\>\"", ",", "\"\<O\>\"", ",", "\"\<P\>\"", ",", 
+     "\"\<Q\>\"", ",", "\"\<R\>\"", ",", "\"\<S\>\"", ",", "\"\<T\>\"", ",", 
+     "\"\<U\>\"", ",", "\"\<V\>\"", ",", "\"\<W\>\"", ",", "\"\<X\>\"", ",", 
+     "\"\<Y\>\"", ",", "\"\<Z\>\"", ",", "\"\< \>\"", ",", "\"\<.\>\""}], 
+    "}"}]}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"relativeFrequencies", "=", 
+    RowBox[{"{", 
+     RowBox[{
+     "653", ",", "125", ",", "223", ",", "328", ",", "1026", ",", "198", ",", 
+      "162", ",", "497", ",", "566", ",", "9", ",", "56", ",", "331", ",", 
+      "202", ",", "571", ",", "615", ",", "150", ",", "8", ",", "498", ",", 
+      "531", ",", "751", ",", "227", ",", "79", ",", "170", ",", "14", ",", 
+      "142", ",", "5", ",", "1828", ",", "100"}], "}"}]}], ";"}], 
+  "\[IndentingNewLine]", 
+  RowBox[{"(*", 
+   RowBox[{
+   "*", " ", "mapping", " ", "from", " ", "an", " ", "index", " ", "to", " ", 
+    "actual", " ", "letter"}], " ", "**)"}]}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"l", "[", "i_", "]"}], ":=", 
+   RowBox[{
+    RowBox[{"l", "[", "i", "]"}], "=", 
+    RowBox[{"alphabet", "[", 
+     RowBox[{"[", "i", "]"}], "]"}]}]}], "\[IndentingNewLine]", 
+  RowBox[{"(*", 
+   RowBox[{
+   "*", " ", "mapping", " ", "from", " ", "an", " ", "actual", " ", "letter", 
+    " ", "to", " ", "an", " ", "index"}], " ", 
+   "**)"}]}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{
+    RowBox[{"i", "[", "\"\<A\>\"", "]"}], "=", "1"}], ";", 
+   RowBox[{
+    RowBox[{"i", "[", "\"\<B\>\"", "]"}], "=", "2"}], ";", 
+   RowBox[{
+    RowBox[{"i", "[", "\"\<C\>\"", "]"}], "=", "3"}], ";", 
+   RowBox[{
+    RowBox[{"i", "[", "\"\<D\>\"", "]"}], "=", "4"}], ";", 
+   RowBox[{
+    RowBox[{"i", "[", "\"\<E\>\"", "]"}], "=", "5"}], ";", 
+   RowBox[{
+    RowBox[{"i", "[", "\"\<F\>\"", "]"}], "=", "6"}], ";", 
+   RowBox[{
+    RowBox[{"i", "[", "\"\<G\>\"", "]"}], "=", "7"}], ";", 
+   RowBox[{
+    RowBox[{"i", "[", "\"\<H\>\"", "]"}], "=", "8"}], ";", 
+   RowBox[{
+    RowBox[{"i", "[", "\"\<I\>\"", "]"}], "=", "9"}], ";", 
+   RowBox[{
+    RowBox[{"i", "[", "\"\<J\>\"", "]"}], "=", "10"}], ";", 
+   RowBox[{
+    RowBox[{"i", "[", "\"\<K\>\"", "]"}], "=", "11"}], ";", 
+   RowBox[{
+    RowBox[{"i", "[", "\"\<L\>\"", "]"}], "=", "12"}], ";", 
+   RowBox[{
+    RowBox[{"i", "[", "\"\<M\>\"", "]"}], "=", "13"}], ";", 
+   RowBox[{
+    RowBox[{"i", "[", "\"\<N\>\"", "]"}], "=", "14"}], ";", 
+   RowBox[{
+    RowBox[{"i", "[", "\"\<O\>\"", "]"}], "=", "15"}], ";", 
+   RowBox[{
+    RowBox[{"i", "[", "\"\<P\>\"", "]"}], "=", "16"}], ";", 
+   RowBox[{
+    RowBox[{"i", "[", "\"\<Q\>\"", "]"}], "=", "17"}], ";", 
+   RowBox[{
+    RowBox[{"i", "[", "\"\<R\>\"", "]"}], "=", "18"}], ";", 
+   RowBox[{
+    RowBox[{"i", "[", "\"\<S\>\"", "]"}], "=", "19"}], ";", 
+   RowBox[{
+    RowBox[{"i", "[", "\"\<T\>\"", "]"}], "=", "20"}], ";", 
+   RowBox[{
+    RowBox[{"i", "[", "\"\<U\>\"", "]"}], "=", "21"}], ";", 
+   RowBox[{
+    RowBox[{"i", "[", "\"\<V\>\"", "]"}], "=", "22"}], ";", 
+   RowBox[{
+    RowBox[{"i", "[", "\"\<W\>\"", "]"}], "=", "23"}], ";", 
+   RowBox[{
+    RowBox[{"i", "[", "\"\<X\>\"", "]"}], "=", "24"}], ";", 
+   RowBox[{
+    RowBox[{"i", "[", "\"\<Y\>\"", "]"}], "=", "25"}], ";", 
+   RowBox[{
+    RowBox[{"i", "[", "\"\<Z\>\"", "]"}], "=", "26"}], ";", 
+   RowBox[{
+    RowBox[{"i", "[", "\"\< \>\"", "]"}], "=", "27"}], ";", 
+   RowBox[{
+    RowBox[{"i", "[", "\"\<.\>\"", "]"}], "=", "28"}], ";"}], 
+  "\[IndentingNewLine]", 
+  RowBox[{"(*", 
+   RowBox[{
+   "*", " ", "only", " ", "\"\<.\>\"", " ", "is", " ", "a", " ", "stop", " ", 
+    "symbol"}], " ", "**)"}]}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"StopSymbolQ", "[", "i_", "]"}], ":=", 
+   RowBox[{
+    RowBox[{"StopSymbolQ", "[", "i", "]"}], "=", 
+    RowBox[{
+     RowBox[{"alphabet", "[", 
+      RowBox[{"[", "i", "]"}], "]"}], "\[Equal]", "\"\<.\>\""}]}]}], 
+  "\[IndentingNewLine]", 
+  RowBox[{"(*", 
+   RowBox[{
+   "*", " ", "probabilities", " ", "of", " ", "different", " ", "symbols", 
+    " ", "as", " ", "rational", " ", "numbers"}], " ", 
+   "**)"}]}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"pLetters", "[", 
+    RowBox[{"m_", ",", "S_"}], "]"}], ":=", 
+   RowBox[{
+    RowBox[{"pLetters", "[", 
+     RowBox[{"m", ",", "S"}], "]"}], "=", 
+    RowBox[{
+     RowBox[{"relativeFrequencies", "[", 
+      RowBox[{"[", "m", "]"}], "]"}], "/", 
+     RowBox[{"Total", "[", "relativeFrequencies", "]"}]}]}]}], 
+  "\[IndentingNewLine]", 
+  RowBox[{"(*", 
+   RowBox[{
+   "*", " ", "cumulative", " ", "probabilities", " ", "of", " ", "different", 
+    " ", "symbols"}], " ", "**)"}]}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"c1Letters", "[", 
+    RowBox[{"1", ",", "S_"}], "]"}], ":=", "0"}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"c1Letters", "[", 
+   RowBox[{"m_", ",", "S_"}], "]"}], ":=", 
+  RowBox[{
+   RowBox[{"c1Letters", "[", 
+    RowBox[{"m", ",", "S"}], "]"}], "=", 
+   RowBox[{
+    RowBox[{"c1Letters", "[", 
+     RowBox[{
+      RowBox[{"m", "-", "1"}], ",", "S"}], "]"}], "+", 
+    RowBox[{"pLetters", "[", 
+     RowBox[{
+      RowBox[{"m", "-", "1"}], ",", "S"}], "]"}]}]}]}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"c2Letters", "[", 
+    RowBox[{"m_", ",", "S_"}], "]"}], ":=", 
+   RowBox[{
+    RowBox[{"c2Letters", "[", 
+     RowBox[{"m", ",", "S"}], "]"}], "=", 
+    RowBox[{
+     RowBox[{"c1Letters", "[", 
+      RowBox[{"m", ",", "S"}], "]"}], "+", 
+     RowBox[{"pLetters", "[", 
+      RowBox[{"m", ",", "S"}], "]"}]}]}]}], "\[IndentingNewLine]", 
+  "\[IndentingNewLine]", 
+  RowBox[{"(*", 
+   RowBox[{
+   "*", " ", "Define", " ", "necessary", " ", "letter", " ", "encoders"}], 
+   " ", "**)"}]}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"letterMatchingInterval", "[", 
+    RowBox[{"v_", ",", "S_"}], "]"}], ":=", 
+   RowBox[{
+    RowBox[{"letterMatchingInterval", "[", 
+     RowBox[{"v", ",", "S"}], "]"}], "=", 
+    RowBox[{"First", "[", 
+     RowBox[{"Select", "[", " ", "\[IndentingNewLine]", 
+      RowBox[{"(*", 
+       RowBox[{
+       "*", " ", "for", " ", "all", " ", "symbol", " ", "indices", " ", "#1", 
+        " ", "starting", " ", "from", " ", "1"}], " ", "**)"}], 
+      "\[IndentingNewLine]", 
+      RowBox[{
+       RowBox[{"Range", "[", 
+        RowBox[{"Length", "[", "alphabet", "]"}], "]"}], ",", 
+       "\[IndentingNewLine]", 
+       RowBox[{"(*", 
+        RowBox[{
+        "*", " ", "select", " ", "those", " ", "which", " ", "are", " ", "a", 
+         " ", "superinterval", " ", "of", " ", "the", " ", "current", " ", 
+         "interval"}], " ", "**)"}], "\[IndentingNewLine]", 
+       RowBox[{
+        RowBox[{
+         RowBox[{
+          RowBox[{"c1Letters", "[", 
+           RowBox[{"#1", ",", "S"}], "]"}], "\[LessEqual]", 
+          RowBox[{"First", "[", "v", "]"}]}], "&&", 
+         RowBox[{
+          RowBox[{"Total", "[", "v", "]"}], "\[LessEqual]", 
+          RowBox[{"c2Letters", "[", 
+           RowBox[{"#1", ",", "S"}], "]"}]}]}], "&"}], ",", 
+       "\[IndentingNewLine]", 
+       RowBox[{"(*", 
+        RowBox[{
+        "*", " ", "choose", " ", "only", " ", "the", " ", "first", " ", 
+         "match"}], " ", "**)"}], "\[IndentingNewLine]", "1"}], " ", 
+      "\[IndentingNewLine]", "]"}], "\[IndentingNewLine]", "]"}]}]}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"letterStop", "[", 
+    RowBox[{"v_", ",", "S_"}], "]"}], ":=", 
+   RowBox[{"If", "[", "\[IndentingNewLine]", 
+    RowBox[{
+     RowBox[{
+      RowBox[{
+       RowBox[{"First", "[", "v", "]"}], "<", "0"}], "||", 
+      RowBox[{
+       RowBox[{"Total", "[", "v", "]"}], ">", "1"}]}], ",", 
+     "\[IndentingNewLine]", 
+     RowBox[{"Throw", "[", "\"\<Could not decode the interval.\>\"", "]"}], 
+     ",", "\[IndentingNewLine]", 
+     RowBox[{"StopSymbolQ", "[", 
+      RowBox[{"Last", "[", "S", "]"}], "]"}]}], "\[IndentingNewLine]", 
+    "]"}]}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"letterEncoder", "=", 
+   RowBox[{"RationalACEncoder", "[", 
+    RowBox[{"pLetters", ",", "c1Letters"}], "]"}]}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"letterDecoder", "=", 
+    RowBox[{"RationalACDecoder", "[", 
+     RowBox[{
+     "letterMatchingInterval", ",", "letterStop", ",", "pLetters", ",", 
+      "c1Letters"}], "]"}]}], ";"}], "\[IndentingNewLine]", 
+  "\[IndentingNewLine]", 
+  RowBox[{"(*", " ", 
+   RowBox[{
+   "Set", " ", "up", " ", "the", " ", "BYU", " ", "ngram", " ", "language", 
+    " ", "model"}], " ", "*)"}]}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"host", "=", "\"\<localhost/steganography\>\""}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"credentials", "=", 
+   RowBox[{"{", 
+    RowBox[{"\"\<kk454\>\"", ",", "\"\<\>\""}], "}"}]}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"dataset", "=", "\"\<1m_sample\>\""}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"NFull", "=", "5"}], ";"}], 
+  "\[IndentingNewLine]"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"pBYU", "=", 
+   RowBox[{"ByuCocaPQuery", "[", 
+    RowBox[{"host", ",", "credentials", ",", "dataset", ",", "NFull"}], 
+    "]"}]}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"c1BYU", "=", 
+   RowBox[{"ByuCocaC1Query", "[", 
+    RowBox[{"host", ",", "credentials", ",", "dataset", ",", "NFull"}], 
+    "]"}]}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"c2BYU", "=", 
+   RowBox[{"ByuCocaC2Query", "[", 
+    RowBox[{"host", ",", "credentials", ",", "dataset", ",", "NFull"}], 
+    "]"}]}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"matchingIntervalBYU", "=", 
+    RowBox[{"ByuCocaMatchingIntervalQuery", "[", 
+     RowBox[{"host", ",", "credentials", ",", "dataset", ",", "NFull"}], 
+     "]"}]}], ";"}], "\[IndentingNewLine]", "\[IndentingNewLine]", 
+  RowBox[{"(*", " ", 
+   RowBox[{"Generate", " ", "the", " ", "RAC", " ", "coders"}], " ", 
+   "*)"}]}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"stegoStop", "[", 
+    RowBox[{"v_", ",", "S_"}], "]"}], ":=", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"First", "[", "v", "]"}], "\[LessEqual]", "0"}], "&&", 
+    RowBox[{
+     RowBox[{"Total", "[", "v", "]"}], "\[GreaterEqual]", "1"}]}]}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"stegoEncode", "=", 
+   RowBox[{"RationalACEncoder", "[", 
+    RowBox[{"pBYU", ",", "c1BYU"}], "]"}]}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"stegoDecode", "=", 
+    RowBox[{"RationalACDecoder", "[", 
+     RowBox[{
+     "matchingIntervalBYU", ",", "stegoStop", ",", "pBYU", ",", "c1BYU"}], 
+     "]"}]}], ";"}], "\[IndentingNewLine]", "\[IndentingNewLine]", 
+  RowBox[{"(*", 
+   RowBox[{
+   "*", " ", "Come", " ", "up", " ", "with", " ", "a", " ", "secret", " ", 
+    "sequence"}], " ", "**)"}]}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"secretText", "=", "\"\<HELLO WORLD MY NAME IS KONRAD.\>\""}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"Print", "[", 
+   RowBox[{"{", 
+    RowBox[{"\"\<Secret text\>\"", ",", "secretText"}], "}"}], "]"}], 
+  "\[IndentingNewLine]", "\[IndentingNewLine]", 
+  RowBox[{"(*", 
+   RowBox[{
+   "*", " ", "Calculate", " ", "the", " ", "interval", " ", "corresponding", 
+    " ", "to", " ", "a", " ", "sequence"}], " ", 
+   "**)"}]}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"secretV", "=", 
+   RowBox[{"letterEncoder", "[", 
+    RowBox[{"Map", "[", 
+     RowBox[{"i", ",", 
+      RowBox[{"Characters", "[", "secretText", "]"}]}], "]"}], "]"}]}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{"Print", "[", 
+  RowBox[{"{", 
+   RowBox[{"\"\<Secret text interval\>\"", ",", 
+    RowBox[{"N", "[", "secretV", "]"}]}], "}"}], "]"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"Print", "[", 
+   RowBox[{"{", 
+    RowBox[{"\"\<Secret text entropy\>\"", ",", 
+     RowBox[{"N", "[", 
+      RowBox[{"-", 
+       RowBox[{"Log", "[", 
+        RowBox[{"2", ",", 
+         RowBox[{"Last", "[", "secretV", "]"}]}], "]"}]}], "]"}]}], "}"}], 
+   "]"}], "\[IndentingNewLine]", "\[IndentingNewLine]", 
+  RowBox[{"(*", 
+   RowBox[{
+   "*", " ", "Map", " ", "the", " ", "secret", " ", "interval", " ", "onto", 
+    " ", "the", " ", "English", " ", "language"}], " ", 
+   "**)"}]}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"stegoText", "=", 
+   RowBox[{"stegoDecode", "[", "secretV", "]"}]}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"Print", "[", 
+   RowBox[{"{", 
+    RowBox[{"\"\<Stego text\>\"", ",", "stegoText"}], "}"}], "]"}], 
+  "\[IndentingNewLine]", "\[IndentingNewLine]", 
+  RowBox[{"(*", 
+   RowBox[{
+   "*", " ", "Map", " ", "stegotext", " ", "onto", " ", "an", " ", 
+    "interval"}], " ", "**)"}]}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"stegoV", "=", 
+   RowBox[{"stegoEncode", "[", "stegoText", "]"}]}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{"Print", "[", 
+  RowBox[{"{", 
+   RowBox[{"\"\<Stego text interval\>\"", ",", 
+    RowBox[{"N", "[", "stegoV", "]"}]}], "}"}], "]"}], "\[IndentingNewLine]", 
+
+ RowBox[{
+  RowBox[{"Print", "[", 
+   RowBox[{"{", 
+    RowBox[{"\"\<Stego text entropy\>\"", ",", 
+     RowBox[{"N", "[", 
+      RowBox[{"-", 
+       RowBox[{"Log", "[", 
+        RowBox[{"2", ",", 
+         RowBox[{"Last", "[", "stegoV", "]"}]}], "]"}]}], "]"}]}], "}"}], 
+   "]"}], "\[IndentingNewLine]", "\[IndentingNewLine]", 
+  RowBox[{"(*", 
+   RowBox[{
+   "*", " ", "Get", " ", "back", " ", "the", " ", "secret", " ", "text", " ", 
+    "from", " ", "the", " ", "stego", " ", "interval"}], " ", 
+   "**)"}]}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"secretSequenceDecoded", "=", 
+   RowBox[{"letterDecoder", "[", "stegoV", "]"}]}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"secretTextDecoded", "=", 
+   RowBox[{"StringJoin", "[", 
+    RowBox[{"Map", "[", 
+     RowBox[{"l", ",", "secretSequenceDecoded"}], "]"}], "]"}]}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{"Print", "[", 
+  RowBox[{"{", 
+   RowBox[{"\"\<Secret text decoded\>\"", ",", "secretTextDecoded"}], "}"}], 
+  "]"}], "\[IndentingNewLine]"}], "Input"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{"\<\"Secret text\"\>", 
+   ",", "\<\"HELLO WORLD MY NAME IS KONRAD.\"\>"}], "}"}]], "Print"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{"\<\"Secret text interval\"\>", ",", 
+   RowBox[{"{", 
+    RowBox[{"0.278254845336606`", ",", "4.561124796594565`*^-40"}], "}"}]}], 
+  "}"}]], "Print"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{"\<\"Secret text entropy\"\>", ",", "130.68773415128766`"}], 
+  "}"}]], "Print"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{"\<\"Stego text\"\>", ",", 
+   RowBox[{"{", 
+    RowBox[{"\<\"had\"\>", ",", "\<\"already\"\>", ",", "\<\"taken\"\>", 
+     ",", "\<\"care\"\>", ",", "\<\"of\"\>", ",", "\<\"by\"\>", 
+     ",", "\<\"his\"\>", ",", "\<\"mother\"\>", ",", "\<\"and\"\>", 
+     ",", "\<\"father\"\>", ",", "\<\"were\"\>", ",", "\<\"killed\"\>", 
+     ",", "\<\"in\"\>", ",", "\<\"a\"\>", ",", "\<\"single\"\>", 
+     ",", "\<\"day\"\>", ",", "\<\"on\"\>", ",", "\<\"the\"\>", 
+     ",", "\<\"way\"\>", ",", "\<\"to\"\>", ",", "\<\"the\"\>", 
+     ",", "\<\"golden\"\>", ",", "\<\"gate\"\>", ",", "\<\"bridge\"\>", 
+     ",", "\<\"and\"\>", ",", "\<\"the\"\>", ",", "\<\"answer\"\>", 
+     ",", "\<\"to\"\>", ",", "\<\"that\"\>", ",", "\<\"question\"\>", 
+     ",", "\<\"lies\"\>", ",", "\<\"in\"\>", ",", "\<\"the\"\>", 
+     ",", "\<\"ability\"\>", ",", "\<\"to\"\>", ",", "\<\"use\"\>", 
+     ",", "\<\"language\"\>", ",", "\<\"that\"\>", ",", "\<\"was\"\>", 
+     ",", "\<\"used\"\>", ",", "\<\"in\"\>", ",", "\<\"the\"\>", 
+     ",", "\<\"analysis\"\>", ",", "\<\"of\"\>", ",", "\<\"the\"\>", 
+     ",", "\<\"data\"\>", ",", "\<\"was\"\>", ",", "\<\"analyzed\"\>", 
+     ",", "\<\"using\"\>", ",", "\<\"the\"\>", ",", "\<\"statistical\"\>", 
+     ",", "\<\"package\"\>", ",", "\<\"for\"\>", ",", "\<\"the\"\>", 
+     ",", "\<\"social\"\>", ",", "\<\"and\"\>", ",", "\<\"political\"\>", 
+     ",", "\<\"implications\"\>", ",", "\<\"of\"\>", ",", "\<\"the\"\>", 
+     ",", "\<\"findings\"\>", ",", "\<\"for\"\>", ",", "\<\"the\"\>", 
+     ",", "\<\"difference\"\>", ",", "\<\"between\"\>", ",", "\<\"the\"\>", 
+     ",", "\<\"mean\"\>", ",", "\<\"achievement\"\>", ",", "\<\"scores\"\>", 
+     ",", "\<\"of\"\>", ",", "\<\"students\"\>", ",", "\<\"who\"\>", 
+     ",", "\<\"participated\"\>", ",", "\<\"in\"\>", ",", "\<\"the\"\>", 
+     ",", "\<\"study\"\>", ",", "\<\"at\"\>", ",", "\<\"any\"\>", 
+     ",", "\<\"time\"\>", ",", "\<\"without\"\>", ",", "\<\"penalty\"\>", 
+     ",", "\<\"of\"\>", ",", "\<\"six\"\>", ",", "\<\"months\"\>", 
+     ",", "\<\"in\"\>", ",", "\<\"jail\"\>", ",", "\<\"for\"\>", 
+     ",", "\<\"civil\"\>"}], "}"}]}], "}"}]], "Print"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{"\<\"Stego text interval\"\>", ",", 
+   RowBox[{"{", 
+    RowBox[{"0.278254845336606`", ",", "1.050944725700942`*^-40"}], "}"}]}], 
+  "}"}]], "Print"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{"\<\"Stego text entropy\"\>", ",", "132.8054370025542`"}], 
+  "}"}]], "Print"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{"\<\"Secret text decoded\"\>", 
+   ",", "\<\"HELLO WORLD MY NAME IS KONRAD.\"\>"}], "}"}]], "Print"]
+}, Open  ]]
+}, Open  ]]
+},
+WindowSize->{970, 665},
+WindowMargins->{{87, Automatic}, {Automatic, 0}},
+FrontEndVersion->"10.0 for Mac OS X x86 (32-bit, 64-bit Kernel) (October 16, \
+2013)",
+StyleDefinitions->"Default.nb"
+]
+
