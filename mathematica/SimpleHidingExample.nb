@@ -320,7 +320,7 @@ Cell[BoxData[{
    "*", " ", "Come", " ", "up", " ", "with", " ", "a", " ", "secret", " ", 
     "sequence"}], " ", "**)"}]}], "\[IndentingNewLine]", 
  RowBox[{
-  RowBox[{"secretText", "=", "\"\<HELLO WORLD MY NAME IS KONRAD.\>\""}], 
+  RowBox[{"secretText", "=", "\"\<TERMINATE.\>\""}], 
   ";"}], "\[IndentingNewLine]", 
  RowBox[{
   RowBox[{"Print", "[", 
@@ -414,77 +414,260 @@ Cell[CellGroupData[{
 
 Cell[BoxData[
  RowBox[{"{", 
-  RowBox[{"\<\"Secret text\"\>", 
-   ",", "\<\"HELLO WORLD MY NAME IS KONRAD.\"\>"}], "}"}]], "Print"],
+  RowBox[{"\<\"Secret text\"\>", ",", "\<\"TERMINATE.\"\>"}], "}"}]], "Print"],
 
 Cell[BoxData[
  RowBox[{"{", 
   RowBox[{"\<\"Secret text interval\"\>", ",", 
    RowBox[{"{", 
-    RowBox[{"0.278254845336606`", ",", "4.561124796594565`*^-40"}], "}"}]}], 
+    RowBox[{"0.6848750079332838`", ",", "1.181362650430875`*^-13"}], "}"}]}], 
   "}"}]], "Print"],
 
 Cell[BoxData[
  RowBox[{"{", 
-  RowBox[{"\<\"Secret text entropy\"\>", ",", "130.68773415128766`"}], 
+  RowBox[{"\<\"Secret text entropy\"\>", ",", "42.94461332750861`"}], 
   "}"}]], "Print"],
 
 Cell[BoxData[
  RowBox[{"{", 
   RowBox[{"\<\"Stego text\"\>", ",", 
    RowBox[{"{", 
-    RowBox[{"\<\"had\"\>", ",", "\<\"already\"\>", ",", "\<\"taken\"\>", 
-     ",", "\<\"care\"\>", ",", "\<\"of\"\>", ",", "\<\"by\"\>", 
-     ",", "\<\"his\"\>", ",", "\<\"mother\"\>", ",", "\<\"and\"\>", 
-     ",", "\<\"father\"\>", ",", "\<\"were\"\>", ",", "\<\"killed\"\>", 
-     ",", "\<\"in\"\>", ",", "\<\"a\"\>", ",", "\<\"single\"\>", 
-     ",", "\<\"day\"\>", ",", "\<\"on\"\>", ",", "\<\"the\"\>", 
-     ",", "\<\"way\"\>", ",", "\<\"to\"\>", ",", "\<\"the\"\>", 
-     ",", "\<\"golden\"\>", ",", "\<\"gate\"\>", ",", "\<\"bridge\"\>", 
-     ",", "\<\"and\"\>", ",", "\<\"the\"\>", ",", "\<\"answer\"\>", 
-     ",", "\<\"to\"\>", ",", "\<\"that\"\>", ",", "\<\"question\"\>", 
-     ",", "\<\"lies\"\>", ",", "\<\"in\"\>", ",", "\<\"the\"\>", 
-     ",", "\<\"ability\"\>", ",", "\<\"to\"\>", ",", "\<\"use\"\>", 
-     ",", "\<\"language\"\>", ",", "\<\"that\"\>", ",", "\<\"was\"\>", 
-     ",", "\<\"used\"\>", ",", "\<\"in\"\>", ",", "\<\"the\"\>", 
-     ",", "\<\"analysis\"\>", ",", "\<\"of\"\>", ",", "\<\"the\"\>", 
-     ",", "\<\"data\"\>", ",", "\<\"was\"\>", ",", "\<\"analyzed\"\>", 
-     ",", "\<\"using\"\>", ",", "\<\"the\"\>", ",", "\<\"statistical\"\>", 
-     ",", "\<\"package\"\>", ",", "\<\"for\"\>", ",", "\<\"the\"\>", 
-     ",", "\<\"social\"\>", ",", "\<\"and\"\>", ",", "\<\"political\"\>", 
-     ",", "\<\"implications\"\>", ",", "\<\"of\"\>", ",", "\<\"the\"\>", 
-     ",", "\<\"findings\"\>", ",", "\<\"for\"\>", ",", "\<\"the\"\>", 
-     ",", "\<\"difference\"\>", ",", "\<\"between\"\>", ",", "\<\"the\"\>", 
-     ",", "\<\"mean\"\>", ",", "\<\"achievement\"\>", ",", "\<\"scores\"\>", 
-     ",", "\<\"of\"\>", ",", "\<\"students\"\>", ",", "\<\"who\"\>", 
-     ",", "\<\"participated\"\>", ",", "\<\"in\"\>", ",", "\<\"the\"\>", 
-     ",", "\<\"study\"\>", ",", "\<\"at\"\>", ",", "\<\"any\"\>", 
-     ",", "\<\"time\"\>", ",", "\<\"without\"\>", ",", "\<\"penalty\"\>", 
-     ",", "\<\"of\"\>", ",", "\<\"six\"\>", ",", "\<\"months\"\>", 
-     ",", "\<\"in\"\>", ",", "\<\"jail\"\>", ",", "\<\"for\"\>", 
-     ",", "\<\"civil\"\>"}], "}"}]}], "}"}]], "Print"],
+    RowBox[{"\<\"that\"\>", ",", "\<\"he\"\>", ",", "\<\"was\"\>", 
+     ",", "\<\"preparing\"\>", ",", "\<\"to\"\>", ",", "\<\"leave\"\>", 
+     ",", "\<\"for\"\>", ",", "\<\"the\"\>", ",", "\<\"airport\"\>", 
+     ",", "\<\"and\"\>", ",", "\<\"the\"\>", ",", "\<\"extent\"\>", 
+     ",", "\<\"of\"\>", ",", "\<\"the\"\>", ",", "\<\"government\"\>", 
+     ",", "\<\"and\"\>", ",", "\<\"the\"\>", ",", "\<\"press\"\>"}], "}"}]}], 
+  "}"}]], "Print"],
 
 Cell[BoxData[
  RowBox[{"{", 
   RowBox[{"\<\"Stego text interval\"\>", ",", 
    RowBox[{"{", 
-    RowBox[{"0.278254845336606`", ",", "1.050944725700942`*^-40"}], "}"}]}], 
+    RowBox[{"0.684875007933332`", ",", "2.269372694643188`*^-14"}], "}"}]}], 
   "}"}]], "Print"],
 
 Cell[BoxData[
  RowBox[{"{", 
-  RowBox[{"\<\"Stego text entropy\"\>", ",", "132.8054370025542`"}], 
+  RowBox[{"\<\"Stego text entropy\"\>", ",", "45.32469976896786`"}], 
   "}"}]], "Print"],
 
 Cell[BoxData[
  RowBox[{"{", 
-  RowBox[{"\<\"Secret text decoded\"\>", 
-   ",", "\<\"HELLO WORLD MY NAME IS KONRAD.\"\>"}], "}"}]], "Print"]
+  RowBox[{"\<\"Secret text decoded\"\>", ",", "\<\"TERMINATE.\"\>"}], 
+  "}"}]], "Print"]
 }, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[{
+ RowBox[{"S", "=", 
+  RowBox[{"{", 
+   RowBox[{
+   "\"\<when\>\"", ",", "\"\<are\>\"", ",", "\"\<you\>\"", ",", 
+    "\"\<going\>\"", ",", "\"\<to\>\"", ",", "\"\<get\>\"", ",", 
+    "\"\<it\>\""}], "}"}]}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"SStaged", "=", 
+   RowBox[{"Rest", "[", 
+    RowBox[{"FoldList", "[", 
+     RowBox[{"Append", ",", 
+      RowBox[{"{", "}"}], ",", "S"}], "]"}], "]"}]}], 
+  "\[IndentingNewLine]"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"Map", "[", "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"N", "[", 
+      RowBox[{
+       RowBox[{
+        RowBox[{"pBYU", "[", 
+         RowBox[{
+          RowBox[{"Last", "[", "#1", "]"}], ",", 
+          RowBox[{"Most", "[", "#1", "]"}]}], "]"}], "*", "100"}], ",", "3"}],
+       "]"}], "&"}], ",", "\[IndentingNewLine]", "SStaged"}], 
+   "\[IndentingNewLine]", "]"}], 
+  "\[IndentingNewLine]"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"intervals", "=", 
+    RowBox[{"Map", "[", "\[IndentingNewLine]", 
+     RowBox[{
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{
+         RowBox[{"First", "[", "#1", "]"}], ",", 
+         RowBox[{"Total", "[", "#1", "]"}], ",", 
+         RowBox[{"Last", "[", "#1", "]"}]}], "}"}], "&"}], ",", 
+      "\[IndentingNewLine]", 
+      RowBox[{"Map", "[", 
+       RowBox[{"stegoEncode", ",", "SStaged"}], "]"}]}], 
+     "\[IndentingNewLine]", "]"}]}], ";"}], 
+  "\[IndentingNewLine]"}], "\[IndentingNewLine]", 
+ RowBox[{"AccountingForm", "[", "\[IndentingNewLine]", 
+  RowBox[{
+   RowBox[{"MatrixForm", "[", 
+    RowBox[{"N", "[", "intervals", "]"}], "]"}], ",", "\[IndentingNewLine]", 
+   RowBox[{"{", 
+    RowBox[{"7", ",", "7"}], "}"}]}], "\[IndentingNewLine]", "]"}]}], "Input"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{"\<\"when\"\>", ",", "\<\"are\"\>", ",", "\<\"you\"\>", 
+   ",", "\<\"going\"\>", ",", "\<\"to\"\>", ",", "\<\"get\"\>", 
+   ",", "\<\"it\"\>"}], "}"}]], "Output"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{"{", "\<\"when\"\>", "}"}], ",", 
+   RowBox[{"{", 
+    RowBox[{"\<\"when\"\>", ",", "\<\"are\"\>"}], "}"}], ",", 
+   RowBox[{"{", 
+    RowBox[{"\<\"when\"\>", ",", "\<\"are\"\>", ",", "\<\"you\"\>"}], "}"}], 
+   ",", 
+   RowBox[{"{", 
+    RowBox[{"\<\"when\"\>", ",", "\<\"are\"\>", ",", "\<\"you\"\>", 
+     ",", "\<\"going\"\>"}], "}"}], ",", 
+   RowBox[{"{", 
+    RowBox[{"\<\"when\"\>", ",", "\<\"are\"\>", ",", "\<\"you\"\>", 
+     ",", "\<\"going\"\>", ",", "\<\"to\"\>"}], "}"}], ",", 
+   RowBox[{"{", 
+    RowBox[{"\<\"when\"\>", ",", "\<\"are\"\>", ",", "\<\"you\"\>", 
+     ",", "\<\"going\"\>", ",", "\<\"to\"\>", ",", "\<\"get\"\>"}], "}"}], 
+   ",", 
+   RowBox[{"{", 
+    RowBox[{"\<\"when\"\>", ",", "\<\"are\"\>", ",", "\<\"you\"\>", 
+     ",", "\<\"going\"\>", ",", "\<\"to\"\>", ",", "\<\"get\"\>", 
+     ",", "\<\"it\"\>"}], "}"}]}], "}"}]], "Output"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{
+  "0.45233099293325151063212960814353359583`3.", ",", 
+   "0.97703026344437187023731765730459394731`3.", ",", 
+   "65.04178272980501392757660167130919220056`3.", ",", 
+   "80.29978586723768736616702355460385438972`3.", ",", 
+   "97.86666666666666666666666666666666666667`3.", ",", 
+   "5.17150395778364116094986807387862796834`3.", ",", 
+   "7.40740740740740740740740740740740740741`3."}], "}"}]], "Output"],
+
+Cell[BoxData[
+ TagBox[
+  TagBox[
+   RowBox[{"(", "\[NoBreak]", GridBox[{
+      {
+       InterpretationBox["\<\"0.9432062\"\>",
+        0.9432062024397855,
+        AutoDelete->True], 
+       InterpretationBox["\<\"0.9477295\"\>",
+        0.9477295123691181,
+        AutoDelete->True], 
+       InterpretationBox["\<\"0.0045233\"\>",
+        0.004523309929332515,
+        AutoDelete->True]},
+      {
+       InterpretationBox["\<\"0.9432662\"\>",
+        0.9432662153287075,
+        AutoDelete->True], 
+       InterpretationBox["\<\"0.9433104\"\>",
+        0.9433104094356265,
+        AutoDelete->True], 
+       InterpretationBox["\<\"0.0000442\"\>",
+        0.000044194106918962905`,
+        AutoDelete->True]},
+      {
+       InterpretationBox["\<\"0.9432817\"\>",
+        0.9432816648006249,
+        AutoDelete->True], 
+       InterpretationBox["\<\"0.9433104\"\>",
+        0.9433104094356265,
+        AutoDelete->True], 
+       InterpretationBox["\<\"0.0000287\"\>",
+        0.000028744635001609578`,
+        AutoDelete->True]},
+      {
+       InterpretationBox["\<\"0.9432852\"\>",
+        0.9432851732464388,
+        AutoDelete->True], 
+       InterpretationBox["\<\"0.9433083\"\>",
+        0.9433082551267934,
+        AutoDelete->True], 
+       InterpretationBox["\<\"0.0000231\"\>",
+        0.000023081880354611545`,
+        AutoDelete->True]},
+      {
+       InterpretationBox["\<\"0.9432857\"\>",
+        0.9432856656598864,
+        AutoDelete->True], 
+       InterpretationBox["\<\"0.9433083\"\>",
+        0.9433082551267934,
+        AutoDelete->True], 
+       InterpretationBox["\<\"0.0000226\"\>",
+        0.000022589466907046497`,
+        AutoDelete->True]},
+      {
+       InterpretationBox["\<\"0.943297\"\>",
+        0.9432969743006634,
+        AutoDelete->True], 
+       InterpretationBox["\<\"0.9432981\"\>",
+        0.9432981425158385,
+        AutoDelete->True], 
+       InterpretationBox["\<\"0.0000012\"\>",
+        1.1682151751401354`*^-6,
+        AutoDelete->True]},
+      {
+       InterpretationBox["\<\"0.9432972\"\>",
+        0.9432972050592164,
+        AutoDelete->True], 
+       InterpretationBox["\<\"0.9432973\"\>",
+        0.9432972915936739,
+        AutoDelete->True], 
+       InterpretationBox["\<\"0.0000001\"\>",
+        8.653445741778782*^-8,
+        AutoDelete->True]}
+     },
+     GridBoxAlignment->{
+      "Columns" -> {{Center}}, "ColumnsIndexed" -> {}, "Rows" -> {{Baseline}},
+        "RowsIndexed" -> {}},
+     GridBoxSpacings->{"Columns" -> {
+         Offset[0.27999999999999997`], {
+          Offset[0.7]}, 
+         Offset[0.27999999999999997`]}, "ColumnsIndexed" -> {}, "Rows" -> {
+         Offset[0.2], {
+          Offset[0.4]}, 
+         Offset[0.2]}, "RowsIndexed" -> {}}], "\[NoBreak]", ")"}],
+   Function[BoxForm`e$, 
+    MatrixForm[BoxForm`e$]]],
+  AccountingForm[#, {7, 7}]& ]], "Output"]
+}, Open  ]],
+
+Cell[BoxData[""], "Input"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"-", 
+  RowBox[{"N", "[", 
+   RowBox[{"Log", "[", 
+    RowBox[{"2", ",", 
+     RowBox[{"Part", "[", 
+      RowBox[{
+       RowBox[{"Transpose", "[", "intervals", "]"}], ",", "3"}], "]"}]}], 
+    "]"}], "]"}]}]], "Input"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{
+  "7.788405434350006`", ",", "14.465786468747897`", ",", 
+   "15.086347762861287`", ",", "15.402879717187705`", ",", 
+   "15.433990249727737`", ",", "19.70726253867098`", ",", 
+   "23.46215004083445`"}], "}"}]], "Output"]
 }, Open  ]]
 },
 WindowSize->{970, 665},
-WindowMargins->{{87, Automatic}, {Automatic, 0}},
+WindowMargins->{{Automatic, -432}, {Automatic, 0}},
 FrontEndVersion->"10.0 for Mac OS X x86 (32-bit, 64-bit Kernel) (October 16, \
 2013)",
 StyleDefinitions->"Default.nb"
