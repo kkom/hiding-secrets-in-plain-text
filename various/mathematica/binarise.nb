@@ -1,0 +1,147 @@
+Notebook[{
+
+Cell[CellGroupData[{
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"binarise", "[", 
+   RowBox[{"v_", "/;", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"First", "[", "v", "]"}], "\[LessEqual]", "0"}], "&&", 
+     RowBox[{
+      RowBox[{"Total", "[", "v", "]"}], "\[GreaterEqual]", "1"}]}]}], "]"}], ":=", 
+  RowBox[{"{", "}"}]}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"binarise", "[", "v_", "]"}], ":=", 
+   RowBox[{
+    RowBox[{"binarise", "[", "v", "]"}], "=", 
+    RowBox[{"If", "[", "\[IndentingNewLine]", 
+     RowBox[{
+      RowBox[{
+       RowBox[{
+        FractionBox["1", "2"], "-", 
+        RowBox[{"First", "[", "v", "]"}]}], "\[GreaterEqual]", 
+       RowBox[{
+        RowBox[{"Total", "[", "v", "]"}], "-", 
+        FractionBox["1", "2"]}]}], ",", "\[IndentingNewLine]", 
+      RowBox[{"Prepend", "[", 
+       RowBox[{
+        RowBox[{"binarise", "[", 
+         RowBox[{"2", "*", "v"}], "]"}], ",", "0"}], "]"}], ",", 
+      "\[IndentingNewLine]", 
+      RowBox[{"Prepend", "[", 
+       RowBox[{
+        RowBox[{"binarise", "[", 
+         RowBox[{
+          RowBox[{"2", "*", "v"}], "-", 
+          RowBox[{"{", 
+           RowBox[{"1", ",", "0"}], "}"}]}], "]"}], ",", "1"}], "]"}]}], 
+     "\[IndentingNewLine]", "]"}]}]}], 
+  "\[IndentingNewLine]"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"fractionise", "[", "b_", "]"}], ":=", 
+   RowBox[{"Fold", "[", "\[IndentingNewLine]", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"If", "[", 
+       RowBox[{
+        RowBox[{"#2", "\[Equal]", "0"}], ",", "\[IndentingNewLine]", 
+        RowBox[{"{", 
+         RowBox[{
+          RowBox[{"First", "[", "#1", "]"}], ",", 
+          FractionBox[
+           RowBox[{"Last", "[", "#1", "]"}], "2"]}], "}"}], ",", 
+        "\[IndentingNewLine]", 
+        RowBox[{"{", 
+         RowBox[{
+          RowBox[{
+           RowBox[{"First", "[", "#1", "]"}], "+", 
+           FractionBox[
+            RowBox[{"Last", "[", "#1", "]"}], "2"]}], ",", 
+          FractionBox[
+           RowBox[{"Last", "[", "#1", "]"}], "2"]}], "}"}]}], 
+       "\[IndentingNewLine]", "]"}], "&"}], ",", "\[IndentingNewLine]", 
+     RowBox[{"{", 
+      RowBox[{"0", ",", "1"}], "}"}], ",", "\[IndentingNewLine]", "b"}], 
+    "\[IndentingNewLine]", "]"}]}], 
+  "\[IndentingNewLine]"}], "\[IndentingNewLine]", 
+ RowBox[{"v", "=", 
+  RowBox[{"{", 
+   RowBox[{
+    FractionBox["5746575647657", "7334564577452"], ",", 
+    SuperscriptBox["10", 
+     RowBox[{"-", "9"}]]}], "}"}]}], "\[IndentingNewLine]", 
+ RowBox[{"b", "=", 
+  RowBox[{"binarise", "[", "v", "]"}]}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"f", "=", 
+   RowBox[{"fractionise", "[", "b", "]"}]}], 
+  "\[IndentingNewLine]"}], "\[IndentingNewLine]", 
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"First", "[", "f", "]"}], "\[GreaterEqual]", 
+    RowBox[{"First", "[", "v", "]"}]}], ",", 
+   RowBox[{
+    RowBox[{"Total", "[", "f", "]"}], "\[LessEqual]", 
+    RowBox[{"Total", "[", "v", "]"}]}]}], "}"}]}], "Input"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{
+   FractionBox["5746575647657", "7334564577452"], ",", 
+   FractionBox["1", "1000000000"]}], "}"}]], "Output"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{
+  "1", ",", "1", ",", "0", ",", "0", ",", "1", ",", "0", ",", "0", ",", "0", 
+   ",", "1", ",", "0", ",", "0", ",", "1", ",", "0", ",", "0", ",", "1", ",", 
+   "0", ",", "1", ",", "1", ",", "1", ",", "1", ",", "0", ",", "1", ",", "0", 
+   ",", "1", ",", "0", ",", "1", ",", "0", ",", "1", ",", "0", ",", "1", ",", 
+   "1"}], "}"}]], "Output"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{
+   FractionBox["1682537131", "2147483648"], ",", 
+   FractionBox["1", "2147483648"]}], "}"}]], "Output"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{"True", ",", "True"}], "}"}]], "Output"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"binaryChoice", "[", "v_", "]"}], ":=", 
+  RowBox[{"N", "[", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{
+      FractionBox["1", "2"], "-", 
+      RowBox[{"First", "[", "v", "]"}]}], ",", 
+     RowBox[{
+      RowBox[{"Total", "[", "v", "]"}], "-", 
+      FractionBox["1", "2"]}]}], "}"}], "]"}]}], "\[IndentingNewLine]", 
+ RowBox[{"binaryChoice", "[", 
+  RowBox[{"{", 
+   RowBox[{".45", ",", "0.09"}], "}"}], "]"}]}], "Input"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{"0.04999999999999999`", ",", "0.040000000000000036`"}], 
+  "}"}]], "Output"]
+}, Open  ]]
+},
+WindowSize->{1101, 613},
+WindowMargins->{{4, Automatic}, {Automatic, 4}},
+FrontEndVersion->"10.0 for Mac OS X x86 (32-bit, 64-bit Kernel) (October 16, \
+2013)",
+StyleDefinitions->"Default.nb"
+]
+
