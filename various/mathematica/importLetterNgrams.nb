@@ -1,55 +1,83 @@
 Notebook[{
-Cell[BoxData[
- RowBox[{"Do", "[", "\[IndentingNewLine]", "\[IndentingNewLine]", 
-  RowBox[{
-   RowBox[{"Scan", "[", "\[IndentingNewLine]", 
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"accumulate", "[", "filename_", "]"}], ":=", 
+  RowBox[{"Rest", "[", 
+   RowBox[{"FoldList", "[", "\[IndentingNewLine]", 
     RowBox[{
      RowBox[{
-      RowBox[{
+      RowBox[{"{", "\[IndentingNewLine]", 
        RowBox[{
-        RowBox[{"ngram", "[", 
-         RowBox[{"i", ",", 
-          RowBox[{"First", "[", "#", "]"}]}], "]"}], "=", 
-        RowBox[{"Last", "[", "#", "]"}]}], ";"}], "&"}], ",", 
+        RowBox[{"Characters", "[", 
+         RowBox[{"ToString", "[", 
+          RowBox[{"First", "[", "#2", "]"}], "]"}], "]"}], ",", 
+        RowBox[{"(*", " ", 
+         RowBox[{"n", "-", 
+          RowBox[{"gram", " ", "sequence"}]}], " ", "*)"}], 
+        "\[IndentingNewLine]", 
+        RowBox[{"Last", "[", "#2", "]"}], ",", " ", 
+        RowBox[{"(*", " ", 
+         RowBox[{"n", "-", 
+          RowBox[{"gram", " ", "P", " ", "frequency"}]}], " ", "*)"}], 
+        "\[IndentingNewLine]", 
+        RowBox[{"Last", "[", "#1", "]"}], ",", " ", 
+        RowBox[{"(*", " ", 
+         RowBox[{"n", "-", 
+          RowBox[{"gram", " ", "C1", " ", "cumulative", " ", "frequency"}]}], 
+         " ", "*)"}], "\[IndentingNewLine]", 
+        RowBox[{
+         RowBox[{"Last", "[", "#1", "]"}], "+", 
+         RowBox[{"Last", "[", "#2", "]"}]}]}], " ", 
+       RowBox[{"(*", " ", 
+        RowBox[{"n", "-", 
+         RowBox[{"gram", " ", "C2", " ", "cumulative", " ", "frequency"}]}], 
+        " ", "*)"}], "\[IndentingNewLine]", "}"}], "&"}], ",", 
      "\[IndentingNewLine]", 
+     RowBox[{"{", 
+      RowBox[{"None", ",", "None", ",", "None", ",", "None", ",", "0"}], 
+      "}"}], ",", "\[IndentingNewLine]", 
      RowBox[{"Import", "[", 
-      RowBox[{
-       RowBox[{"\"\</Users/kkom/Desktop/ngrams_\>\"", "<>", 
-        RowBox[{"ToString", "[", "i", "]"}]}], ",", "\"\<TSV\>\""}], "]"}]}], 
-    "\[IndentingNewLine]", "]"}], ",", "\[IndentingNewLine]", 
-   "\[IndentingNewLine]", 
-   RowBox[{"{", 
-    RowBox[{"i", ",", "3"}], "}"}]}], "\[IndentingNewLine]", "]"}]], "Input"],
-
-Cell[CellGroupData[{
-
-Cell[BoxData[
- RowBox[{"ngram", "[", 
-  RowBox[{"2", ",", "\"\<ab\>\""}], "]"}]], "Input"],
-
-Cell[BoxData["1423"], "Output"]
-}, Open  ]],
-
-Cell[BoxData[
- RowBox[{"(*", " ", 
+      RowBox[{"filename", ",", "\"\<TSV\>\""}], "]"}]}], 
+    "\[IndentingNewLine]", "]"}], "]"}]}], "\[IndentingNewLine]", 
+ RowBox[{
   RowBox[{
-   RowBox[{
-    RowBox[{"count", "[", "ngram", "]"}], " ", "=", " ", 
+   RowBox[{"hashNgrams", "[", "list_", "]"}], ":=", 
+   RowBox[{"Module", "[", 
     RowBox[{
-    "number", " ", "of", " ", "times", " ", "a", " ", "certain", " ", "ngram",
-      " ", "was", " ", "seen"}]}], ",", " ", 
-   RowBox[{
-    RowBox[{"marginalCount", "[", "ngram", "]"}], " ", "=", " ", 
+     RowBox[{"{", "dict", "}"}], ",", "\[IndentingNewLine]", 
+     RowBox[{
+      RowBox[{"Scan", "[", "\[IndentingNewLine]", 
+       RowBox[{
+        RowBox[{
+         RowBox[{
+          RowBox[{
+           RowBox[{"dict", "[", 
+            RowBox[{"Part", "[", 
+             RowBox[{"list", ",", "#1", ",", "1"}], "]"}], "]"}], "=", "#1"}],
+           ";"}], "&"}], ",", "\[IndentingNewLine]", 
+        RowBox[{"Range", "[", 
+         RowBox[{"Length", "[", "list", "]"}], "]"}]}], "\[IndentingNewLine]",
+        "]"}], ";", "\[IndentingNewLine]", "dict"}]}], "\[IndentingNewLine]", 
+    "]"}]}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"Timing", "[", 
+   RowBox[{"list", "=", 
     RowBox[{
-    "number", " ", "of", " ", "times", " ", "\"\<ngram + any letter\>\"", " ",
-      "was", " ", "seen"}]}]}], " ", "*)"}]], "Input"],
-
-Cell[BoxData[""], "Input"]
+    "accumulate", "[", "\"\</Users/kkom/Desktop/ngrams_3\>\"", "]"}]}], "]"}],
+   ";"}], "\[IndentingNewLine]", 
+ RowBox[{"Timing", "[", 
+  RowBox[{"dict", "=", 
+   RowBox[{"hashNgrams", "[", "list", "]"}]}], "]"}], "\[IndentingNewLine]", 
+ RowBox[{"Timing", "[", 
+  RowBox[{"dict", "[", 
+   RowBox[{"{", 
+    RowBox[{"\"\<w\>\"", ",", "\"\<h\>\"", ",", "\"\<e\>\""}], "}"}], "]"}], 
+  "]"}]}], "Input"]
 },
 WindowSize->{740, 583},
-WindowMargins->{{132, Automatic}, {Automatic, 24}},
+WindowMargins->{{Automatic, 260}, {8, Automatic}},
 ShowSelection->True,
-FrontEndVersion->"10.0 for Mac OS X x86 (32-bit, 64-bit Kernel) (October 16, \
+FrontEndVersion->"10.0 for Mac OS X x86 (32-bit, 64-bit Kernel) (November 20, \
 2013)",
 StyleDefinitions->"Default.nb"
 ]
