@@ -10,8 +10,9 @@ import gzip
 import itertools
 import urllib.request
 
-from libsteg.common.timing import timer
-
+from pysteg.common.timing import timer
+from pysteg.common.streaming import iter_remote_gzip
+ 
 # Define and parse the script arguments
 parser = argparse.ArgumentParser(
     description=descr,
@@ -19,7 +20,6 @@ parser = argparse.ArgumentParser(
 )
 
 parser.add_argument("URL", help="web address of the file")
-
 parser.add_argument("--start", type=int, default=0,
     help="skip lines before this one")
 parser.add_argument("--stop", type=int, default=None,
@@ -30,12 +30,6 @@ parser.add_argument("--step", type=int, default=1,
 args = parser.parse_args()
 
 # Define iterators used in the script
-def iter_remote_gzip(url):
-    with urllib.request.urlopen(url) as f:
-        with gzip.GzipFile(fileobj=f) as g:
-            for l in g:
-                yield l
-
 line_numbers = map(lambda x: args.start + args.step*x, itertools.count())
 lines = itertools.islice(
     iter_remote_gzip(args.URL), args.start, args.stop, args.step
