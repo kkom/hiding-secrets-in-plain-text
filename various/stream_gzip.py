@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
 descr = """
-This script streams a gzip-compressed file from a network location.
+This script streams a gzip-compressed file from a network location. Lines are
+numbered from 0.
 """
 
 import argparse
@@ -19,11 +20,11 @@ parser = argparse.ArgumentParser(
 parser.add_argument("URL", help="web address of the file")
 
 parser.add_argument("--start", type=int, default=0,
-    help="skip lines until this one")
+    help="skip lines before this one")
 parser.add_argument("--stop", type=int, default=None,
-    help="do not show lines beyond this one")
+    help="only show lines before this one")
 parser.add_argument("--step", type=int, default=1,
-    help="step over that many lines")
+    help="step size")
 
 args = parser.parse_args()
 
@@ -34,7 +35,7 @@ def iter_remote_gzip(url):
             for l in g:
                 yield l
 
-line_numbers = map(lambda x: args.step*x, itertools.count())
+line_numbers = map(lambda x: args.step*x, itertools.count(args.start))
 lines = itertools.islice(
     iter_remote_gzip(args.URL), args.start, args.stop, args.step
 )
