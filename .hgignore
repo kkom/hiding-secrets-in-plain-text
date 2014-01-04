@@ -1,2 +1,4 @@
-(^|/)\.
-\.pyc$
+syntax: glob
+.*
+__pycache__
+*.pyc
