@@ -8,8 +8,9 @@ numbered from 0.
 import argparse
 import gzip
 import itertools
-import time
 import urllib.request
+
+from libsteg.common.timing import timer
 
 # Define and parse the script arguments
 parser = argparse.ArgumentParser(
@@ -41,9 +42,8 @@ lines = itertools.islice(
 )
 
 # Run and time the iterators
-start = time.time()
-for (i,l) in zip(line_numbers, lines):
-    print("{}: {}".format(i, l.decode()), end="")
-interval = time.time() - start
+with timer(method="time") as t:
+    for (i,l) in zip(line_numbers, lines):
+        print("{}: {}".format(i, l.decode()), end="")
         
-print('The request took {:.2f} s of real time.'.format(interval))
+print('The request took {:.2f} s of real time.'.format(t.interval))
