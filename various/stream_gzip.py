@@ -35,7 +35,7 @@ def iter_remote_gzip(url):
             for l in g:
                 yield l
 
-line_numbers = map(lambda x: args.step*x, itertools.count(args.start))
+line_numbers = map(lambda x: args.start + args.step*x, itertools.count())
 lines = itertools.islice(
     iter_remote_gzip(args.URL), args.start, args.stop, args.step
 )
