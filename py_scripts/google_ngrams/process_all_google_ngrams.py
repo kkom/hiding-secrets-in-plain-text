@@ -10,8 +10,14 @@ import io
 import json
 import os
 import time
+import urllib.parse
 
-from pysteg.common.streaming import iter_remote_gzip 
+from datetime import datetime
+
+from pysteg.common.itertools import consume
+from pysteg.common.streaming import iter_remote_gzip
+from pysteg.common.streaming import ngrams_iter2file
+
 from pysteg.google_ngrams.extract_ngram_counts import extract_ngram_counts
 
 # Define and parse the script arguments
@@ -27,45 +33,45 @@ parser.add_argument("output", help="output directory for processed files")
     
 args = parser.parse_args()
 
-# Read the prefixes
-remote_path_root = "http://storage.googleapis.com/books/ngrams/books/"
-filename_template = "googlebooks-eng-us-all-{n}gram-20120701-{prefix}"
-
-with open(args.ngrams, 'r') as f:
-    ngrams = json.load(f)
+def process_file(descr):
+    """Process a single file."""
     
-for n in sorted(ngrams.keys()):
-    for prefix in ngrams[n]:
-        # Generate filenames
-        filename = filename_template.format(n=n, prefix=prefix)
-        remote_path = remote_path_root + filename + ".gz"
-        local_path = os.path.join(args.output, filename)
+    filename_template = "googlebooks-eng-us-all-{n}gram-20120701-{prefix}"
+    local_root = args.output
+    remote_root = "http://storage.googleapis.com/books/ngrams/books/"
+    
+    n, prefix = descr
+    
+    filename = filename_template.format(n=n, prefix=prefix)
+    local_path = os.path.join(local_root, filename)
+    remote_path = urllib.parse.urljoin(remote_root, filename + ".gz")
+    
+    if os.path.isfile(local_path + "_DONE"):
+        print("{t} Skipped {f}.".format(t=datetime.now(), f=filename))
+    else:
+        print("{t} Processing {f}...".format(t=datetime.now(), f=filename))
         
-        # If the file is not already done or locked
-        if (not os.path.isfile(local_path + "_DONE") and
-            not os.path.isfile(local_path + "_LOCK")):
-            
-            # This part is not safe - another instance may start processing the
-            # same file between when this instance decides to do it and puts the
-            # lock on it. The probability of this happening is extremely low,
-            # but a semaphore is the correct solution.
-            open(local_path + "_LOCK", 'w').close()
+        # Generate iterators over ngrams
+        source_ngrams = iter_remote_gzip(remote_path)
+        processed_ngrams = extract_ngram_counts(source_ngrams, int(n))
         
-            # Generate iterators over ngrams
-            source_ngrams = iter_remote_gzip(remote_path)
-            processed_ngrams = extract_ngram_counts(source_ngrams, int(n))
+        with io.open(local_path, 'wb') as f:
+            ngrams_iter2file(processed_ngrams, f)
             
-            print("Processing {}...".format(filename))
+        open(local_path + "_DONE", 'w').close()
+        
+        print("{t} Processed {f}.".format(t=datetime.now(), f=filename))
 
-            with io.open(local_path, 'wb') as f:
-                for ngram in processed_ngrams:
-                    for word in ngram[0]:
-                        f.write(word)
-                        f.write(b'\t')
+def yield_ngram_descriptions(filename):
+    """Yield ngram descriptions from a file."""
+    
+    with open(filename, 'r') as f:
+        ngrams = json.load(f)
         
-                    f.write(bytes(str(ngram[1]), "utf-8"))
-                    f.write(b'\n')
-            
-            os.remove(local_path + "_LOCK")
-            open(local_path + "_DONE", 'w').close()
-        
+    for n in sorted(ngrams.keys()):
+        for prefix in ngrams[n]:
+            yield (n, prefix)
+
+# Process the files
+ngrams = yield_ngram_descriptions(args.ngrams)
+consume(map(process_file, ngrams))
