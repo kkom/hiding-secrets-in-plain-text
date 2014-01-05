@@ -6,6 +6,7 @@ the processed ngram counts locally.
 """
 
 import argparse
+import io
 import itertools
 
 from pysteg.common.streaming import iter_remote_gzip 
@@ -29,5 +30,12 @@ args = parser.parse_args()
 source_ngrams = itertools.islice(iter_remote_gzip(args.URL), 0, args.t)
 processed_ngrams = extract_ngram_counts(source_ngrams, args.n)
 
-for ngram in processed_ngrams:
-    print(ngram)
+# Process the ngrams file
+with io.open(args.output, 'wb') as f:
+    for ngram in processed_ngrams:
+        for word in ngram[0]:
+            f.write(word)
+            f.write(b'\t')
+        
+        f.write(bytes(str(ngram[1]), "utf-8"))
+        f.write(b'\n')
