@@ -49,8 +49,10 @@ for n in sorted(ngrams.keys()):
             source_ngrams = iter_remote_gzip(remote_path)
             processed_ngrams = extract_ngram_counts(source_ngrams, int(n))
             
-            # Write the file
+            # Process the file
             open(local_path + "_LOCK", 'w').close()
+            
+            print("Processing {}...".format(filename))
 
             with io.open(local_path, 'wb') as f:
                 for ngram in processed_ngrams:
