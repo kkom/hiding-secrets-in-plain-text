@@ -44,13 +44,16 @@ for n in sorted(ngrams.keys()):
         # If the file is not already done or locked
         if (not os.path.isfile(local_path + "_DONE") and
             not os.path.isfile(local_path + "_LOCK")):
+            
+            # This part is not safe - another instance may start processing the
+            # same file between when this instance decides to do it and puts the
+            # lock on it. The probability of this happening is extremely low,
+            # but a semaphore is the correct solution.
+            open(local_path + "_LOCK", 'w').close()
         
             # Generate iterators over ngrams
             source_ngrams = iter_remote_gzip(remote_path)
             processed_ngrams = extract_ngram_counts(source_ngrams, int(n))
-            
-            # Process the file
-            open(local_path + "_LOCK", 'w').close()
             
             print("Processing {}...".format(filename))
 
