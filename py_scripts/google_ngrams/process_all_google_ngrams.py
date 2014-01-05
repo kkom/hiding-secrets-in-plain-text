@@ -6,7 +6,9 @@ saves them locally.
 """
 
 import argparse
+import io
 import json
+import os
 import time
 
 from pysteg.common.streaming import iter_remote_gzip 
@@ -27,7 +29,7 @@ args = parser.parse_args()
 
 # Read the prefixes
 remote_path_root = "http://storage.googleapis.com/books/ngrams/books/"
-filename_template = "googlebooks-eng-us-all-{n}gram-20120701-{prefix}.gz"
+filename_template = "googlebooks-eng-us-all-{n}gram-20120701-{prefix}"
 
 with open(args.ngrams, 'r') as f:
     ngrams = json.load(f)
@@ -36,6 +38,7 @@ for n in sorted(ngrams.keys()):
     for prefix in ngrams[n]:
         # Generate filenames
         filename = filename_template.format(n=n, prefix=prefix)
+        remote_path = remote_path_root + filename + ".gz"
         local_path = os.path.join(args.output, filename)
         
         # If the file is not already done or locked
@@ -43,7 +46,7 @@ for n in sorted(ngrams.keys()):
             not os.path.isfile(local_path + "_LOCK")):
         
             # Generate iterators over ngrams
-            source_ngrams = iter_remote_gzip(remote_path_root + filename)
+            source_ngrams = iter_remote_gzip(remote_path)
             processed_ngrams = extract_ngram_counts(source_ngrams, int(n))
             
             # Write the file
