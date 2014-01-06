@@ -76,6 +76,11 @@ def yield_ngram_descriptions(filename):
             yield (n, prefix)
 
 if __name__ == '__main__':
-    with multiprocessing.Pool(processes=args.processes) as p:
-        ngrams = yield_ngram_descriptions(args.ngrams)
-        p.map(process_file, ngrams, 1)
+    p = multiprocessing.Pool(processes=args.processes)
+    
+    ngrams = yield_ngram_descriptions(args.ngrams)
+    p.map(process_file, ngrams, 1)
+    
+    p.close()
+    p.join()
+    
