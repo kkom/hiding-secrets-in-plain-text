@@ -8,6 +8,7 @@ saves them locally.
 import argparse
 import io
 import json
+import multiprocessing
 import os
 import time
 import urllib.parse
@@ -28,6 +29,8 @@ parser = argparse.ArgumentParser(
 
 parser.add_argument("ngrams", help="JSON file listing all the ngram files")
 parser.add_argument("output", help="output directory for processed files")
+parser.add_argument("--processes", metavar="P", type=int, default=1,
+    help="set the number of parallel worker processes (default 1)")
 # parser.add_argument("--off", nargs=2, metavar=("START","END"),
 #     help="disables the script between the two hours (HH:MM format)")
     
@@ -60,7 +63,7 @@ def process_file(descr):
             
         open(local_path + "_DONE", 'w').close()
         
-        print("{t} Processed {f}.".format(t=datetime.now(), f=filename))
+        print("{t} Finished {f}.".format(t=datetime.now(), f=filename))
 
 def yield_ngram_descriptions(filename):
     """Yield ngram descriptions from a file."""
@@ -72,6 +75,7 @@ def yield_ngram_descriptions(filename):
         for prefix in ngrams[n]:
             yield (n, prefix)
 
-# Process the files
-ngrams = yield_ngram_descriptions(args.ngrams)
-consume(map(process_file, ngrams))
+if __name__ == '__main__':
+    with multiprocessing.Pool(processes=args.processes) as p:
+        ngrams = yield_ngram_descriptions(args.ngrams)
+        p.map(process_file, ngrams, 1)
