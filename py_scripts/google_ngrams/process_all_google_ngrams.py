@@ -5,6 +5,11 @@ This script processes all Google Books Ngrams files listed in a JSON file and
 saves them locally.
 """
 
+epilog = """
+Note that the hours_off parameter will not stop the script from running an
+already dispatched job.
+"""
+
 import argparse
 import datetime
 import io
@@ -21,19 +26,17 @@ from pysteg.common.streaming import ngrams_iter2file
 from pysteg.google_ngrams.extract_ngram_counts import extract_ngram_counts
 
 # Define and parse the script arguments
-parser = argparse.ArgumentParser(
-    description=descr,
-    formatter_class=argparse.RawDescriptionHelpFormatter
-)
+parser = argparse.ArgumentParser(description=descr, epilog=epilog)
 
 parser.add_argument("ngrams", help="JSON file listing all the ngram files")
 parser.add_argument("output", help="output directory for processed files")
 parser.add_argument("--processes", metavar="P", type=int, default=1,
-    help="sets the number of parallel worker processes (default 1)")
+    help="set the number of parallel worker processes (default 1)")
 parser.add_argument("--hours_off", nargs=2, metavar=("START","END"),
-    help="disables the script between the two hours (HH:MM format)")
+    help=("stop the script from dispatching jobs between two hours (HH:MM "
+          "format)"))
 parser.add_argument("--days_on", type=int, nargs='+',
-    help=("forces the script to run on the specified days regardless of the "
+    help=("force the script to run on the specified days regardless of the "
           "hours_off parameter (days are numbered starting from Monday as 1)"))
     
 args = parser.parse_args()
