@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 descr = """
-This script processes all Google Books Ngrams files listed in a JSON file and
-saves them locally.
+This script will process all Google Books Ngrams files listed in a JSON file and
+save them locally.
 """
 
 epilog = """
@@ -35,7 +35,7 @@ parser.add_argument("--processes", metavar="P", type=int, default=1,
 parser.add_argument("--hours_off", nargs=2, metavar=("START","END"),
     help=("stop the script from dispatching jobs between two hours (HH:MM "
           "format)"))
-parser.add_argument("--days_on", type=int, nargs='+',
+parser.add_argument("--days_on", metavar="DAY", type=int, nargs='+',
     help=("force the script to run on the specified days regardless of the "
           "hours_off parameter (days are numbered starting from Monday as 1)"))
     
