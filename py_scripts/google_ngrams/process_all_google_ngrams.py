@@ -59,6 +59,8 @@ def allowed_to_dispatch():
             return False
         else:
             return True
+            
+    return True
 
 def process_file(descr):
     """Process a single file."""
