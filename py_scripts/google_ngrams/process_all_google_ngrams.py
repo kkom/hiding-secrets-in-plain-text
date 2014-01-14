@@ -19,7 +19,6 @@ import os
 import time
 import urllib.parse
 
-from pysteg.common.itertools import consume
 from pysteg.common.streaming import iter_remote_gzip
 from pysteg.common.streaming import ngrams_iter2file
 
