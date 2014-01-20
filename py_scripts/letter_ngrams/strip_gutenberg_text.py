@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 descr = """
 This script strips Project Gutenberg text from the beginning and end of an
 e-book. Normally used for preparing the text to build a histogram of n-grams. 

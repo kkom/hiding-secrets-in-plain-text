@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 descr = """
 This script creates a histogram of letter n-grams from text files. The n-grams
 include 26 ASCII letters, digits and the following punctuation: !"'(),-.:;?
