@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 descr = """
 This script uploads ngrams from the Brigham Young University (BYU) Corpus of 
 Contemporary American English (COCA) database to a PostgreSQL database.
