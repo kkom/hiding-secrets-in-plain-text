@@ -1,0 +1,12 @@
+The library is used for connecting to the PostgreSQL database.
+
+Website: http://initd.org/psycopg/
+
+Installation using Ubuntu package management (version may be outdated):
+
+$ sudo apt-get install python3-psycopg2
+
+Installation using easy_install3 (up to date version):
+
+$ sudo apt-get install libpq-dev
+$ sudo easy_install3 psycopg2
