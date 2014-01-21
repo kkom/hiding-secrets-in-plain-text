@@ -22,7 +22,8 @@ import urllib.parse
 from pysteg.common.streaming import iter_remote_gzip
 from pysteg.common.streaming import ngrams_iter2file
 
-from pysteg.google_ngrams.extract_ngram_counts import extract_ngram_counts
+from pysteg.googlebooks_ngrams.ngrams_analysis import extract_ngram_counts
+from pysteg.googlebooks_ngrams.ngrams_analysis import yield_ngram_descriptions
 
 # Define and parse the script arguments
 parser = argparse.ArgumentParser(description=descr, epilog=epilog)
@@ -92,16 +93,6 @@ def process_file(descr):
         open(local_path + "_DONE", 'w').close()
         
         print("{t} Finished {f}".format(t=datetime.datetime.now(),f=filename))
-
-def yield_ngram_descriptions(filename):
-    """Yield ngram descriptions from a file."""
-    
-    with open(filename, 'r') as f:
-        ngrams = json.load(f)
-        
-    for n in sorted(ngrams.keys()):
-        for prefix in ngrams[n]:
-            yield (n, prefix)
 
 if __name__ == '__main__':
     ngram_descriptions = yield_ngram_descriptions(args.ngrams)
