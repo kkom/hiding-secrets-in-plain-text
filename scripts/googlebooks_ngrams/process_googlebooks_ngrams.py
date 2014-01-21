@@ -12,8 +12,6 @@ already dispatched job.
 
 import argparse
 import datetime
-import io
-import json
 import multiprocessing
 import os
 import time
@@ -87,7 +85,7 @@ def process_file(descr):
         source_ngrams = iter_remote_gzip(remote_path)
         processed_ngrams = extract_ngram_counts(source_ngrams, int(n))
         
-        with io.open(local_path, 'wb') as f:
+        with open(local_path, 'wb') as f:
             ngrams_iter2file(processed_ngrams, f)
             
         open(local_path + "_DONE", 'w').close()
