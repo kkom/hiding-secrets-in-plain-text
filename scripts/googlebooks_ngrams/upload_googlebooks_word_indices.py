@@ -40,6 +40,10 @@ parser.add_argument("--output", help="output text file for the index")
 
 args = parser.parse_args()
 
+# Create shortcuts for special characters (as bytes)
+backslash = b'\\'
+eof = b''
+
 # Create table names with schemas
 tmp_table = "\"{dataset}\".raw_word_indices".format(dataset=args.dataset)
 table = "\"{dataset}\".word_indices".format(dataset=args.dataset)
@@ -65,12 +69,15 @@ if args.stage <= 1:
     print("Created TABLE {tmp_table}".format(**locals()))
     
     for file in args.files:
-        # Escape all backslashes
+        # Google Books ngrams represent strings exactly. There are no special
+        # characters that need to be escaped, hence \ is a valid character on
+        # its own.
+        #
+        # Conversely, PostgreSQL expects all special characters in data to be
+        # escaped, including \. As a result, each backslash needs to be doubled.
         with open(file, 'rb') as i:
             with open(file + '_ESCAPED', 'wb') as o:
                 s = i.read(1)
-                backslash = b'\\'
-                eof = b''
                 while(s != eof):
                     if s != backslash:
                         o.write(s)
@@ -91,7 +98,7 @@ if args.stage <= 1:
         # Remove the escaped file
         os.remove(file + "_ESCAPED")
     
-        print("Dumped FILE {file}".format(**locals()))
+        print("Dumped FILE {file} to TABLE {tmp_table}".format(**locals()))
 
 # Stage 2: Create an index table and insert into it sorted words from the
 #          temporary table
@@ -121,7 +128,8 @@ if args.stage <= 2:
     conn.commit()
     
     print("Created TABLE {table}".format(**locals()))
-    print("Created INDEX on column \"w\"".format(**locals()))
+    print("Inserted sorted data from {tmp_table} to {table}".format(**locals()))
+    print("Created INDEX on column \"w\" in TABLE {table}".format(**locals()))
     
 # Stage 3: If specified, output the index to a text file
 if args.stage <= 3 and args.output:
@@ -131,9 +139,29 @@ if args.stage <= 3 and args.output:
         TO
           %s;
         """.format(**locals()),
-        (args.output,)
+        (args.output + "_TMP",)
     )
     conn.commit()
+    
+    # PostgreSQL's COPY TO statement will return all special characters,
+    # including backslash, escaped with an extra backslash. Since Google Books
+    # ngrams do not contain any special characters and backlash is considered to
+    # be a normal character, this extra backslash is unnecessary and will always
+    # occur before another backslash.
+    #
+    # So whenever a backslash is read from the file output by PostgreSQL, it
+    # will be followed by an unnecessary one.
+    with open(args.output + "_TMP", 'rb') as i:
+        with open(args.output, 'wb') as o:
+            s = i.read(1)
+            while(s != eof):
+                if s != backslash:
+                    o.write(s)
+                else:
+                    o.write(s)
+                    i.read(1)
+                s = i.read(1)
+    os.remove(args.output + "_TMP")
     
 # Disconnect from the database
 cur.close()
