@@ -21,6 +21,8 @@ import os
 
 import psycopg2
 
+from pysteg.common.files import path_append_hidden_flag
+
 # Define and parse arguments
 parser = argparse.ArgumentParser(
     description=descr,
@@ -34,7 +36,7 @@ parser.add_argument("database", help="name of the database")
 parser.add_argument("dataset",
     help="name of the dataset (for example: 'googlebooks')")
     
-parser.add_argument("--stage", type=int,
+parser.add_argument("--stage", type=int, default=1,
     help="stage from which to run the script")
 parser.add_argument("--output", help="output text file for the index")
 
@@ -68,15 +70,18 @@ if args.stage <= 1:
     
     print("Created TABLE {tmp_table}".format(**locals()))
     
-    for file in args.files:
+    for path in args.files:
         # Google Books ngrams represent strings exactly. There are no special
         # characters that need to be escaped, hence \ is a valid character on
         # its own.
         #
         # Conversely, PostgreSQL expects all special characters in data to be
         # escaped, including \. As a result, each backslash needs to be doubled.
-        with open(file, 'rb') as i:
-            with open(file + '_ESCAPED', 'wb') as o:
+        
+        # Escape the backslashes to a separate, temporary file
+        escaped_path = path_append_hidden_flag(path, "_ESCAPED")
+        with open(path, "rb") as i:
+            with open(escaped_path, "wb") as o:
                 s = i.read(1)
                 while(s != eof):
                     if s != backslash:
@@ -91,14 +96,14 @@ if args.stage <= 1:
             COPY {tmp_table} (w, f)
             FROM %s;
             """.format(**locals()),
-            (file + "_ESCAPED",)
+            (escaped_path,)
         )
         conn.commit()
     
         # Remove the escaped file
-        os.remove(file + "_ESCAPED")
+        os.remove(escaped_path)
     
-        print("Dumped FILE {file} to TABLE {tmp_table}".format(**locals()))
+        print("Dumped FILE {path} to TABLE {tmp_table}".format(**locals()))
 
 # Stage 2: Create an index table and insert into it sorted words from the
 #          temporary table
