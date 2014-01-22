@@ -167,6 +167,7 @@ if args.stage <= 3 and args.output:
                     i.read(1)
                 s = i.read(1)
     os.remove(args.output + "_TMP")
+    print("Dumped the words index to FILE {args.output}".format(**locals()))
     
 # Disconnect from the database
 cur.close()
