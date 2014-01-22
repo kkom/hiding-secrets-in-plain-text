@@ -128,7 +128,7 @@ if args.stage <= 2:
         CREATE INDEX ON {table}
           USING btree (w)
           WITH (fillfactor = 100);
-        """.format(dataset=args.dataset)
+        """.format(**locals())
     )
     conn.commit()
     
