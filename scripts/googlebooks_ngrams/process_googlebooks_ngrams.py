@@ -21,7 +21,7 @@ from pysteg.common.streaming import iter_remote_gzip
 from pysteg.common.streaming import ngrams_iter2file
 
 from pysteg.googlebooks_ngrams.ngrams_analysis import extract_ngram_counts
-from pysteg.googlebooks_ngrams.ngrams_analysis import yield_ngram_descriptions
+from pysteg.googlebooks_ngrams.ngrams_analysis import gen_ngram_descriptions
 
 # Define and parse the script arguments
 parser = argparse.ArgumentParser(description=descr, epilog=epilog)
@@ -93,7 +93,7 @@ def process_file(descr):
         print("{t} Finished {f}".format(t=datetime.datetime.now(),f=filename))
 
 if __name__ == '__main__':
-    ngram_descriptions = yield_ngram_descriptions(args.ngrams)
+    ngram_descriptions = gen_ngram_descriptions(args.ngrams)
 
     if args.processes == 1:
         for ngram in ngram_descriptions:

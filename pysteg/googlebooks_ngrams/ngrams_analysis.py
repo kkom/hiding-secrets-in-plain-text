@@ -47,8 +47,8 @@ def extract_ngram_counts(source_ngrams, n):
             current_ngram_count = int(data[n+1])
             current_ngram_valid = valid_ngram(current_ngram)
 
-def yield_ngram_descriptions(filename):
-    """Yield ngram descriptions from a file."""
+def gen_ngram_descriptions(filename):
+    """Yields ngram descriptions from a file."""
     
     with open(filename, 'r') as f:
         ngrams = json.load(f)
