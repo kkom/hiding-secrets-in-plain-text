@@ -9,15 +9,7 @@ import json
 import urllib.parse
 import urllib.request
 
-def yield_ngram_descriptions(filename):
-    """Yield ngram descriptions from a file."""
-    
-    with open(filename, 'r') as f:
-        ngrams = json.load(f)
-        
-    for n in sorted(ngrams.keys()):
-        for prefix in ngrams[n]:
-            yield (n, prefix)
+from pysteg.googlebooks_ngrams.ngrams_analysis import gen_ngram_descriptions
             
 def get_ngram_file_size(ngram_description):
     """
@@ -44,7 +36,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     
     # Create the iterator for ngram descriptions
-    ngram_descriptions = yield_ngram_descriptions(args.ngrams)
+    ngram_descriptions = gen_ngram_descriptions(args.ngrams)
 
     # Print the column headers
     print("{n} {prefix:11} {size_gb:>9} {cum_size_gb:>15}".format(

@@ -13,7 +13,7 @@ import multiprocessing
 import os
 
 from pysteg.common.files import open_file_to_process, FileAlreadyProcessed
-from pysteg.googlebooks_ngrams.ngrams_analysis import yield_ngram_descriptions
+from pysteg.googlebooks_ngrams.ngrams_analysis import gen_ngram_descriptions
 
 def read_index(index_file):
     """Read the index file."""
@@ -68,7 +68,7 @@ if __name__ == '__main__':
     args.index.close()
 
     # Create a generator yielding ngram descriptions
-    ngram_descriptions = yield_ngram_descriptions(args.ngrams)
+    ngram_descriptions = gen_ngram_descriptions(args.ngrams)
     
     # Process the files
     if args.processes == 1:
