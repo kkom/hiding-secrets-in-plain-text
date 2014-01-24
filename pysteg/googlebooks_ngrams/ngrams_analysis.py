@@ -56,3 +56,8 @@ def gen_ngram_descriptions(filename):
     for n in sorted(ngrams.keys()):
         for prefix in ngrams[n]:
             yield (n, prefix)
+            
+def ngram_filename(n,prefix):
+    """Returns a standard ngram filename from its order and prefix."""
+    
+    return "googlebooks-eng-us-all-{n}gram-20120701-{prefix}".format(**locals())
