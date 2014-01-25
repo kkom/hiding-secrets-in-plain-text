@@ -64,7 +64,7 @@ if args.stage <= 1:
         DROP TABLE IF EXISTS {tmp_table};
 
         CREATE TABLE {tmp_table} (
-          i BIGSERIAL PRIMARY KEY,
+          i SERIAL PRIMARY KEY,
           w TEXT UNIQUE,
           f BIGINT
         );
@@ -133,7 +133,7 @@ if args.stage <= 1:
         DROP TABLE IF EXISTS {table};
 
         CREATE TABLE {table} (
-          i BIGINT PRIMARY KEY,
+          i INTEGER PRIMARY KEY,
           w TEXT UNIQUE
         );
     
