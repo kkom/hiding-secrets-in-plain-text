@@ -21,8 +21,6 @@ def read_index(index_file):
         lambda x: reversed(x[:-1].split('\t')),
         index_file
     ))
-    index["_START_"] = "-1"
-    index["_END_"] = "-2"
     return index
 
 def process_file(descr):
@@ -43,9 +41,16 @@ def process_file(descr):
             print("Translating from {input_path}".format(**locals()))
             
             for line in i:
-                l = line.split("\t")
-                l[:-1] = [index[w] for w in l[:-1]]
-                o.write("\t".join(l))
+                try:
+                    l = line.split("\t")
+                    l[:-1] = [index[w] for w in l[:-1]]
+                    o.write("\t".join(l))
+                except KeyError:
+                    # If some word is not in the index (there are only about 10
+                    # such words), do not save the ngram. The distribution is
+                    # not distorted very much, but it is much easier to
+                    # construct the index.
+                    pass
             
             print("Translated to {output_path}".format(**locals()))
 
