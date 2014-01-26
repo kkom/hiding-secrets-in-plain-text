@@ -297,8 +297,9 @@ def upload_ngrams(n, prefixes, index_ranges, cumfreq_ranges):
         cur.execute("""
           INSERT INTO
             {context_table}
-          VALUES
-            (min(c1), max(c2))
+          SELECT
+            min(c1) AS c1,
+            max(c2) AS c2
           FROM
             {table};
           """.format(**locals())
