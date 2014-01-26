@@ -100,7 +100,7 @@ def upload_ngrams(n, prefixes, index_ranges, cumfreq_ranges):
         )
     print("Created context TABLE {context_table}".format(**locals()))
     
-    # Commit creating new ngrams table
+    # Commit creating parent ngrams and context tables
     conn.commit()
     
     # Populate respective partition tables 
@@ -151,7 +151,7 @@ def upload_ngrams(n, prefixes, index_ranges, cumfreq_ranges):
             print("Created context partition TABLE "
                   "{context_partition_table}".format(**locals()))
         
-        # Commit creating a partition
+        # Commit creating ngrams and context partition tables 
         conn.commit()
     
         for prefix in prefixes[partition]:
@@ -275,7 +275,7 @@ def upload_ngrams(n, prefixes, index_ranges, cumfreq_ranges):
             print("Created INDEX on ({context_columns}) in TABLE "
                   "{context_partition_table}".format(**locals()))
         
-        # Commit indexing a single partition table after processing all
+        # Commit indexing ngrams and context tables after processing all
         # corresponding prefix files
         conn.commit()
     
