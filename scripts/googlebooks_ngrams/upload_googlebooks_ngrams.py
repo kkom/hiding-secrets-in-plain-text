@@ -38,14 +38,27 @@ def gen_job_descriptions(partitioned_ngrams, cumfreq_ranges):
 def upload_ngrams(n, prefixes, index_ranges, cumfreq_ranges):
     """Upload ngrams for a particular n to the PostgreSQL database."""
     
-    table = "\"{dataset}\".\"{n}grams\"".format(
-        dataset=args.dataset, **locals())
+    def get_table_name(schema, table):
+        return "\"{schema}\".\"{table}\"".format(**locals())
+    
+    def get_column_definitions(n):
+        return ",\n".join(map(
+            lambda x: "w{} INTEGER".format(x),
+            range(1, n+1)
+        ))
         
-    column_definitions = ",\n".join(map(
-        lambda x: "w{} INTEGER".format(x),
-        range(1, n+1)
-    ))
-    columns = ", ".join(map(lambda x: "w{}".format(x), range(1, n+1)))
+    def get_column_names(n):
+        return ", ".join(map(lambda x: "w{}".format(x), range(1, n+1)))
+    
+    table = get_table_name(args.dataset, "{n}grams".format(**locals()))
+    context_table = get_table_name(args.dataset, "{n}grams__context".format(
+        **locals()))
+        
+    column_definitions = get_column_definitions(n)
+    context_column_definitions = get_column_definitions(n-1) + ",\n" if n > 1 else ""
+    
+    columns = get_column_names(n)
+    context_columns = get_column_names(n-1) if n > 1 else ""
     
     cur.execute("""
         DROP TABLE IF EXISTS {table} CASCADE;
@@ -56,13 +69,24 @@ def upload_ngrams(n, prefixes, index_ranges, cumfreq_ranges):
           c1 BIGINT,
           c2 BIGINT
         );
+        
+        DROP TABLE IF EXISTS {context_table} CASCADE;
+
+        CREATE TABLE {context_table} (
+          i SERIAL,
+          {context_column_definitions}
+          c1 BIGINT,
+          c2 BIGINT
+        );
         """.format(**locals())
     )
     conn.commit()
+    print("Created TABLE {table}".format(**locals()))
+    print("Created context TABLE {context_table}".format(**locals()))
     
     for partition in sorted(prefixes.keys()):
-        partition_table = "\"{dataset}\".\"{n}grams_{partition}\"".format(
-            dataset=args.dataset, **locals())
+        partition_table = get_table_name(args.dataset,
+            "{n}grams_{partition}".format(**locals()))
             
         index_range = index_ranges[partition]
         cumfreq_range = cumfreq_ranges[partition]
@@ -87,8 +111,8 @@ def upload_ngrams(n, prefixes, index_ranges, cumfreq_ranges):
         for prefix in prefixes[partition]:
             path = os.path.join(args.input, ngram_filename(n, prefix))
             
-            tmp_table = "\"{dataset}\".\"tmp_{n}grams_{prefix}\"".format(
-                dataset=args.dataset, **locals())
+            tmp_table = get_table_name(args.dataset,
+                "tmp_{n}grams_{prefix}".format(**locals()))
             
             cur.execute("""
                 DROP TABLE IF EXISTS {tmp_table};
