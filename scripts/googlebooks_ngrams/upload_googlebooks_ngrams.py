@@ -69,7 +69,6 @@ def upload_ngrams(n, prefixes, index_ranges, cumfreq_ranges):
         );
         """.format(**locals())
     )
-    conn.commit()
     print("Created TABLE {table}".format(**locals()))
     
     # Create parent context table
@@ -88,7 +87,6 @@ def upload_ngrams(n, prefixes, index_ranges, cumfreq_ranges):
             );
             """.format(**locals())
         )
-        conn.commit()
     else:
         cur.execute("""
             DROP TABLE IF EXISTS {context_table};
@@ -100,8 +98,10 @@ def upload_ngrams(n, prefixes, index_ranges, cumfreq_ranges):
             );
             """.format(**locals())
         )
-        conn.commit()
     print("Created context TABLE {context_table}".format(**locals()))
+    
+    # Commit creating new ngrams table
+    conn.commit()
     
     # Populate respective partition tables 
     for partition in sorted(prefixes.keys()):
@@ -127,7 +127,6 @@ def upload_ngrams(n, prefixes, index_ranges, cumfreq_ranges):
             ) INHERITS ({table});
             """.format(**locals())
         )
-        conn.commit()
         print("Created partition TABLE {partition_table}".format(**locals()))
         
         # If n > 1, then data in the context table should be partitioned as well
@@ -149,9 +148,11 @@ def upload_ngrams(n, prefixes, index_ranges, cumfreq_ranges):
                 ) INHERITS ({context_table});
                 """.format(**locals())
             )
-            conn.commit()
             print("Created context partition TABLE "
                   "{context_partition_table}".format(**locals()))
+        
+        # Commit creating a partition
+        conn.commit()
     
         for prefix in prefixes[partition]:
             path = os.path.join(args.input, ngram_filename(n, prefix))
@@ -201,7 +202,6 @@ def upload_ngrams(n, prefixes, index_ranges, cumfreq_ranges):
                 """.format(**locals()),
                 (path,)
             )
-            conn.commit()
             print("Dumped FILE {path} to TABLE {cumfreq_tmp_table}".format(
                 **locals()))
                 
@@ -215,7 +215,6 @@ def upload_ngrams(n, prefixes, index_ranges, cumfreq_ranges):
                   {cumfreq_tmp_table};
                 """.format(**locals())
             )
-            conn.commit()
             print("Copied TABLE {cumfreq_tmp_table} to TABLE "
                   "{partition_table}".format(**locals()))
                   
@@ -236,15 +235,15 @@ def upload_ngrams(n, prefixes, index_ranges, cumfreq_ranges):
                     {context_columns} ASC;
                   """.format(**locals())
                 )
-                conn.commit()
                 print("Cumulated and copied TABLE {cumfreq_tmp_table} to TABLE "
                       "{context_partition_table}".format(**locals()))
                       
-            # Drop cumfreq_tmp_table table
             cur.execute("""
               DROP TABLE {cumfreq_tmp_table};
               """.format(**locals())
             )
+            
+            # Commit changes due to processing a single prefix file
             conn.commit()
         
         # Index the ngrams partition table
@@ -262,7 +261,6 @@ def upload_ngrams(n, prefixes, index_ranges, cumfreq_ranges):
                 WITH (fillfactor = 100);
             """.format(**locals())
         )
-        conn.commit()
         print("Created INDEXES on ({columns}), (c1) and (c2) in TABLE "
               "{partition_table}".format(**locals()))
         
@@ -274,9 +272,12 @@ def upload_ngrams(n, prefixes, index_ranges, cumfreq_ranges):
                   WITH (fillfactor = 100);
               """.format(**locals())
             )
-            conn.commit()
             print("Created INDEX on ({context_columns}) in TABLE "
                   "{context_partition_table}".format(**locals()))
+        
+        # Commit indexing a single partition table after processing all
+        # corresponding prefix files
+        conn.commit()
     
     # Create context for 1 grams
     if n == 1:
@@ -290,9 +291,11 @@ def upload_ngrams(n, prefixes, index_ranges, cumfreq_ranges):
             {table};
           """.format(**locals())
         )
-        conn.commit()
         print("Cumulated and copied TABLE {table} to TABLE "
               "{context_table}".format(**locals()))
+        
+        # Commit creating context for 1grams
+        conn.commit()
 
 if __name__ == '__main__':
     # Define and parse arguments
