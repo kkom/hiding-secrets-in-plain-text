@@ -38,8 +38,8 @@ def upload_ngrams(n, prefixes, index_ranges, cumfreq_ranges):
     """Upload ngrams for a particular n to the PostgreSQL database."""
     
     # Define functions to generate table and columns definitions
-    def get_table_name(schema, table):
-        return "\"{schema}\".\"{table}\"".format(**locals())
+    def create_relation_name(schema, relation):
+        return "\"{schema}\".\"{relation}\"".format(**locals())
     
     def get_column_definitions(n):
         return ",\n".join(map(
@@ -51,9 +51,11 @@ def upload_ngrams(n, prefixes, index_ranges, cumfreq_ranges):
         return ", ".join(map(lambda x: "w{}".format(x), range(1, n+1)))
     
     # Generate table and columns definitions
-    table = get_table_name(args.dataset, "{n}grams".format(**locals()))
-    context_table = get_table_name(args.dataset, "{n}grams__context".format(
-        **locals()))  
+    table = create_relation_name(args.dataset, "{n}grams".format(**locals()))
+    context_table = create_relation_name(args.dataset,
+        "{n}grams__context".format(**locals()))
+    cumfreq_sequence = create_relation_name(args.dataset,
+        "{n}grams__cumfreq_seq".format(**locals()))
     column_definitions = get_column_definitions(n)
     columns = get_column_names(n)
     
@@ -67,6 +69,12 @@ def upload_ngrams(n, prefixes, index_ranges, cumfreq_ranges):
           c1 BIGINT,
           c2 BIGINT
         );
+        
+        DROP SEQUENCE IF EXISTS {cumfreq_sequence};
+        
+        CREATE SEQUENCE {cumfreq_sequence}
+          MINVALUE 0
+          OWNED BY {table}.c2;
         """.format(**locals())
     )
     conn.commit()
@@ -107,7 +115,7 @@ def upload_ngrams(n, prefixes, index_ranges, cumfreq_ranges):
     for partition in sorted(prefixes.keys()):
         # Define various properties of the partition table, such as its name and
         # the range of data it is supposed to contain
-        partition_table = get_table_name(args.dataset,
+        partition_table = create_relation_name(args.dataset,
             "{n}grams_{partition}".format(**locals()))
         index_range = index_ranges[partition]
         cumfreq_range = cumfreq_ranges[partition]
@@ -132,7 +140,7 @@ def upload_ngrams(n, prefixes, index_ranges, cumfreq_ranges):
         
         # If n > 1, then data in the context table should be partitioned as well
         if n > 1:        
-            context_partition_table = get_table_name(args.dataset,
+            context_partition_table = create_relation_name(args.dataset,
                 "{n}grams_{partition}__context".format(**locals()))
     
             cur.execute("""
@@ -155,9 +163,9 @@ def upload_ngrams(n, prefixes, index_ranges, cumfreq_ranges):
     
         for prefix in prefixes[partition]:
             path = os.path.join(args.input, ngram_filename(n, prefix))
-            raw_tmp_table = get_table_name(args.dataset,
+            raw_tmp_table = create_relation_name(args.dataset,
                 "tmp_raw__{n}grams_{prefix}".format(**locals()))
-            cumfreq_tmp_table = get_table_name(args.dataset,
+            cumfreq_tmp_table = create_relation_name(args.dataset,
                 "tmp_cumfreq__{n}grams_{prefix}".format(**locals()))
             
             # Copy ngrams starting with a particular prefix into a temporary
@@ -202,6 +210,28 @@ def upload_ngrams(n, prefixes, index_ranges, cumfreq_ranges):
             conn.commit()
             print("Dumped FILE {path} to TABLE {cumfreq_tmp_table}".format(
                 **locals()))
+                
+            # Insert ngrams with this prefix into the partition table
+            cur.execute("""
+                INSERT INTO
+                  {partition_table} ({columns}, c1, c2)
+                SELECT
+                  {columns},
+                  c1 + (SELECT last_value FROM {cumfreq_sequence}) AS c1,
+                  c2 + (SELECT last_value FROM {cumfreq_sequence}) AS c2
+                FROM
+                  {cumfreq_tmp_table};
+                  
+                SELECT
+                  setval('{cumfreq_sequence}', max(c2))
+                FROM
+                  {partition_table};
+                """.format(**locals()),
+                (path,)
+            )
+            conn.commit()
+            print("Copied TABLE {cumfreq_tmp_table} to TABLE "
+                  "{partition_table}".format(**locals()))
         
         # Index the ngrams partition table for efficient access
         cur.execute("""
