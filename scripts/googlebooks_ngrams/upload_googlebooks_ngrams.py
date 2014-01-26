@@ -33,9 +33,20 @@ def partition_ngrams(ngram_descriptions):
 def gen_job_descriptions(partitioned_ngrams, cumfreq_ranges):
     for n in sorted(partitioned_ngrams.keys()):
         yield (int(n), partitioned_ngrams[n], index_ranges, cumfreq_ranges[n])
+        
+def complete(task):
+    """Record in the filesystem that a task has been completed."""
+    open(os.path.join(args.progress_dir, task), "w").close()
+
+def is_completed(task):
+    """Check if a task has been completed."""
+    return os.path.isfile(os.path.join(args.progress_dir, task))
     
 def upload_ngrams(n, prefixes, index_ranges, cumfreq_ranges):
     """Upload ngrams for a particular n to the PostgreSQL database."""
+    
+    if is_completed("{n}grams_analyse".format(**locals())):
+        return
     
     # Define functions to generate table and columns definitions
     def create_relation_name(schema, relation):
@@ -57,54 +68,59 @@ def upload_ngrams(n, prefixes, index_ranges, cumfreq_ranges):
     column_definitions = get_column_definitions(n)
     columns = get_column_names(n)
     
-    # Create parent ngrams table
-    cur.execute("""
-        DROP TABLE IF EXISTS {table} CASCADE;
-    
-        CREATE TABLE {table} (
-          i SERIAL,
-          {column_definitions},
-          c1 BIGINT,
-          c2 BIGINT
-        );
-        """.format(**locals())
-    )
-    print("Created TABLE {table}".format(**locals()))
-    
-    # Create parent context table
-    if n > 1:
-        context_column_definitions = get_column_definitions(n-1)
-        context_columns = get_column_names(n-1)
-
+    if not is_completed("{n}grams_create_parent_tables".format(**locals())):
+        # Create parent ngrams table
         cur.execute("""
-            DROP TABLE IF EXISTS {context_table} CASCADE;
-
-            CREATE TABLE {context_table} (
+            DROP TABLE IF EXISTS {table} CASCADE;
+    
+            CREATE TABLE {table} (
               i SERIAL,
-              {context_column_definitions},
+              {column_definitions},
               c1 BIGINT,
               c2 BIGINT
             );
             """.format(**locals())
         )
-    else:
-        cur.execute("""
-            DROP TABLE IF EXISTS {context_table};
-
-            CREATE TABLE {context_table} (
-              i SERIAL PRIMARY KEY,
-              c1 BIGINT,
-              c2 BIGINT
-            );
-            """.format(**locals())
-        )
-    print("Created context TABLE {context_table}".format(**locals()))
+        print("Created TABLE {table}".format(**locals()))
     
-    # Commit creating parent ngrams and context tables
-    conn.commit()
+        # Create parent context table
+        if n > 1:
+            context_column_definitions = get_column_definitions(n-1)
+            context_columns = get_column_names(n-1)
+
+            cur.execute("""
+                DROP TABLE IF EXISTS {context_table} CASCADE;
+
+                CREATE TABLE {context_table} (
+                  i SERIAL,
+                  {context_column_definitions},
+                  c1 BIGINT,
+                  c2 BIGINT
+                );
+                """.format(**locals())
+            )
+        else:
+            cur.execute("""
+                DROP TABLE IF EXISTS {context_table};
+
+                CREATE TABLE {context_table} (
+                  i SERIAL PRIMARY KEY,
+                  c1 BIGINT,
+                  c2 BIGINT
+                );
+                """.format(**locals())
+            )
+        print("Created context TABLE {context_table}".format(**locals()))
+    
+        # Commit defining parent tables
+        conn.commit()
+        complete("{n}grams_create_parent_tables".format(**locals()))
     
     # Populate respective partition tables 
     for partition in sorted(prefixes.keys()):
+        if is_completed("{n}grams_{partition}_analyse_partition".format(**locals())):
+            continue
+    
         # Define various properties of the partition table, such as its name and
         # the range of data it is supposed to contain
         partition_table = create_relation_name(args.dataset,
@@ -112,32 +128,12 @@ def upload_ngrams(n, prefixes, index_ranges, cumfreq_ranges):
         index_range = index_ranges[partition]
         cumfreq_range = cumfreq_ranges[partition]
         
-        # Create the partition table
-        cur.execute("""
-            DROP TABLE IF EXISTS {partition_table};
-        
-            CREATE TABLE {partition_table} (
-              PRIMARY KEY (i),
-              CHECK (     w1 >= {index_range[0]}
-                      AND w1 <= {index_range[1]}
-                      AND c1 >= {cumfreq_range[0]}
-                      AND c1 <= {cumfreq_range[1]}
-                      AND c2 >= {cumfreq_range[0]}
-                      AND c2 <= {cumfreq_range[1]} )
-            ) INHERITS ({table});
-            """.format(**locals())
-        )
-        print("Created partition TABLE {partition_table}".format(**locals()))
-        
-        # If n > 1, then data in the context table should be partitioned as well
-        if n > 1:        
-            context_partition_table = create_relation_name(args.dataset,
-                "{n}grams_{partition}__context".format(**locals()))
-    
+        if not is_completed("{n}grams_{partition}_create_tables".format(**locals())):
+            # Create the partition table
             cur.execute("""
-                DROP TABLE IF EXISTS {context_partition_table};
+                DROP TABLE IF EXISTS {partition_table};
         
-                CREATE TABLE {context_partition_table} (
+                CREATE TABLE {partition_table} (
                   PRIMARY KEY (i),
                   CHECK (     w1 >= {index_range[0]}
                           AND w1 <= {index_range[1]}
@@ -145,16 +141,41 @@ def upload_ngrams(n, prefixes, index_ranges, cumfreq_ranges):
                           AND c1 <= {cumfreq_range[1]}
                           AND c2 >= {cumfreq_range[0]}
                           AND c2 <= {cumfreq_range[1]} )
-                ) INHERITS ({context_table});
+                ) INHERITS ({table});
                 """.format(**locals())
             )
-            print("Created context partition TABLE "
-                  "{context_partition_table}".format(**locals()))
+            print("Created partition TABLE {partition_table}".format(**locals()))
         
-        # Commit creating ngrams and context partition tables 
-        conn.commit()
+            # If n > 1, then data in the context table should be partitioned too
+            if n > 1:        
+                context_partition_table = create_relation_name(args.dataset,
+                    "{n}grams_{partition}__context".format(**locals()))
+    
+                cur.execute("""
+                    DROP TABLE IF EXISTS {context_partition_table};
+        
+                    CREATE TABLE {context_partition_table} (
+                      PRIMARY KEY (i),
+                      CHECK (     w1 >= {index_range[0]}
+                              AND w1 <= {index_range[1]}
+                              AND c1 >= {cumfreq_range[0]}
+                              AND c1 <= {cumfreq_range[1]}
+                              AND c2 >= {cumfreq_range[0]}
+                              AND c2 <= {cumfreq_range[1]} )
+                    ) INHERITS ({context_table});
+                    """.format(**locals())
+                )
+                print("Created context partition TABLE "
+                      "{context_partition_table}".format(**locals()))
+        
+            # Commit creating ngrams and context partition tables 
+            conn.commit()
+            complete("{n}grams_{partition}_create_tables".format(**locals()))
     
         for prefix in prefixes[partition]:
+            if is_completed("{n}grams_{prefix}_analyse_prefix".format(**locals())):
+                continue
+        
             path = os.path.join(args.input, ngram_filename(n, prefix))
             raw_tmp_table = create_relation_name(args.dataset,
                 "tmp_raw__{n}grams_{prefix}".format(**locals()))
@@ -245,6 +266,7 @@ def upload_ngrams(n, prefixes, index_ranges, cumfreq_ranges):
             
             # Commit changes due to processing a single prefix file
             conn.commit()
+            complete("{n}grams_{prefix}_analyse_prefix".format(**locals()))
         
         # Index the ngrams partition table
         cur.execute("""
@@ -278,6 +300,7 @@ def upload_ngrams(n, prefixes, index_ranges, cumfreq_ranges):
         # Commit indexing ngrams and context tables after processing all
         # corresponding prefix files
         conn.commit()
+        complete("{n}grams_{partition}_analyse_partition".format(**locals()))
     
     # Create context for 1 grams
     if n == 1:
@@ -296,6 +319,8 @@ def upload_ngrams(n, prefixes, index_ranges, cumfreq_ranges):
         
         # Commit creating context for 1grams
         conn.commit()
+        
+    complete("{n}grams_analyse".format(**locals()))
 
 if __name__ == '__main__':
     # Define and parse arguments
@@ -309,6 +334,8 @@ if __name__ == '__main__':
         help="JSON file listing first word index ranges for each partition")
     parser.add_argument("cumfreq_ranges",
         help="JSON file listing cumulative frequency ranges for each partition")
+    parser.add_argument("progress_dir",
+        help="directory where progress of the process can be saved")
     parser.add_argument("database",
         help="name of the database (for example: 'steganography')")
     parser.add_argument("dataset",
