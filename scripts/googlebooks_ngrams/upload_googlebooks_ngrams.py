@@ -1,11 +1,7 @@
 #!/usr/bin/env python3
 
 descr = """
-Lol
-"""
-
-epilog = """
-Wtf
+This scripts upload Google Books Ngrams to a local PostgreSQL database.
 """
 
 import argparse
@@ -86,6 +82,7 @@ def upload_ngrams(n, prefixes, index_ranges, cumfreq_ranges):
             """.format(**locals())
         )
         conn.commit()
+        print("Created partition TABLE {partition_table}".format(**locals()))
     
         for prefix in prefixes[partition]:
             path = os.path.join(args.input, ngram_filename(n, prefix))
@@ -121,8 +118,8 @@ def upload_ngrams(n, prefixes, index_ranges, cumfreq_ranges):
                 (path,)
             )
             conn.commit()
-            
-            print("Dumped FILE {path}".format(**locals()))
+            print("Dumped FILE {path} to TABLE {partition_table}".format(
+                **locals()))
             
         cur.execute("""
             CREATE INDEX ON {partition_table}
@@ -139,14 +136,13 @@ def upload_ngrams(n, prefixes, index_ranges, cumfreq_ranges):
             """.format(**locals())
         )
         conn.commit()
-        print("Created INDEX on ({columns}) in TABLE {partition_table}".format(
-            **locals()))
+        print("Created INDEXES on ({columns}), (c1) and (c2) in TABLE "
+              "{partition_table}".format(**locals()))
 
 if __name__ == '__main__':
     # Define and parse arguments
     parser = argparse.ArgumentParser(
         description=descr,
-        epilog=epilog,
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
     parser.add_argument("ngrams", help="JSON file listing all the ngram files")
