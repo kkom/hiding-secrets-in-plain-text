@@ -54,8 +54,6 @@ def upload_ngrams(n, prefixes, index_ranges, cumfreq_ranges):
     table = create_relation_name(args.dataset, "{n}grams".format(**locals()))
     context_table = create_relation_name(args.dataset,
         "{n}grams__context".format(**locals()))
-    cumfreq_sequence = create_relation_name(args.dataset,
-        "{n}grams__cumfreq_seq".format(**locals()))
     column_definitions = get_column_definitions(n)
     columns = get_column_names(n)
     
@@ -69,12 +67,6 @@ def upload_ngrams(n, prefixes, index_ranges, cumfreq_ranges):
           c1 BIGINT,
           c2 BIGINT
         );
-        
-        DROP SEQUENCE IF EXISTS {cumfreq_sequence};
-        
-        CREATE SEQUENCE {cumfreq_sequence}
-          MINVALUE 0
-          OWNED BY {table}.c2;
         """.format(**locals())
     )
     conn.commit()
@@ -198,8 +190,10 @@ def upload_ngrams(n, prefixes, index_ranges, cumfreq_ranges):
                 SELECT
                   i,
                   {columns},
-                  sum(f) OVER (ORDER BY {columns} ASC) - f AS c1,
-                  sum(f) OVER (ORDER BY {columns} ASC) AS c2
+                  sum(f) OVER (ORDER BY {columns} ASC)
+                    + (SELECT coalesce(max(c2),0) FROM {table}) - f AS c1,
+                  sum(f) OVER (ORDER BY {columns} ASC)
+                    + (SELECT coalesce(max(c2),0) FROM {table}) AS c2
                 FROM
                   {raw_tmp_table};
                   
@@ -216,9 +210,7 @@ def upload_ngrams(n, prefixes, index_ranges, cumfreq_ranges):
                 INSERT INTO
                   {partition_table} ({columns}, c1, c2)
                 SELECT
-                  {columns},
-                  c1 + (SELECT last_value FROM {cumfreq_sequence}) AS c1,
-                  c2 + (SELECT last_value FROM {cumfreq_sequence}) AS c2
+                  {columns}, c1, c2
                 FROM
                   {cumfreq_tmp_table};
                 """.format(**locals())
@@ -234,8 +226,8 @@ def upload_ngrams(n, prefixes, index_ranges, cumfreq_ranges):
                     {context_partition_table} ({context_columns}, c1, c2)
                   SELECT
                     {context_columns},
-                    min(c1) + (SELECT last_value FROM {cumfreq_sequence}) AS c1,
-                    max(c2) + (SELECT last_value FROM {cumfreq_sequence}) AS c2
+                    min(c1) AS c1,
+                    max(c2) AS c2
                   FROM
                     {cumfreq_tmp_table}
                   GROUP BY
@@ -248,14 +240,8 @@ def upload_ngrams(n, prefixes, index_ranges, cumfreq_ranges):
                 print("Cumulated and copied TABLE {cumfreq_tmp_table} to TABLE "
                       "{context_partition_table}".format(**locals()))
                       
-            # Update the cumulative frequency counter for this ngrams table and
-            # drop cumfreq_tmp_table table
+            # Drop cumfreq_tmp_table table
             cur.execute("""
-              SELECT
-                setval('{cumfreq_sequence}', max(c2))
-              FROM
-                {table};
-                
               DROP TABLE {cumfreq_tmp_table};
               """.format(**locals())
             )
