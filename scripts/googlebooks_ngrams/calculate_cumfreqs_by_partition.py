@@ -41,9 +41,6 @@ if __name__ == '__main__':
     cumfreq_ranges = {}
     
     for n in sorted(ngrams.keys()):
-        if n == "3":
-            break
-    
         # Calculate total frequencies in each partition
         cumfreqs = {}
         for prefix in ngrams[n]:
@@ -58,7 +55,7 @@ if __name__ == '__main__':
         cumfreq_ranges[n] = {}
         cumfreq = 0
         for partition in partitions:
-            cumfreq_ranges[n][partition] = (cumfreq + 1,
+            cumfreq_ranges[n][partition] = (cumfreq,
                                             cumfreq + cumfreqs[partition])
             cumfreq += cumfreqs[partition]
     
