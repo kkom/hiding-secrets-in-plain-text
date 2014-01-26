@@ -175,7 +175,7 @@ if args.stage <= 1:
             **locals()))
     
 # Stage 2: If specified, output the index to a text file
-if args.stage <= 3 and args.index_output:
+if args.stage <= 2 and args.index_output:
     tmp_output_path = path_append_flag(args.index_output, "_TMP")
     cur.execute("""
         COPY
