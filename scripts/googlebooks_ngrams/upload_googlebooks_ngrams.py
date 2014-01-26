@@ -10,7 +10,6 @@ import os
 
 import psycopg2
 
-from pysteg.common.files import open_file_to_process, FileAlreadyProcessed
 from pysteg.googlebooks import get_partition
 from pysteg.googlebooks_ngrams.ngrams_analysis import ngram_filename
 
@@ -156,41 +155,55 @@ def upload_ngrams(n, prefixes, index_ranges, cumfreq_ranges):
     
         for prefix in prefixes[partition]:
             path = os.path.join(args.input, ngram_filename(n, prefix))
+            raw_tmp_table = get_table_name(args.dataset,
+                "tmp_raw__{n}grams_{prefix}".format(**locals()))
+            cumfreq_tmp_table = get_table_name(args.dataset,
+                "tmp_cumfreq__{n}grams_{prefix}".format(**locals()))
             
-            tmp_table = get_table_name(args.dataset,
-                "tmp_{n}grams_{prefix}".format(**locals()))
-            
+            # Copy ngrams starting with a particular prefix into a temporary
+            # table and cumulate their frequencies
             cur.execute("""
-                DROP TABLE IF EXISTS {tmp_table};
+                DROP TABLE IF EXISTS {raw_tmp_table};
             
-                CREATE TABLE {tmp_table} (
+                CREATE TABLE {raw_tmp_table} (
                   i SERIAL PRIMARY KEY,
                   {column_definitions},
                   f BIGINT
                 );
                 
+                DROP TABLE IF EXISTS {cumfreq_tmp_table};
+            
+                CREATE TABLE {cumfreq_tmp_table} (
+                  i INTEGER PRIMARY KEY,
+                  {column_definitions},
+                  c1 BIGINT,
+                  c2 BIGINT
+                );
+                
                 COPY
-                  {tmp_table} ({columns}, f)
+                  {raw_tmp_table} ({columns}, f)
                 FROM
                   %s;
                     
                 INSERT INTO
-                  {partition_table} ({columns}, c1, c2)
+                  {cumfreq_tmp_table} (i, {columns}, c1, c2)
                 SELECT
+                  i,
                   {columns},
-                  sum(f) OVER (ORDER BY {columns}) + {cumfreq_range[0]} - f AS c1,
-                  sum(f) OVER (ORDER BY {columns}) + {cumfreq_range[0]} AS c2
+                  sum(f) OVER (ORDER BY {columns}) - f AS c1,
+                  sum(f) OVER (ORDER BY {columns}) AS c2
                 FROM
-                  {tmp_table};
+                  {raw_tmp_table};
                   
-                DROP TABLE {tmp_table};
+                DROP TABLE {raw_tmp_table};
                 """.format(**locals()),
                 (path,)
             )
             conn.commit()
-            print("Dumped FILE {path} to TABLE {partition_table}".format(
+            print("Dumped FILE {path} to TABLE {cumfreq_tmp_table}".format(
                 **locals()))
-            
+        
+        # Index the ngrams partition table for efficient access
         cur.execute("""
             CREATE INDEX ON {partition_table}
                 USING btree ({columns})
