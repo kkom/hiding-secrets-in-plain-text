@@ -40,7 +40,7 @@ def gen_job_descriptions(partitioned_ngrams, cumfreq_ranges):
         yield (int(n), partitioned_ngrams[n], index_ranges, cumfreq_ranges[n])
     
 def upload_ngrams(n, prefixes, index_ranges, cumfreq_ranges):
-    """"""
+    """Upload ngrams for a particular n to the PostgreSQL database."""
     
     table = "\"{dataset}\".\"{n}grams\"".format(
         dataset=args.dataset, **locals())
@@ -76,7 +76,7 @@ def upload_ngrams(n, prefixes, index_ranges, cumfreq_ranges):
         
             CREATE TABLE {partition_table} (
               PRIMARY KEY (i),
-              CHECK ( w1 >= {index_range[0]}
+              CHECK (     w1 >= {index_range[0]}
                       AND w1 <= {index_range[1]}
                       AND c1 >= {cumfreq_range[0]}
                       AND c1 <= {cumfreq_range[1]}
@@ -103,9 +103,9 @@ def upload_ngrams(n, prefixes, index_ranges, cumfreq_ranges):
                 );
                 
                 COPY
-                    {tmp_table} ({columns}, f)
+                  {tmp_table} ({columns}, f)
                 FROM
-                    %s;
+                  %s;
                     
                 INSERT INTO
                   {partition_table} ({columns}, c1, c2)
@@ -124,9 +124,17 @@ def upload_ngrams(n, prefixes, index_ranges, cumfreq_ranges):
             
             print("Dumped FILE {path}".format(**locals()))
             
-        cur.execute("""                
+        cur.execute("""
             CREATE INDEX ON {partition_table}
                 USING btree ({columns})
+                WITH (fillfactor = 100);
+                
+            CREATE INDEX ON {partition_table}
+                USING btree (c1)
+                WITH (fillfactor = 100);
+                
+            CREATE INDEX ON {partition_table}
+                USING btree (c2)
                 WITH (fillfactor = 100);
             """.format(**locals())
         )
