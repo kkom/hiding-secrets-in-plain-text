@@ -198,8 +198,8 @@ def upload_ngrams(n, prefixes, index_ranges, cumfreq_ranges):
                 SELECT
                   i,
                   {columns},
-                  sum(f) OVER (ORDER BY {columns}) - f AS c1,
-                  sum(f) OVER (ORDER BY {columns}) AS c2
+                  sum(f) OVER (ORDER BY {columns} ASC) - f AS c1,
+                  sum(f) OVER (ORDER BY {columns} ASC) AS c2
                 FROM
                   {raw_tmp_table};
                   
@@ -221,19 +221,47 @@ def upload_ngrams(n, prefixes, index_ranges, cumfreq_ranges):
                   c2 + (SELECT last_value FROM {cumfreq_sequence}) AS c2
                 FROM
                   {cumfreq_tmp_table};
-                  
-                SELECT
-                  setval('{cumfreq_sequence}', max(c2))
-                FROM
-                  {partition_table};
-                """.format(**locals()),
-                (path,)
+                """.format(**locals())
             )
             conn.commit()
             print("Copied TABLE {cumfreq_tmp_table} to TABLE "
                   "{partition_table}".format(**locals()))
+                  
+            # Insert ngrams with this prefix into the context partition table
+            if n > 1:
+                cur.execute("""
+                  INSERT INTO
+                    {context_partition_table} ({context_columns}, c1, c2)
+                  SELECT
+                    {context_columns},
+                    min(c1) + (SELECT last_value FROM {cumfreq_sequence}) AS c1,
+                    max(c2) + (SELECT last_value FROM {cumfreq_sequence}) AS c2
+                  FROM
+                    {cumfreq_tmp_table}
+                  GROUP BY
+                    {context_columns}
+                  ORDER BY
+                    {context_columns} ASC;
+                  """.format(**locals())
+                )
+                conn.commit()
+                print("Cumulated and copied TABLE {cumfreq_tmp_table} to TABLE "
+                      "{context_partition_table}".format(**locals()))
+                      
+            # Update the cumulative frequency counter for this ngrams table and
+            # drop cumfreq_tmp_table table
+            cur.execute("""
+              SELECT
+                setval('{cumfreq_sequence}', max(c2))
+              FROM
+                {table};
+                
+              DROP TABLE {cumfreq_tmp_table};
+              """.format(**locals())
+            )
+            conn.commit()
         
-        # Index the ngrams partition table for efficient access
+        # Index the ngrams partition table
         cur.execute("""
             CREATE INDEX ON {partition_table}
                 USING btree ({columns})
@@ -251,6 +279,33 @@ def upload_ngrams(n, prefixes, index_ranges, cumfreq_ranges):
         conn.commit()
         print("Created INDEXES on ({columns}), (c1) and (c2) in TABLE "
               "{partition_table}".format(**locals()))
+        
+        # Index the ngrams context partition table
+        if n > 1:
+            cur.execute("""
+              CREATE INDEX ON {context_partition_table}
+                  USING btree ({context_columns})
+                  WITH (fillfactor = 100);
+              """.format(**locals())
+            )
+            conn.commit()
+            print("Created INDEX on ({context_columns}) in TABLE "
+                  "{context_partition_table}".format(**locals()))
+    
+    # Create context for 1 grams
+    if n == 1:
+        cur.execute("""
+          INSERT INTO
+            {context_table}
+          VALUES
+            (min(c1), max(c2))
+          FROM
+            {table};
+          """.format(**locals())
+        )
+        conn.commit()
+        print("Cumulated and copied TABLE {table} to TABLE "
+              "{context_table}".format(**locals()))
 
 if __name__ == '__main__':
     # Define and parse arguments
