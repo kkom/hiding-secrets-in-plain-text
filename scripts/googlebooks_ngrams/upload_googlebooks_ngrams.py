@@ -233,7 +233,9 @@ def upload_ngrams(n, prefixes, index_ranges, cumfreq_ranges):
                 SELECT
                   {columns}, c1, c2
                 FROM
-                  {cumfreq_tmp_table};
+                  {cumfreq_tmp_table}
+                ORDER BY
+                  i ASC;
                 """.format(**locals())
             )
             print("Copied TABLE {cumfreq_tmp_table} to TABLE "
@@ -252,6 +254,7 @@ def upload_ngrams(n, prefixes, index_ranges, cumfreq_ranges):
                     {cumfreq_tmp_table}
                   GROUP BY
                     {context_columns}
+                  -- This is much faster than "ORDER BY min(i)", can investigate
                   ORDER BY
                     {context_columns} ASC;
                   """.format(**locals())
