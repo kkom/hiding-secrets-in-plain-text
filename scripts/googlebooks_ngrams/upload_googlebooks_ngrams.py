@@ -212,8 +212,8 @@ def upload_ngrams(n, prefixes, index_ranges, cumfreq_ranges):
                 SELECT
                   i,
                   {columns},
-                  sum(f) OVER (ORDER BY {columns} ASC)
-                    + (SELECT coalesce(max(c2),0) FROM {table}) - f AS c1,
+                  sum(f) OVER (ORDER BY {columns} ASC) - f
+                    + (SELECT coalesce(max(c2),0) FROM {table}) AS c1,
                   sum(f) OVER (ORDER BY {columns} ASC)
                     + (SELECT coalesce(max(c2),0) FROM {table}) AS c2
                 FROM
