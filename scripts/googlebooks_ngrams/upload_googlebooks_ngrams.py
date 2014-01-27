@@ -271,9 +271,10 @@ def upload_ngrams(n, prefixes, index_ranges, cumfreq_ranges):
             conn.commit()
             complete("{n}grams_{prefix}_analyse_prefix".format(**locals()))
         
-        # Index the ngrams partition table
+        # Index the ngrams partition table. Making the index on columns unique
+        # ensures that no leaves of the probability tree are duplicated.
         cur.execute("""
-            CREATE INDEX ON {partition_table}
+            CREATE UNIQUE INDEX ON {partition_table}
                 USING btree ({columns})
                 WITH (fillfactor = 100);
                 
@@ -289,10 +290,15 @@ def upload_ngrams(n, prefixes, index_ranges, cumfreq_ranges):
         print("Created INDEXES on ({columns}), (c1) and (c2) in TABLE "
               "{partition_table}".format(**locals()))
         
-        # Index the ngrams context partition table
+        # Index the ngrams context partition table. Since ngrams are added from
+        # the prefix files sequentially, if it happened that two ngrams starting
+        # with the same (w1, ..., w(n-1)) were wrongly put in different prefix
+        # files, an error will occur. Ngrams starting with the same (w1, ...,
+        # w(n-2)) are not a problem, since we will always query for P(w(n) | w1,
+        # ..., w(n-1)).
         if n > 1:
             cur.execute("""
-              CREATE INDEX ON {context_partition_table}
+              CREATE UNIQUE INDEX ON {context_partition_table}
                   USING btree ({context_columns})
                   WITH (fillfactor = 100);
               """.format(**locals())
