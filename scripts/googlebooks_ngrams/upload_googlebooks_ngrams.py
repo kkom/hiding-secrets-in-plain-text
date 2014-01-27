@@ -196,7 +196,7 @@ def upload_ngrams(n, prefixes, index_ranges, cumfreq_ranges):
                 DROP TABLE IF EXISTS {cumfreq_tmp_table};
             
                 CREATE TABLE {cumfreq_tmp_table} (
-                  i INTEGER PRIMARY KEY,
+                  i SERIAL PRIMARY KEY,
                   {column_definitions},
                   c1 BIGINT,
                   c2 BIGINT
@@ -208,9 +208,8 @@ def upload_ngrams(n, prefixes, index_ranges, cumfreq_ranges):
                   %s;
                     
                 INSERT INTO
-                  {cumfreq_tmp_table} (i, {columns}, c1, c2)
+                  {cumfreq_tmp_table} ({columns}, c1, c2)
                 SELECT
-                  i,
                   {columns},
                   sum(f) OVER (ORDER BY {columns} ASC) - f
                     + (SELECT coalesce(max(c2),0) FROM {table}) AS c1,
@@ -223,7 +222,7 @@ def upload_ngrams(n, prefixes, index_ranges, cumfreq_ranges):
                 """.format(**locals()),
                 (path,)
             )
-            print("Dumped FILE {path} to TABLE {cumfreq_tmp_table}".format(
+            print("Copied FILE {path} to TABLE {cumfreq_tmp_table}".format(
                 **locals()))
                 
             # Insert ngrams with this prefix into the partition table
