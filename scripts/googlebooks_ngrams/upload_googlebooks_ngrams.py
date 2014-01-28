@@ -70,8 +70,8 @@ def upload_ngrams(n, prefixes, index_ranges, cumfreq_ranges):
             CREATE TABLE {table} (
               i SERIAL,
               {column_definitions},
-              c1 BIGINT,
-              c2 BIGINT
+              cf1 BIGINT,
+              cf2 BIGINT
             );
             """.format(**locals())
         )
@@ -88,8 +88,8 @@ def upload_ngrams(n, prefixes, index_ranges, cumfreq_ranges):
                 CREATE TABLE {context_table} (
                   i SERIAL,
                   {context_column_definitions},
-                  c1 BIGINT,
-                  c2 BIGINT
+                  cf1 BIGINT,
+                  cf2 BIGINT
                 );
                 """.format(**locals())
             )
@@ -99,8 +99,8 @@ def upload_ngrams(n, prefixes, index_ranges, cumfreq_ranges):
 
                 CREATE TABLE {context_table} (
                   i SERIAL PRIMARY KEY,
-                  c1 BIGINT,
-                  c2 BIGINT
+                  cf1 BIGINT,
+                  cf2 BIGINT
                 );
                 """.format(**locals())
             )
@@ -131,10 +131,10 @@ def upload_ngrams(n, prefixes, index_ranges, cumfreq_ranges):
                   PRIMARY KEY (i),
                   CHECK (     w1 >= {index_range[0]}
                           AND w1 <= {index_range[1]}
-                          AND c1 >= {cumfreq_range[0]}
-                          AND c1 <= {cumfreq_range[1]}
-                          AND c2 >= {cumfreq_range[0]}
-                          AND c2 <= {cumfreq_range[1]} )
+                          AND cf1 >= {cumfreq_range[0]}
+                          AND cf1 <= {cumfreq_range[1]}
+                          AND cf2 >= {cumfreq_range[0]}
+                          AND cf2 <= {cumfreq_range[1]} )
                 ) INHERITS ({table});
                 """.format(**locals())
             )
@@ -152,10 +152,10 @@ def upload_ngrams(n, prefixes, index_ranges, cumfreq_ranges):
                       PRIMARY KEY (i),
                       CHECK (     w1 >= {index_range[0]}
                               AND w1 <= {index_range[1]}
-                              AND c1 >= {cumfreq_range[0]}
-                              AND c1 <= {cumfreq_range[1]}
-                              AND c2 >= {cumfreq_range[0]}
-                              AND c2 <= {cumfreq_range[1]} )
+                              AND cf1 >= {cumfreq_range[0]}
+                              AND cf1 <= {cumfreq_range[1]}
+                              AND cf2 >= {cumfreq_range[0]}
+                              AND cf2 <= {cumfreq_range[1]} )
                     ) INHERITS ({context_table});
                     """.format(**locals())
                 )
@@ -192,8 +192,8 @@ def upload_ngrams(n, prefixes, index_ranges, cumfreq_ranges):
                 CREATE TABLE {cumfreq_tmp_table} (
                   i SERIAL PRIMARY KEY,
                   {column_definitions},
-                  c1 BIGINT,
-                  c2 BIGINT
+                  cf1 BIGINT,
+                  cf2 BIGINT
                 );
                 
                 COPY
@@ -202,13 +202,13 @@ def upload_ngrams(n, prefixes, index_ranges, cumfreq_ranges):
                   %s;
                     
                 INSERT INTO
-                  {cumfreq_tmp_table} ({columns}, c1, c2)
+                  {cumfreq_tmp_table} ({columns}, cf1, cf2)
                 SELECT
                   {columns},
                   sum(f) OVER (ORDER BY {columns} ASC) - f
-                    + (SELECT coalesce(max(c2),0) FROM {table}) AS c1,
+                    + (SELECT coalesce(max(cf2),0) FROM {table}) AS cf1,
                   sum(f) OVER (ORDER BY {columns} ASC)
-                    + (SELECT coalesce(max(c2),0) FROM {table}) AS c2
+                    + (SELECT coalesce(max(cf2),0) FROM {table}) AS cf2
                 FROM
                   {raw_tmp_table};
                   
@@ -222,9 +222,9 @@ def upload_ngrams(n, prefixes, index_ranges, cumfreq_ranges):
             # Insert ngrams with this prefix into the partition table
             cur.execute("""
                 INSERT INTO
-                  {partition_table} ({columns}, c1, c2)
+                  {partition_table} ({columns}, cf1, cf2)
                 SELECT
-                  {columns}, c1, c2
+                  {columns}, cf1, cf2
                 FROM
                   {cumfreq_tmp_table}
                 ORDER BY
@@ -238,11 +238,11 @@ def upload_ngrams(n, prefixes, index_ranges, cumfreq_ranges):
             if n > 1:
                 cur.execute("""
                   INSERT INTO
-                    {context_partition_table} ({context_columns}, c1, c2)
+                    {context_partition_table} ({context_columns}, cf1, cf2)
                   SELECT
                     {context_columns},
-                    min(c1) AS c1,
-                    max(c2) AS c2
+                    min(cf1) AS cf1,
+                    max(cf2) AS cf2
                   FROM
                     {cumfreq_tmp_table}
                   GROUP BY
@@ -271,12 +271,12 @@ def upload_ngrams(n, prefixes, index_ranges, cumfreq_ranges):
                 USING btree ({columns})
                 WITH (fillfactor = 100);
                 
-            CREATE INDEX ON {partition_table}
-                USING btree (c1, c2)
+            CREATE UNIQUE INDEX ON {partition_table}
+                USING btree (cf1, cf2)
                 WITH (fillfactor = 100);
             """.format(**locals())
         )
-        print("Created UNIQUE INDEXES on ({columns}) and (c1, c2) in TABLE "
+        print("Created UNIQUE INDEXES on ({columns}) and (cf1, cf2) in TABLE "
               "{partition_table}".format(**locals()))
         
         # Index the ngrams context partition table. Since ngrams are added from
@@ -304,10 +304,10 @@ def upload_ngrams(n, prefixes, index_ranges, cumfreq_ranges):
     if n == 1:
         cur.execute("""
           INSERT INTO
-            {context_table} (c1, c2)
+            {context_table} (cf1, cf2)
           SELECT
-            min(c1) AS c1,
-            max(c2) AS c2
+            min(cf1) AS cf1,
+            max(cf2) AS cf2
           FROM
             {table};
           """.format(**locals())
