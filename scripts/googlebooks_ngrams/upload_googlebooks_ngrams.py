@@ -272,15 +272,11 @@ def upload_ngrams(n, prefixes, index_ranges, cumfreq_ranges):
                 WITH (fillfactor = 100);
                 
             CREATE INDEX ON {partition_table}
-                USING btree (c1)
-                WITH (fillfactor = 100);
-                
-            CREATE INDEX ON {partition_table}
-                USING btree (c2)
+                USING btree (c1, c2)
                 WITH (fillfactor = 100);
             """.format(**locals())
         )
-        print("Created INDEXES on ({columns}), (c1) and (c2) in TABLE "
+        print("Created UNIQUE INDEXES on ({columns}) and (c1, c2) in TABLE "
               "{partition_table}".format(**locals()))
         
         # Index the ngrams context partition table. Since ngrams are added from
@@ -296,7 +292,7 @@ def upload_ngrams(n, prefixes, index_ranges, cumfreq_ranges):
                   WITH (fillfactor = 100);
               """.format(**locals())
             )
-            print("Created INDEX on ({context_columns}) in TABLE "
+            print("Created UNIQUE INDEX on ({context_columns}) in TABLE "
                   "{context_partition_table}".format(**locals()))
         
         # Commit indexing ngrams and context tables after processing all
