@@ -64,7 +64,7 @@ class GooglebooksNgramsLanguageModel:
         
         self.cur.execute("""
           SELECT
-            c1, c2
+            cf1, cf2
           FROM
             {table}
           {where}
@@ -92,7 +92,6 @@ class GooglebooksNgramsLanguageModel:
         if ngram_row is None:
             # Back off to a lower-order model or raise an exception
             if n > 1:
-                print("Backing off from a {n}gram model.".format(**locals()))
                 return self._c_raw(w, context[1:])
             else:
                 raise Exception("Word {w} not in alphabet.".format(**locals()))
@@ -101,7 +100,7 @@ class GooglebooksNgramsLanguageModel:
             #
             # cf - cumulative frequencies of the ngram [context + (w)]
             # CF - cumulative frequencies of the ngram [context]
-            # c  - cumulative probabilities of w given context
+            # c  - cumulative probabilities of w with the given context
             
             context_row = self.get_row_by_words(context)
             cf1, cf2 = ngram_row
@@ -130,7 +129,6 @@ class GooglebooksNgramsLanguageModel:
         if context_row is None:
             # Back off to a lower-order model or raise an exception
             if n > 1:
-                print("Backing off from a {n}gram model.".format(**locals()))
                 return self._next_raw(c, context[1:])
             else:
                 raise Exception("1-grams context table broken.")
@@ -140,7 +138,7 @@ class GooglebooksNgramsLanguageModel:
             #
             # cf - cumulative frequencies of the ngram [context + (w)]
             # CF - cumulative frequencies of the ngram [context]
-            # c  - cumulative probabilities of w given context
+            # c  - cumulative probabilities of w with the given context
             
             c1, c2 = c
             CF1, CF2 = context_row
@@ -155,7 +153,7 @@ class GooglebooksNgramsLanguageModel:
               FROM
                 {table}
               WHERE
-                c1 <= {cf1} AND c2 >= {cf2}
+                cf1 <= {cf1} AND cf2 >= {cf2}
               LIMIT 1;
               """.format(**locals())
             )
