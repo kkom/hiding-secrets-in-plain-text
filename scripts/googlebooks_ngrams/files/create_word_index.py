@@ -37,6 +37,10 @@ if __name__ == '__main__':
     gen_index = count(1)
     with open(args.output, "w") as f:
         for p in create_partition_names():
-            for i, w in zip(gen_index, sorted(index_partitions[p])):
+            # The order of zipping is important - if gen_index was zipped first,
+            # one extra element of it would be consumed after all elements of
+            # index_partitions[p] have been zipped. This means losing a single
+            # count every time partition is switched. 
+            for w, i in zip(sorted(index_partitions[p]), gen_index):
                 f.write("{i}\t{w}\n".format(**locals()))
             print("Dumped {p} partition".format(**locals()))

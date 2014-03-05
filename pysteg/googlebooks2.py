@@ -25,17 +25,11 @@ def get_partition(word):
     """Returns partition to which a word corresponds."""
     
     partitions = create_partition_names_frozenset();
+    prefix = word[:2].lower()
     
-    if len(word) == 1:
-        if word in partitions:
-            return word
-        else:
-            return "_"
+    if prefix in partitions:
+        return prefix
+    elif len(prefix) > 1 and prefix[0] in partitions:
+        return prefix[0]
     else:
-        if word[0:2] in partitions:
-            return word[0:2]
-        elif word[0:1] in partitions:
-            return word[0]
-        else:
-            return "_"
-            
+        return "_"
