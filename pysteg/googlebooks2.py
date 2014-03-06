@@ -2,9 +2,10 @@
 
 import string
 
-from itertools import chain
+from itertools import count, chain
 from functools import lru_cache
 
+@lru_cache(maxsize=1)
 def create_partition_names():
     """Returns a tuple of all valid partition names."""
 
@@ -20,6 +21,15 @@ def create_partition_names():
 @lru_cache(maxsize=1)
 def create_partition_names_frozenset():
     return frozenset(create_partition_names())
+    
+@lru_cache(maxsize=1)
+def create_partition_order_index():
+    """Returns a dictionary keyed by partition and valued by partition order."""
+    return dict(zip(create_partition_names(),count(1)))
+    
+def partition_order(p):
+    """Returns the order key of a partition."""
+    return create_partition_order_index()[p]
     
 def get_partition(word):
     """Returns partition to which a word corresponds."""
