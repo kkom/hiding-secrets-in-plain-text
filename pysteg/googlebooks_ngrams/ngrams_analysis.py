@@ -1,5 +1,6 @@
 import json
-import re
+
+from pysteg.googlebooks2 import pos_tagged
 
 def extract_ngram_counts(source_ngrams, n):
     """
@@ -13,21 +14,11 @@ def extract_ngram_counts(source_ngrams, n):
     function's performance.
     """
     
-    pos_tags = {"NOUN", "VERB", "ADJ", "ADV", "PRON", "DET", "ADP", "NUM",
-        "CONJ", "PRT", ".", "X"}
-    
-    # A part-of-speech (POS) tag can either be appended to the end of a word, as
-    # in "eat_VERB", or can be a placeholder on its own, as in "_VERB_".
-    pos_pattern = re.compile("_[A-Z.]+_?$")
-    
     def valid_ngram(ngram):
         """Check if the current ngram is valid, i.e. POS tag-free."""
-        
         for word in ngram:
-            for potential_tag in pos_pattern.findall(word.decode()):
-                if potential_tag.strip("_") in pos_tags:
-                    return False
-        
+            if pos_tagged(word):
+                return False
         return True
     
     current_ngram = []
