@@ -35,18 +35,37 @@ def partition_order(p):
     """Returns the order key of a partition."""
     return create_partition_order_index()[p]
     
-def get_partition(word):
+def get_partition(word, partitions=None):
     """Returns partition to which a word corresponds."""
     
-    partitions = create_partition_names_frozenset();
-    prefix = word[:2].lower()
+    # If no partitions were passed as an argument, use all partitions
+    if partitions == None:
+        partitions = create_partition_names_frozenset()
     
-    if prefix in partitions:
+    # If the word is a special tag, it belongs to the "_" partition
+    if word == "_START_" or word == "_END_":
+        if "_" in partitions:
+            return "_"
+        else:
+            return False
+    
+    # Simplify the word - remove punctuation
+    norm_word = "".join(filter(lambda x: x not in string.punctuation, word))
+    prefix = norm_word[:2].lower()
+    
+    # Cover the case of single character words with a direct match or 2+ words
+    # with first two characters matching 
+    if len(prefix) > 0 and prefix in partitions:
         return prefix
-    elif len(prefix) > 1 and prefix[0] in partitions:
+    # Cover the case of 2+ words with only the first character match
+    elif len(prefix) > 0 and prefix[0] in partitions:
         return prefix[0]
+    # Else empty string, i.e. all punctuation or no character match
     else:
-        return "_"
+        if "_" in partitions:
+            return "_"        
+        else:
+            return False
         
 def pos_tagged(word):
     """Returns if a word either is or contains a POS tag."""
@@ -59,4 +78,3 @@ def pos_tagged(word):
         if potential_tag.strip("_") in POS_TAGS:
             return False
     return True
-
