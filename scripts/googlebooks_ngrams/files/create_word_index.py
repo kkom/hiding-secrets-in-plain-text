@@ -33,6 +33,9 @@ if __name__ == '__main__':
                 index_partitions[get_partition(line[0])].add(line[0])
         print("Processed {path}".format(**locals()))
     
+    # Manually add "_START_" and "_END_" markers
+    index_partitions["_"].update(("_START_", "_END_"))
+    
     # Assign indices to words and save them
     gen_index = count(1)
     with open(args.output, "w") as f:
