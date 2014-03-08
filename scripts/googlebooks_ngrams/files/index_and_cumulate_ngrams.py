@@ -16,99 +16,64 @@ import struct
 from itertools import chain, count
 from os import path
 
-from pysteg.googlebooks2 import create_partition_names
-from pysteg.googlebooks2 import get_partition
-from pysteg.googlebooks2 import partition_order
+from pysteg.googlebooks2 import PARTITION_NAMES, SPECIAL_PREFIXES
 from pysteg.googlebooks_ngrams.ngrams_analysis import ngram_filename
 
 def write_ngrams_table(n, prefixes):
     """Writes a cumulative frequencies ngrams table for a particular n."""
     
-    # This is a very messy piece of code which constructs the schedule of
-    # partitions and ngram files. The schedule is an order list of tuples
-    # containing an ordered list of partitions to which words need to be
-    # assigned and an unordered list of ngram files from which ngrams are
-    # assigned to any of those partitions. The induced order of partitions needs
-    # to follow the general order of partitions, in order to produce ordered
-    # cumulative ngram tables.
-    partition_names = create_partition_names();
-    if n == 1:
-        # Create a raw schedule dictionary keyed by prefix files
-        raw_schedule = { (pref,):set() for pref in prefixes
-                         if pref not in {"other", "punctuation"} }
-        
-        # Assign partitions to prefixes
-        for part in partition_names:
-            if part != "_":
-                raw_schedule[(part[0],)].add(part)
-                
-        # Handle the special case of "other"/"punctuation" and "_"
-        raw_schedule[("other", "punctuation")] = {"_"}
-        
-        # Convert raw schedule into a list of partition-prefix tuples
-        pp = ((part, frozenset(pref)) for pref, part in raw_schedule.items())
-        
-    else:
-        # Create a raw schedule dictionary keyed by partition names
-        raw_schedule = {(part,):set() for part in partition_names}
-        
-        # Assign prefixes to partitions
-        for pref in prefixes:
-            if pref not in {"other", "punctuation"}:
-                raw_schedule[(get_partition(pref),)].add(pref)
-        
-        # Handle the special case of "other"/"punctuation" and "_"
-        raw_schedule[("_",)] = {"other", "punctuation"}
-        
-        # Convert raw schedule into a list of partition-prefix tuples
-        pp = ((part, frozenset(pref)) for part, pref in raw_schedule.items())
-    
-    # Sort the schedule
-    schedule = tuple(sorted(
-        ( (tuple(sorted(part,key=partition_order)), pref) for part, pref in pp),
-        key=lambda schedule_pair: partition_order(schedule_pair[0][0])
-    ))
+    # Prepare a schedule of reading ngrams from prefix files
+    schedule = {part:set() for part in PARTITION_NAMES}
+    for pref in prefixes:
+        if pref in SPECIAL_PREFIXES:
+            schedule["_"].add(pref)
+        else:
+            schedule[pref[0]].add(pref)
     
     # Create the file with all ngrams
-    with open(path.join(args.output, "{n}gram".format(**locals())), "wb") as fn:
+    output_path = path.join(args.output, "{n}gram".format(**locals()))
+    with open(output_path, "wb") as fo:
         # Prepare the line format specifier
         fmt = "<" + n * "i" + "q"
     
         # Write the first line consisting of all columns equal to 0
         cf = 0
-        fn.write(struct.pack(fmt, *n*(0,) + (cf,)))
-    
-        # Go over the schedule
-        for parts, prefs in schedule:    
-            # Create a dictionary of ngram sets separated by partitions
-            partitions = {part:set() for part in parts}
-            partitions_set = frozenset(parts)
+        fo.write(struct.pack(fmt, *n*(0,) + (cf,)))
+        
+        # Go over the partitions schedule
+        for part in PARTITION_NAMES:    
+            # Create a set of all ngrams in the partition
+            ngrams = set()
             
-            # Read files one by one
-            for pref in prefs:
+            # Read one by one prefix files corresponding to the partition
+            for pref in schedule[part]:
+                # Simultaneously read ngrams from the prefix file and write
+                # those which don't match to the error file 
                 filename = ngram_filename(n,pref)
-                with open(path.join(args.input, filename), "r") as fp:
-                    with open(path.join(args.error, filename), "w") as fe:                  
-                        for line in fp:
-                            ngram = line[:-1].split("\t")
-                            try:
-                                # Translate all words into their indices
-                                ixs = tuple(map(lambda x: w2i[x], ngram[:-1]))
-                                # Partition in which the ngram should fall
-                                part = get_partition(ngram[0], partitions_set)
-                                # Add the ngram
-                                partitions[part].add((ixs, int(ngram[-1])))
-                            except KeyError:
-                                fe.write(line)
-                        print("Read ngrams from {filename}".format(**locals()))
+                input_path = path.join(args.input, filename)
+                error_path = path.join(args.error, filename)
+                with open(input_path, "r") as fi, open(error_path, "w") as fe:
+                    for line in fi:
+                        ngram = line[:-1].split("\t")
+                        try:
+                            # Translate all words into their indices
+                            ixs = tuple(map(lambda x: w2i[x][0], ngram[:-1]))
+                            # Assert that the partition is correct
+                            assert(w2i[ngram[0]][1] == part)
+                            # Add the ngram
+                            ngrams.add((ixs, int(ngram[-1])))
+                        # If the partition doesn't match or the word cannot be
+                        # found in the index
+                        except (AssertionError, KeyError):
+                            fe.write(line)
+                    print("Read ngrams from {input_path}".format(**locals()))
             
             # Sort and dump the partitions
-            for part in partitions:
-                for ngram in sorted(partitions[part]):
-                    print(ngram)
-                    cf += ngram[1]
-                    fn.write(struct.pack(fmt, *ngram[0] + (cf,)))
-                print("Dumped {part} to {n}gram file".format(**locals()))
+            for ngram in sorted(ngrams):
+                cf += ngram[1]
+                fo.write(struct.pack(fmt, *ngram[0] + (cf,)))
+            print("Dumped indexed and cumulated ngrams partition {part} to "
+                  "{output_path}".format(**locals()))
 
 if __name__ == '__main__':
     # Define and parse arguments
@@ -124,16 +89,17 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # Read the index of words
+    def read_index_line(line):
+        """Given an index file line returns a (word, (ix, partition)) tuple."""
+        line_split = line[:-1].split("\t")
+        return (line_split[1], (int(line_split[0]), line_split[2]))
     with open(args.index, "r") as f:
-        w2i = dict(zip(
-            map(lambda x: x[:-1].split("\t")[1], f),
-            count(1)
-        ))
+        w2i = dict(map(read_index_line, f))
     
     # Load the ngram descriptions
     with open(args.ngrams, "r") as f:
          ngram_descriptions = json.load(f)
     
+    # Create all bytes ngram tables
     for n, prefixes in ngram_descriptions.items():
         write_ngrams_table(int(n), prefixes)
-        break
