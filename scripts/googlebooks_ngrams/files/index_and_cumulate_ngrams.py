@@ -16,6 +16,8 @@ import struct
 from itertools import chain, count
 from os import path
 
+from numpy import zeros
+
 from pysteg.googlebooks2 import PARTITION_NAMES, SPECIAL_PREFIXES
 from pysteg.googlebooks_ngrams.ngrams_analysis import ngram_filename
 
@@ -35,17 +37,26 @@ def write_ngrams_table(n, prefixes):
     with open(output_path, "wb") as fo:
         # Prepare the line format specifier
         fmt = "<" + n * "i" + "q"
+        dtp = [("w{}".format(i),"<i4") for i in range(n)] + [("f","<i4")]
     
         # Write the first line consisting of all columns equal to 0
         cf = 0
         fo.write(struct.pack(fmt, *n*(0,) + (cf,)))
         
         # Go over the partitions schedule
-        for part in PARTITION_NAMES:    
-            # Create a set of all ngrams in the partition
-            ngrams = set()
+        for part in PARTITION_NAMES:
+            # Count the maximum number of ngrams in the partition
+            ngrams_maxn = sum(
+                sum(1 for line
+                    in open(path.join(args.input, ngram_filename(n,pref)), "r"))
+                for pref in schedule[part]
+            )
+        
+            # Create a numpy array that can contain all potential ngrams
+            ngrams = zeros(ngrams_maxn, dtype=dtp)
             
             # Read one by one prefix files corresponding to the partition
+            i = 0
             for pref in schedule[part]:
                 # Simultaneously read ngrams from the prefix file and write
                 # those which don't match to the error file 
@@ -61,17 +72,21 @@ def write_ngrams_table(n, prefixes):
                             # Assert that the partition is correct
                             assert(w2i[ngram[0]][1] == part)
                             # Add the ngram
-                            ngrams.add((ixs, int(ngram[-1])))
+                            ngrams[i] = ixs + (int(ngram[-1]),)
+                            i+=1
                         # If the partition doesn't match or the word cannot be
                         # found in the index
                         except (AssertionError, KeyError):
                             fe.write(line)
                     print("Read ngrams from {input_path}".format(**locals()))
+            ngrams_n = i
             
-            # Sort and dump the partitions
-            for ngram in sorted(ngrams):
-                cf += ngram[1]
-                fo.write(struct.pack(fmt, *ngram[0] + (cf,)))
+            # Sort and dump the partition
+            ngrams = ngrams[:ngrams_n]
+            ngrams.sort(order=["w{}".format(i) for i in range(n)])
+            for i in range(ngrams_n):
+                cf += ngrams[i]["f"]
+                fo.write(struct.pack(fmt, *tuple(ngrams[i])[:-1] + (cf,)))
             print("Dumped indexed and cumulated ngrams partition {part} to "
                   "{output_path}".format(**locals()))
 
