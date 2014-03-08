@@ -5,11 +5,12 @@ This script will create a words index from all Google Books 1grams.
 """
 
 import argparse
+import json
 
 from itertools import count, repeat
+from os.path import join
 
-from pysteg.googlebooks2 import create_partition_names, get_partition
-from pysteg.googlebooks_ngrams.ngrams_analysis import gen_ngram_descriptions
+from pysteg.googlebooks2 import PARTITION_NAMES, SPECIAL_PREFIXES
 from pysteg.googlebooks_ngrams.ngrams_analysis import ngram_filename
 
 if __name__ == '__main__':
@@ -19,31 +20,38 @@ if __name__ == '__main__':
     parser.add_argument("input", help="input directory for ngram files")
     parser.add_argument("output", help="output path for words index")
     args = parser.parse_args()
-
-    # Prepare index partitions 
-    index_partitions = {p:set() for p in create_partition_names()}
     
-    # Put words into partitions
-    ngram_descriptions = gen_ngram_descriptions(args.ngrams)
-    for ngram_description in filter(lambda x: x[0] == "1", ngram_descriptions):
-        path = args.input + ngram_filename(*ngram_description)
-        with open(path, "r") as f:
-            for l in f:
-                line = l.split("\t")
-                index_partitions[get_partition(line[0])].add(line[0])
-        print("Processed {path}".format(**locals()))
+    # Read ngram descriptions file
+    with open(args.ngrams, "r") as f:
+        ngrams = json.load(f)
     
-    # Manually add "_START_" and "_END_" markers
-    index_partitions["_"].update(("_START_", "_END_"))
+    # Create 1:many partitions to prefixes correspondence schedule
+    schedule = {p:frozenset({p}) for p in ngrams["1"]
+                if p not in SPECIAL_PREFIXES}
+    schedule["_"] = SPECIAL_PREFIXES
     
-    # Assign indices to words and save them
+    # Verify that the implicitly created partitions are correct
+    assert(set(schedule.keys()) == set(PARTITION_NAMES))
+    
+    # Go over the schedule
     gen_index = count(1)
-    with open(args.output, "w") as f:
-        for p in create_partition_names():
-            # The order of zipping is important - if gen_index was zipped first,
-            # one extra element of it would be consumed after all elements of
-            # index_partitions[p] have been zipped. This means losing a single
-            # count every time partition is switched. 
-            for w, i in zip(sorted(index_partitions[p]), gen_index):
-                f.write("{i}\t{w}\n".format(**locals()))
-            print("Dumped {p} partition".format(**locals()))
+    with open(args.output, "w") as fo:
+        for part in PARTITION_NAMES:
+            # Initialise all words
+            if part == "_":
+                words = {"_START_", "_END_"}
+            else:
+                words = set()
+            
+            # Read words from respective prefix files
+            for pref in schedule[part]:
+                path = join(args.input, ngram_filename(1, pref))
+                with open(path, "r") as fi:
+                    for line in fi:
+                        words.add(line[:-1].split("\t")[0])
+                print("Read words from {path}".format(**locals()))
+            
+            # Dump words to the index file
+            for w, i in zip(sorted(words), gen_index):
+                fo.write("{i}\t{w}\t{part}\n".format(**locals()))
+            print("Dumped {part} partition".format(**locals()))
