@@ -58,7 +58,7 @@ cur = conn.cursor()
 # Stage 1: Create the index table from 1grams
 if args.stage <= 1:
     last_indices = {}
-    
+
     # Create a temporary table
     cur.execute("""
         DROP TABLE IF EXISTS {tmp_table};
@@ -72,10 +72,10 @@ if args.stage <= 1:
     )
     conn.commit()
     print("Created TABLE {tmp_table}".format(**locals()))
-    
+
     with open(args.ngrams, 'r') as f:
         ngrams = json.load(f)
-    
+
     # Load words from 1grams into the table
     for prefix in sorted(ngrams["1"]):
         # _START_ and _END_ markers only exist in the context of another ngram.
@@ -90,11 +90,11 @@ if args.stage <= 1:
                 """.format(**locals())
             )
             conn.commit()
-            
+
         # Escape all backslashes
         path = os.path.join(args.input, ngram_filename(1, prefix))
         escaped_path = path_append_flag(path, "_ESCAPED")
-        
+
         with open(path, "rb") as i:
             with open(escaped_path, "wb") as o:
                 s = i.read(1)
@@ -116,18 +116,18 @@ if args.stage <= 1:
             (escaped_path,)
         )
         conn.commit()
-    
+
         # Remove the escaped file
         os.remove(escaped_path)
-        
+
         # Get end index for this prefix
         cur.execute("""
             SELECT currval('{tmp_table}_i_seq');
         """.format(**locals()))
         last_indices[prefix] = cur.fetchone()[0];
-        
+
         print("Inserted words from FILE {path}".format(**locals()))
-    
+
     # Copy data to the actual index table (without frequencies)
     cur.execute("""
         DROP TABLE IF EXISTS {table};
@@ -136,7 +136,7 @@ if args.stage <= 1:
           i INTEGER PRIMARY KEY,
           w TEXT UNIQUE
         );
-    
+
         INSERT INTO
           {table} (i, w)
         SELECT
@@ -145,21 +145,21 @@ if args.stage <= 1:
           {tmp_table}
         ORDER BY
           i ASC;
-          
+
         DROP TABLE {tmp_table};
-      
+
         CREATE INDEX ON {table}
           USING btree (w)
           WITH (fillfactor = 100);
         """.format(**locals())
     )
     conn.commit()
-    
+
     print("Created TABLE {table}".format(**locals()))
     print("Copied data from {tmp_table} to {table}".format(**locals()))
     print("Dropped TABLE {tmp_table}".format(**locals()))
     print("Created INDEX on column \"w\" in TABLE {table}".format(**locals()))
-    
+
     # Calculate the range of indices for each prefix
     if args.index_ranges_output:
         index_ranges = {}
@@ -167,13 +167,13 @@ if args.stage <= 1:
         for prefix in sorted(last_indices.keys()):
             index_ranges[prefix] = (last_index+1, last_indices[prefix])
             last_index = last_indices[prefix]
-            
+
         with open(args.index_ranges_output, "w") as f:
             json.dump(index_ranges, f)
-        
+
         print("Dumped index ranges to FILE {args.index_ranges_output}".format(
             **locals()))
-    
+
 # Stage 2: If specified, output the index to a text file
 if args.stage <= 2 and args.index_output:
     tmp_output_path = path_append_flag(args.index_output, "_TMP")
@@ -186,7 +186,7 @@ if args.stage <= 2 and args.index_output:
         (tmp_output_path,)
     )
     conn.commit()
-    
+
     # PostgreSQL's COPY TO statement will return all special characters,
     # including backslash, escaped with an extra backslash. Since Google Books
     # ngrams do not contain any special characters and backlash is considered to
@@ -207,7 +207,7 @@ if args.stage <= 2 and args.index_output:
                 s = i.read(1)
     os.remove(tmp_output_path)
     print("Dumped words index to FILE {args.index_output}".format(**locals()))
-    
+
 # Disconnect from the database
 cur.close()
 conn.close()

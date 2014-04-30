@@ -3,7 +3,7 @@
 descr = """
 This script strips Project Gutenberg information text from the beginning and
 end of an e-book. Normally used for preparing the text to build a histogram of
-ngrams. 
+ngrams.
 """
 
 import argparse
@@ -35,10 +35,10 @@ for text in args.input:
             for r in f1:
                 if start.search(r):
                     break
-            
+
             for r in f1:
                 if end.search(r):
                     break
-            
+
                 f2.write(r)
-                
+

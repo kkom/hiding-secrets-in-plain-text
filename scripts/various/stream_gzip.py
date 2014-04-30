@@ -12,7 +12,7 @@ import urllib.request
 
 from pysteg.common.timing import timer
 from pysteg.common.streaming import iter_remote_gzip
- 
+
 # Define and parse the script arguments
 parser = argparse.ArgumentParser(
     description=descr,
@@ -39,5 +39,5 @@ lines = itertools.islice(
 with timer(method="time") as t:
     for (i,l) in zip(line_numbers, lines):
         print("{}: {}".format(i, l.decode()), end="")
-        
+
 print('The request took {:.2f} s of real time.'.format(t.interval))

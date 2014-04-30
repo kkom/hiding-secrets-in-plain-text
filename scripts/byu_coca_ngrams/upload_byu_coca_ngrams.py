@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
 descr = """
-This script uploads ngrams from the Brigham Young University (BYU) Corpus of 
+This script uploads ngrams from the Brigham Young University (BYU) Corpus of
 Contemporary American English (COCA) database to a PostgreSQL database.
 
-It uses Unix sockets and peer authentication to connect to the 
+It uses Unix sockets and peer authentication to connect to the
 database, so has to be run on the same machine that the database engine. The
-COPY  command will not work unless the user connected to the database is a 
+COPY  command will not work unless the user connected to the database is a
 superuser.
 """
 
@@ -17,35 +17,35 @@ import psycopg2
 class ByuCocaNgramUpload:
     def __init__(self, settings,):
         self.settings = settings
-        
+
         self.N = int(self.settings["n"])
-        
+
         self.word_columns = tuple("w{}".format(i) for i in range(1,self.N+1))
         self.pos_columns = tuple("pos{}".format(i) for i in range(1,self.N+1))
         self.word_column_names = self.gen_word_column_names(self.N)
         self.pos_column_names = ",".join(self.pos_columns)
         self.word_column_defs = self.gen_word_column_defs(self.N)
-        self.pos_column_defs = ",".join(map(lambda x: x + " text", 
+        self.pos_column_defs = ",".join(map(lambda x: x + " text",
                                         self.pos_columns))
         self.lowercase_word_columns_as_normal_columns = ",".join(map(
             lambda x: "lower({x}) AS {x}".format(x=x), self.word_columns))
         self.lowercase_word_columns = ",".join(map(
             lambda x: "lower({})".format(x), self.word_columns))
         self.q_condition = " AND ".join(map(
-            lambda x: "{} != 'q!'".format(x), self.word_columns)) 
-        
+            lambda x: "{} != 'q!'".format(x), self.word_columns))
+
         self.table = "{n}gram_{dataset}".format(**self.settings)
-        
+
     def gen_word_column_names(self, n):
         return ",".join(self.word_columns[0:n])
-        
+
     def gen_word_column_defs(self, n):
         return ",".join(map(lambda x: x + " text", self.word_columns[0:n]))
-    
+
     def connect(self):
         self.conn = psycopg2.connect(database=self.settings["database"])
         self.cur = self.conn.cursor()
-        
+
     def disconnect(self):
         self.conn.commit()
         self.cur.close()
@@ -61,7 +61,7 @@ class ByuCocaNgramUpload:
             {word_column_defs},
             {pos_column_defs}
           );
-          
+
           COPY "{schema}"."raw_{table}" (
             p,
             {word_column_names},
@@ -78,7 +78,7 @@ class ByuCocaNgramUpload:
                 pos_column_names=self.pos_column_names
             ), (self.settings["file"],)
         )
-        
+
         self.conn.commit()
 
         print("Succesfully dumped data to a temporary table "
@@ -86,11 +86,11 @@ class ByuCocaNgramUpload:
             schema=self.settings["schema"],
             table=self.table
         ))
-        
+
     def cumulate_data(self):
         self.cur.execute("""
           DROP TABLE IF EXISTS "{schema}"."{table}";
-          
+
           CREATE TABLE "{schema}"."{table}" (
             i integer primary key,
             {word_column_defs},
@@ -99,7 +99,7 @@ class ByuCocaNgramUpload:
             c1 bigint,
             c2 bigint
           );
-          
+
           INSERT INTO
             "{schema}"."{table}"
           SELECT
@@ -113,9 +113,9 @@ class ByuCocaNgramUpload:
             "{schema}"."raw_{table}"
           WHERE
             {q_condition};
-            
+
           DROP TABLE "{schema}"."raw_{table}";
-            
+
           CREATE UNIQUE INDEX
             ON "{schema}"."{table}"
             USING btree (i)
@@ -130,7 +130,7 @@ class ByuCocaNgramUpload:
                 q_condition=self.q_condition
             )
         )
-        
+
         self.conn.commit()
 
         print("Succesfully saved data to table "
@@ -138,20 +138,20 @@ class ByuCocaNgramUpload:
             schema=self.settings["schema"],
             table=self.table
         ))
-    
+
     def marginalize_ngrams(self):
         """
         Creates N tables of marginalised and lowercase ngrams with n in
         {1, ..., N}.
-    
+
         The marginalisation procedure is naive and inexact: (n-1)-gram statistic
         is constructed from (n)-grams by marginalising those whose FIRST (n-1)
         words match the (n-1)-gram exactly.
         """
-        
+
         self.cur.execute("""
           DROP TABLE IF EXISTS "{schema}"."{table}_{N}";
-          
+
           CREATE TABLE "{schema}"."{table}_{N}" (
             i serial primary key,
             {word_column_defs},
@@ -159,7 +159,7 @@ class ByuCocaNgramUpload:
             c1 bigint,
             c2 bigint
           );
-          
+
           INSERT INTO
             "{schema}"."{table}_{N}" ( {word_column_names}, p, c1, c2 )
           SELECT
@@ -179,23 +179,23 @@ class ByuCocaNgramUpload:
             ) tmp
           ORDER BY
             i ASC;
-          
+
           CREATE UNIQUE INDEX ON "{schema}"."{table}_{N}"
             USING btree (i)
             WITH(fillfactor = 100);
-            
+
           CREATE INDEX ON "{schema}"."{table}_{N}"
             USING btree ({conditional_column_names})
             WITH (fillfactor = 100);
-                
+
           CREATE INDEX ON "{schema}"."{table}_{N}"
             USING btree ({word_column_names})
             WITH (fillfactor = 100);
-            
+
           CREATE UNIQUE INDEX ON "{schema}"."{table}_{N}"
             USING btree (c1)
             WITH(fillfactor = 100);
-            
+
           CREATE UNIQUE INDEX ON "{schema}"."{table}_{N}"
             USING btree (c2)
             WITH(fillfactor = 100);
@@ -211,20 +211,20 @@ class ByuCocaNgramUpload:
                 conditional_column_names=self.gen_word_column_names(self.N-1)
             )
         )
-        
+
         self.conn.commit()
-        
+
         print("Succesfully saved data to table "
               "\"{schema}\".\"{table}_{N}\".".format(
             schema=self.settings["schema"],
             table=self.table,
             N=self.N,
         ))
-        
+
         for n in range(self.N-1,0,-1):
             self.cur.execute("""
               DROP TABLE IF EXISTS "{schema}"."{table}_{n}";
-        
+
               CREATE TABLE "{schema}"."{table}_{n}" (
                 i serial primary key,
                 {word_column_defs},
@@ -232,7 +232,7 @@ class ByuCocaNgramUpload:
                 c1 bigint,
                 c2 bigint
               );
-        
+
               INSERT INTO
                 "{schema}"."{table}_{n}" ( {word_column_names}, p, c1, c2 )
               SELECT
@@ -252,19 +252,19 @@ class ByuCocaNgramUpload:
                 ) tmp
               ORDER BY
                 i ASC;
-          
+
               CREATE UNIQUE INDEX ON "{schema}"."{table}_{n}"
                 USING btree (i)
                 WITH(fillfactor = 100);
-                
+
               CREATE INDEX ON "{schema}"."{table}_{n}"
                 USING btree ({word_column_names})
                 WITH (fillfactor = 100);
-            
+
               CREATE UNIQUE INDEX ON "{schema}"."{table}_{n}"
                 USING btree (c1)
                 WITH(fillfactor = 100);
-            
+
               CREATE UNIQUE INDEX ON "{schema}"."{table}_{n}"
                 USING btree (c2)
                 WITH(fillfactor = 100);
@@ -277,7 +277,7 @@ class ByuCocaNgramUpload:
                     word_column_defs=self.gen_word_column_defs(n)
                 )
             )
-            
+
             if n > 1:
                 self.cur.execute("""
                   CREATE INDEX ON "{schema}"."{table}_{n}"
@@ -290,26 +290,26 @@ class ByuCocaNgramUpload:
                         conditional_column_names=self.gen_word_column_names(n-1)
                     )
                 )
-            
+
             self.conn.commit()
-        
+
             print("Succesfully saved data to table "
                   "\"{schema}\".\"{table}_{n}\".".format(
                 schema=self.settings["schema"],
                 table=self.table,
                 n=n,
             ))
-            
+
         self.cur.execute("""
           DROP TABLE IF EXISTS "{schema}"."{table}_0";
-    
+
           CREATE TABLE "{schema}"."{table}_0" (
             i serial primary key,
             p integer,
             c1 bigint,
             c2 bigint
           );
-          
+
           INSERT INTO
             "{schema}"."{table}_0" ( p, c1, c2 )
           SELECT
@@ -325,7 +325,7 @@ class ByuCocaNgramUpload:
         )
 
         self.conn.commit()
-    
+
         print("Succesfully saved data to table "
               "\"{schema}\".\"{table}_0\".".format(
             schema=self.settings["schema"],

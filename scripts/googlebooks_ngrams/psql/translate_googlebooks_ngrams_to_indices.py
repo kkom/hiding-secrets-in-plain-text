@@ -32,27 +32,27 @@ def process_file(descr):
 
     filename_template = "googlebooks-eng-us-all-{n}gram-20120701-{prefix}"
     filename = filename_template.format(**locals())
-    
+
     input_path = os.path.join(args.input, filename)
     output_path = os.path.join(args.output, filename)
-    
+
     partition = get_partition(prefix, partitions)
-    
+
     unindexed = 0
     bad_partition = 0
-    
+
     with open(input_path, "r") as i:
         with open_file_to_process(output_path, "w") as o:
             if o == False:
                 raise FileAlreadyProcessed()
-            
+
             for line in i:
                 try:
                     l = line.split("\t")
                     l[:-1] = [index[w] for w in l[:-1]]
-                    
+
                     # Check if the first word of the ngram satisfies partition
-                    # index constraint 
+                    # index constraint
                     w1 = int(l[0])
                     if (w1 < index_ranges[partition][0]
                             or w1 > index_ranges[partition][1]):
@@ -60,7 +60,7 @@ def process_file(descr):
                             **locals()))
                         bad_partition += 1
                         continue
-                    
+
                     o.write("\t".join(l))
                 except KeyError:
                     # If some word is not in the index (there are only about 10
@@ -70,9 +70,9 @@ def process_file(descr):
                     print("Unindexed word in line: {line}".format(**locals()),
                         end="")
                     unindexed += 1
-            
+
             print("Translated to {output_path}".format(**locals()))
-            
+
     return (unindexed, bad_partition)
 
 if __name__ == '__main__':
@@ -94,7 +94,7 @@ if __name__ == '__main__':
     # Read the index of words
     index = read_index(args.index)
     args.index.close()
-    
+
     # Load index ranges
     with open(args.index_ranges, "r") as f:
         index_ranges = json.load(f)
@@ -102,12 +102,12 @@ if __name__ == '__main__':
 
     # Create a generator yielding ngram descriptions
     ngram_descriptions = gen_ngram_descriptions(args.ngrams)
-    
+
     # Process the files
     if args.processes == 1:
         total_unindexed = 0
         total_bad_partition = 0
-    
+
         for ngram in ngram_descriptions:
             (unindexed, bad_partition) = process_file(ngram)
             total_unindexed += unindexed
@@ -122,7 +122,7 @@ if __name__ == '__main__':
                 lambda x, y: (x[0]+y[0], x[1]+y[1]),
                 errors
             )
-            
+
     print("Ngrams with unindexed words discarded: {total_unindexed}".format(
         **locals()))
     print("Ngrams in bad partitions discarded: {total_bad_partition}".format(

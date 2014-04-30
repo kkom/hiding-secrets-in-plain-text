@@ -8,7 +8,7 @@ class SimpleStreamer(TwythonStreamer):
     def on_success(self, data):
         if 'text' in data:
             print('{id}: {text}'.format(id=data['id'], text=data['text']))
-    
+
     def on_error(self, status_code, data):
         print(data)
         self.disconnect()
@@ -16,4 +16,3 @@ class SimpleStreamer(TwythonStreamer):
 if __name__ == '__main__':
     stream = SimpleStreamer(*TwitterAuthentication().get_credentials())
     stream.statuses.sample(language='en')
-    

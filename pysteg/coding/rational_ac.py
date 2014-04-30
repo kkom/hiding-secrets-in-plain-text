@@ -2,7 +2,7 @@ from functools import lru_cache
 
 from sympy import Rational
 
-# Database of symbol relative frequencies and mappings between letters and 
+# Database of symbol relative frequencies and mappings between letters and
 # indices
 frequencies = {' ': 1828, '.': 100, 'P': 150, 'Q': 8, 'R': 498, 'S': 531,
                'T': 751, 'U': 227, 'V': 79, 'W': 170, 'X': 14, 'Y': 142, 'Z': 5,
@@ -36,7 +36,7 @@ def p(m):
     @lru_cache()
     def total():
         return sum(frequencies.values())
-    
+
     return Rational(frequencies[l(m)], total())
 
 @lru_cache(maxsize=None)
@@ -50,7 +50,7 @@ def c(m):
 @lru_cache(maxsize=None)
 def encode_rec(S):
     """
-    Recursive definition of an arithmetic encoder. This might fail for long 
+    Recursive definition of an arithmetic encoder. This might fail for long
     streams.
     """
     if S == ():
@@ -60,13 +60,13 @@ def encode_rec(S):
         (b, l) = encode_rec(tuple(init))
         return (b + c(last) * l, p(last) * l)
 
-@lru_cache(maxsize=None)     
+@lru_cache(maxsize=None)
 def encode_iter(S):
     """
     Iterative definition of an arithmetic encoder.
     """
     (b, l) = (Rational(0), Rational(1))
-    
+
     for s in S:
         (b, l) = (b + c(s) * l, p(s) * l)
 

@@ -16,7 +16,7 @@ def ngrams_iter2file(ngrams, f):
     standard (ngrams_iterable, count) format and the words saved as Bytes. The
     file has to be open in binary mode.
     """
-    
+
     for ngram in ngrams:
         for word in ngram[0]:
             f.write(word)
@@ -24,4 +24,3 @@ def ngrams_iter2file(ngrams, f):
 
         f.write(bytes(str(ngram[1]), "utf-8"))
         f.write(b'\n')
-        
