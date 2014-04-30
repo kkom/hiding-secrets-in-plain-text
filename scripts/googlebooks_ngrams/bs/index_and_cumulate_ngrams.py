@@ -18,16 +18,17 @@ from os import path
 
 from numpy import zeros
 
-from pysteg.googlebooks2 import PARTITION_NAMES, SPECIAL_PREFIXES
 from pysteg.googlebooks_ngrams.ngrams_analysis import ngram_filename
+from pysteg.googlebooks_ngrams.ngrams_analysis import BS_PARTITION_NAMES
+from pysteg.googlebooks_ngrams.ngrams_analysis import BS_SPECIAL_PREFIXES
 
 def write_ngrams_table(n, prefixes):
     """Writes a cumulative frequencies ngrams table for a particular n."""
 
     # Prepare a schedule of reading ngrams from prefix files
-    schedule = {part:set() for part in PARTITION_NAMES}
+    schedule = {part:set() for part in BS_PARTITION_NAMES}
     for pref in prefixes:
-        if pref in SPECIAL_PREFIXES:
+        if pref in BS_SPECIAL_PREFIXES:
             schedule["_"].add(pref)
         else:
             schedule[pref[0]].add(pref)
@@ -44,7 +45,7 @@ def write_ngrams_table(n, prefixes):
         fo.write(struct.pack(fmt, *n*(0,) + (cf,)))
 
         # Go over the partitions schedule
-        for part in PARTITION_NAMES:
+        for part in BS_PARTITION_NAMES:
             # Count the maximum number of ngrams in the partition
             ngrams_maxn = sum(
                 sum(1 for line
