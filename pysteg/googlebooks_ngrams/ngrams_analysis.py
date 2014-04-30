@@ -1,5 +1,9 @@
 import json
 import re
+import string
+
+BS_PARTITION_NAMES = tuple(string.digits + "_" + string.ascii_lowercase)
+BS_SPECIAL_PREFIXES = frozenset({"other", "punctuation"})
 
 def integrate_pure_ngram_counts(source_ngrams, n):
     """

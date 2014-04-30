@@ -10,8 +10,9 @@ import json
 from itertools import count, repeat
 from os.path import join
 
-from pysteg.googlebooks2 import PARTITION_NAMES, SPECIAL_PREFIXES
 from pysteg.googlebooks_ngrams.ngrams_analysis import ngram_filename
+from pysteg.googlebooks_ngrams.ngrams_analysis import BS_PARTITION_NAMES
+from pysteg.googlebooks_ngrams.ngrams_analysis import BS_SPECIAL_PREFIXES
 
 if __name__ == '__main__':
     # Define and parse the script arguments
@@ -27,16 +28,16 @@ if __name__ == '__main__':
 
     # Create 1:many partitions to prefixes correspondence schedule
     schedule = {p:frozenset({p}) for p in ngrams["1"]
-                if p not in SPECIAL_PREFIXES}
-    schedule["_"] = SPECIAL_PREFIXES
+                if p not in BS_SPECIAL_PREFIXES}
+    schedule["_"] = BS_SPECIAL_PREFIXES
 
     # Verify that the implicitly created partitions are correct
-    assert(set(schedule.keys()) == set(PARTITION_NAMES))
+    assert(set(schedule.keys()) == set(BS_PARTITION_NAMES))
 
     # Go over the schedule
     gen_index = count(1)
     with open(args.output, "w") as fo:
-        for part in PARTITION_NAMES:
+        for part in BS_PARTITION_NAMES:
             # Initialise all words
             if part == "_":
                 words = {"_START_", "_END_"}
