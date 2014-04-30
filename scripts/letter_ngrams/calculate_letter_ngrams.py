@@ -15,35 +15,35 @@ from unidecode import unidecode
 
 def update_ngrams(hist, N, text):
     """Write docs here."""
-        
+
     def new_buffer():
         return ([[' ' for j in range(i+1)] for i in range(N)], 1)
-    
+
     solid = string.digits + string.ascii_lowercase + '!"\'(),-.:;?'
     whitespace = string.whitespace
     all = solid + whitespace
-    
+
     with open(text, 'r') as f:
         for r in f:
             (b,k) = new_buffer()
-            
+
             for l in unidecode(r).lower():
                 if l in all:
                     if l in whitespace:
                         l = ' '
-                
+
                     for n in range(N):
                         if k <= n:
                             b[n][k] = l
                         else:
                             b[n] = b[n][1:] + [l]
-                        
+
                         if k >= n:
                             s = ''.join(b[n])
                             hist[n][s] = hist[n].get(s,0) + 1
-                            
+
                     k += 1
-                    
+
                     if l in whitespace:
                         (b,k) = new_buffer()
     return hist

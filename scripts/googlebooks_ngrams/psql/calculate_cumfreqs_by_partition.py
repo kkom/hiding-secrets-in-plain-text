@@ -11,7 +11,7 @@ import os
 
 from pysteg.googlebooks import get_partition
 from pysteg.googlebooks_ngrams.ngrams_analysis import ngram_filename
-            
+
 def calculate_cumfreq(path):
     """Sum the frequency of all ngrams in a file."""
     s = 0
@@ -32,14 +32,14 @@ if __name__ == '__main__':
     # Read the ngram descriptions
     with open(args.ngrams, 'r') as f:
         ngrams = json.load(f)
-    
+
     # Partitions are the 1gram prefixes ordered alphabetically
     partitions = sorted(ngrams["1"])
     partitions_set = frozenset(partitions)
-    
+
     # Dictionary holding cumulative frequency ranges in each partition
     cumfreq_ranges = {}
-    
+
     for n in sorted(ngrams.keys()):
         # Calculate total frequencies in each partition
         cumfreqs = {}
@@ -50,7 +50,7 @@ if __name__ == '__main__':
                 + calculate_cumfreq(path))
             print("Counted cumulative frequency for FILE {path}".format(
                 **locals()))
-        
+
         # Calculate cumulative frequency ranges in each partition
         cumfreq_ranges[n] = {}
         cumfreq = 0
@@ -58,9 +58,8 @@ if __name__ == '__main__':
             cumfreq_ranges[n][partition] = (cumfreq,
                                             cumfreq + cumfreqs[partition])
             cumfreq += cumfreqs[partition]
-    
+
     with open(args.output, "w") as f:
         json.dump(cumfreq_ranges, f)
     print("Saved cumulative frequency ranges to JSON FILE {args.output}".format(
         **locals()))
-    
