@@ -30,6 +30,12 @@ def allowed(c):
     """Check if a character is allowed through normalisation."""
     return c in __normalised_charset
 
+def close_output_files(out):
+    """Close the output files and remove them from the dictionary."""
+    for i in tuple(out.keys()):
+        out[i].close()
+        del out[i]
+
 def explode(token):
     """Explode the token by punctuation characters."""
 
@@ -83,6 +89,13 @@ def output_ngram(l, count, out):
     # See if an appropriate output file is already open
     prefix = token_prefix(l[0], n)
     if (n, prefix) not in out:
+        # Close all files if too many are open. The elegant way would be to
+        # maintain the files in the order of last access and close only the one
+        # that was accessed longest time ago, but this hack works for now and
+        # efficiency is not key in this script.
+        if len(out) > 1000:
+            close_output_files(out)
+
         filename = ngram_filename(n, prefix)
         path = os.path.join(args.output, filename)
         out[(n, prefix)] = open(path, "a")
@@ -188,9 +201,7 @@ def process_file(descr, max_n):
                     for stop in range(start+1, min(start+max_s,s[0])+1):
                         output_ngram(l[0][start:stop], l_original[-1], out)
 
-    # Close the output files
-    for o in out.values():
-        o.close()
+    close_output_files(out)
 
     print_status("Finished", filename)
 
