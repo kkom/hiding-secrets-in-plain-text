@@ -104,14 +104,14 @@ def output_ngram(l, count, out):
     out[(n, prefix)].write("\t".join(l + (count,)))
 
 def print_status(message, filename):
-    """Output to the terminal status of processing a file."""
+    """Output status of processing a file to the terminal."""
 
     time = datetime.datetime.now()
     print("{time} {message} {filename}".format(**locals()))
 
 def token_prefix(token, n):
     """
-    Returns the prefix of a token. After normalisation a token can consist of
+    Return the prefix of a token. After normalisation a token can consist of
     lowercase letters, digits and punctuation marks, so it suffices to check the
     first character (in case of 1-grams) or the first two characters (in case of
     2-grams).
@@ -141,10 +141,10 @@ def process_file(descr, max_n):
     filename = ngram_filename(n, prefix)
     path = os.path.join(args.input, filename)
 
+    print_status("Processing", filename)
+
     # Dictionary of all possible output files
     out = dict()
-
-    print_status("Processing", filename)
 
     with open(path, "r") as i:
         for line in i:
@@ -161,7 +161,7 @@ def process_file(descr, max_n):
             if s[0] == 0 or s[-1] == 0:
                 continue
 
-            # There are at least two original tokens, so both edge tokens
+            # There are at least two original tokens, so both edge tokens exist
             if n >= 2:
                 # Count the total exploded size of middle original tokens, these
                 # have to be included in the output
