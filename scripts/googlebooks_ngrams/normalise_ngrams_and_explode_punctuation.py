@@ -1,72 +1,119 @@
 #!/usr/bin/env python3
 
 descr = """
-This script will first find the closest ASCII equivalent of each token in an
-ngram and then discard all non-alphanumeric characters. The resulting ngrams
-may become no longer unique and also shorter.
+This script will first find the closest ASCII equivalent of each token. It will
+then remove all characters which are not digits, letters or standard
+punctuation. All tokens will be exploded by punctuation marks -- a valid token
+will consist of any number of alphanumeric characters or a single punctuation
+mark. Induced ngrams of the order not exceeding the original order of the input
+database will be then output.
 """
 
 import argparse
+import datetime
+import itertools
 import os
 import string
 
-from collections import namedtuple
-
 from unidecode import unidecode
 
-from pysteg.googlebooks_ngrams.ngrams_analysis import bs_word_partition
 from pysteg.googlebooks_ngrams.ngrams_analysis import gen_ngram_descriptions
 from pysteg.googlebooks_ngrams.ngrams_analysis import ngram_filename
 
-def word_prefix(word, n):
-    """
-    Returns the prefix of a word. The function is simple because it is to be
-    used solely by this script - we can assume that the word consists only of
-    alphanumeric characters or is a _START_/_END_ token.
-    """
+__alphabetic_charset = frozenset(string.ascii_lowercase)
+__numeric_charset = frozenset(string.digits)
+__punctuation_charset = frozenset(string.punctuation)
+__alphanumeric_charset = __alphabetic_charset.union(__numeric_charset)
+__normalised_charset = __alphanumeric_charset.union(__punctuation_charset)
 
-    if word == "_START_" or word == "_END_":
-        return "other"
-    if n == 1:
-        return word[0]
+def allowed(c):
+    """Check if a character is allowed through normalisation."""
+    return c in __normalised_charset
+
+def explode(token):
+    """Explode the token by punctuation characters."""
+
+    if len(token) == 0:
+        return tuple()
+
+    exploded = []
+
+    interval_start = 0
+    current_punctuation = False
+    previous_punctuation = False
+
+    for i in range(len(token)):
+        current_punctuation = token[i] in __punctuation_charset
+
+        if i != 0 and current_punctuation or previous_punctuation:
+            exploded.append(token[interval_start:i])
+            interval_start = i
+
+        previous_punctuation = current_punctuation
+
+    exploded.append(token[interval_start:])
+
+    return tuple(exploded)
+
+def normalise(token):
+    """
+    Normalise the token. A sentence marker will stay unchanged, a token without
+    punctuation will be normalised to its alphanumerical representation
+    (possibly empty in case it only consists of special characters), and a token
+    with punctuation will be split by punctuation.
+    """
+    if token == "_START_" or token == "_END_":
+        # Sentence delimiters stay unchanged
+        return (token,)
     else:
-        if len(word) == 1 or word[1] not in string.ascii_lowercase:
-            return word[0] + "_"
-        else:
-            return word[:2]
+        # Convert token from Unicode to the best ASCII representation and
+        # leave only the allowed characters
+        token = ''.join(filter(allowed, unidecode(token).lower()))
 
-def output_ngram(l, count, out)
+        # Explode the token by punctuation characters
+        return explode(token)
+
+def output_ngram(l, count, out):
     """
     Output a normalised ngram to an appropriate file. The input ngram includes
     empty tokens.
     """
-
-    # Perform left and right merges
-    for i in range(n):
-        if type(l[i]) == Merge:
-            merge = l[i]
-            if merge.dir == -1:
-                l[i-1] = l[i-1] + merge.word
-            elif merge.dir == +1:
-                l[i+1] = merge.word + l[i+1]
-
-    # Remove empty tokens
-    l = tuple(w for w in l if not (w == "" or type(w) == Merge))
-
-    # Check the new length
-    new_n = len(l)
+    n = len(l)
 
     # See if an appropriate output file is already open
-    new_prefix = word_prefix(l[0], new_n)
-    if (new_n, new_prefix) not in out:
-        out_filename = ngram_filename(new_n, new_prefix)
-        out_path = os.path.join(args.output, out_filename)
-        out[(new_n, new_prefix)] = open(out_path, "a")
+    prefix = token_prefix(l[0], n)
+    if (n, prefix) not in out:
+        filename = ngram_filename(n, prefix)
+        path = os.path.join(args.output, filename)
+        out[(n, prefix)] = open(path, "a")
 
     # Write the positive count to the output file
-    out[(new_n, new_prefix)].write("\t".join(l + (count,)))
+    out[(n, prefix)].write("\t".join(l + (count,)))
 
-def process_file(descr):
+def print_status(message, filename):
+    """Output to the terminal status of processing a file."""
+
+    time = datetime.datetime.now()
+    print("{time} {message} {filename}".format(**locals()))
+
+def token_prefix(token, n):
+    """
+    Returns the prefix of a token. After normalisation a token can consist of
+    lowercase letters, digits and punctuation marks, so it suffices to check the
+    first character (in case of 1-grams) or the first two characters (in case of
+    2-grams).
+    """
+
+    if token in ("_START_", "_END_") or token[0] not in __alphanumeric_charset:
+        return "other"
+    elif n == 1 or token[0] in __numeric_charset:
+        return token[0]
+    elif len(token) == 1 or token[1] not in __alphanumeric_charset:
+        return token[0] + "_"
+    else:
+        return token[:2]
+
+def process_file(descr, max_n):
     """
     Process a single file. Since ngrams will change size and partition, they
     will be appended to existing files containing ngram counts from other prefix
@@ -75,77 +122,85 @@ def process_file(descr):
     script needs to be restarted from scratch if interrupted midway.
     """
 
-    n, in_prefix = descr
+    n, prefix = descr
     n = int(n)
 
-    in_filename = ngram_filename(n, in_prefix)
-    in_path = os.path.join(args.input, in_filename)
+    filename = ngram_filename(n, prefix)
+    path = os.path.join(args.input, filename)
 
     # Dictionary of all possible output files
     out = dict()
 
-    # Check if a character is allowed through normalisation
-    allowed_characters = frozenset(string.digits + string.ascii_lowercase)
-    def allowed(c):
-        return c in allowed_characters
+    print_status("Processing", filename)
 
-    # Named tuple for merging tokens during normalisation:
-    # dir is the direction merging, it is equal to -1 for left and +1 for right
-    # word is the resulting word to be appended to its neighbour
-    Merge = namedtuple('Merge', 'dir word')
-
-    def normalise(word):
-        """
-        Normalise the word depending on whether it's a sentence marker, a
-        special case to be merged or a normal word to be filtered from
-        non-alphanumeric characters.
-        """
-        if word == "_START_" or word == "_END_":
-            # Sentence delimiters stay unchanged
-            return word
-        if word.lower() == "'s":
-            # Possessive <'s> or contracted <is> need to be left merged
-            return Merge(-1, "s")
-        else:
-            # Otherwise convert Unicode to the best ASCII representation and
-            # leave only alphanumeric characters
-            return ''.join(filter(allowed, unidecode(word).lower()))
-
-    with open(in_path, "r") as i:
+    with open(path, "r") as i:
         for line in i:
             l_original = line.split("\t")
 
-            # Normalise individual tokens
-            l = [normalise(w) for w in l_original[:-1]]
+            # Normalise and explode original tokens
+            l = tuple(normalise(w) for w in l_original[:-1])
 
-            # Discard ngrams with empty token on the edge - a lower order
+            # Count the exploded size of each original token
+            s = tuple(len(token) for token in l)
+
+            # Discard ngrams with empty original edge tokens - a lower order
             # ngram already handles these counts
-            if l[0] == "" or l[-1] == "":
+            if s[0] == 0 or s[-1] == 0:
                 continue
 
-            # Discard ngrams with merge tokes pointing outwards - the edge
-            # tokens are also effectively empty since they belong to a word
-            # outside the ngram
-            if ((type(l[0]) == Merge and l[0].dir == -1) or
-                (type(l[-1]) == Merge and l[-1].dir == +1)):
-                continue
+            # There are at least two original tokens, so both edge tokens
+            if n >= 2:
+                # Count the total exploded size of middle original tokens, these
+                # have to be included in the output
+                middle_s = sum(s[1:-1])
 
-            # Discard ngrams with merge tokens pointing towards an empty token -
-            # these are undefined and cannot be handled elegantly
-            for i in range(n):
-                if type(l[i]) == Merge and l[i+merge.dir] == "":
+                # Count the maximum number of normalised tokens that can come
+                # from the original edge tokens
+                max_edge_s = max_n - middle_s
+
+                # There are too many exploded middle tokens -- the normalised
+                # ngram including at least one normalised token from each
+                # original edge token would be beyond the order of the model
+                if max_edge_s < 2:
                     continue
 
-            # The next step would be to output the merged ngram counts, with
-            # negative counts corresponding to lower order ngrams. I have
-            # however realised that this is problematic. The next version of the
-            # script will explore instead of joining ngrams.
+                # Limit the maximum number of normalised edge token by the
+                # combined sizes of exploded original edge tokens
+                max_ts = min(max_edge_s, s[0]+s[1])
+
+                # Flatten the original middle tokens
+                l_middle = tuple(itertools.chain.from_iterable(l[1:-1]))
+
+                # Consider every combination of normalised edge tokens -- they
+                # need to be adjacent to the middle tokens
+                for ls in range(1,max_ts):
+                    for rs in range(1,max_ts-ls+1):
+                        output_ngram(l[0][-ls:] + l_middle + l[-1][:rs],
+                                     l_original[-1], out)
+
+            # There is only one original token
+            else:
+                # Maximum number of normalised tokens coming from the original
+                # token
+                max_s = min(max_n,s[0])
+
+                for start in range(0, s[0]):
+                    for stop in range(start+1, min(start+max_s,s[0])+1):
+                        output_ngram(l[0][start:stop], l_original[-1], out)
+
+    # Close the output files
+    for o in out.values():
+        o.close()
+
+    print_status("Finished", filename)
 
 if __name__ == '__main__':
     # Define and parse the script arguments
     parser = argparse.ArgumentParser(description=descr)
     parser.add_argument("ngrams",
         help="JSON file listing all ngram file descriptions")
+    parser.add_argument("n_max", type=int,
+        help="maximum order of output ngrams")
     parser.add_argument("input",
         help="input directory with original ngram counts")
     parser.add_argument("output",
@@ -154,4 +209,8 @@ if __name__ == '__main__':
 
     ngram_descriptions = gen_ngram_descriptions(args.ngrams)
 
-    process_file(("3", "th"))
+    print("Remember that {args.output} needs to be cleared before running the "
+          "script.".format(**locals()))
+
+    for ngram in ngram_descriptions:
+        process_file(ngram, args.n_max)
