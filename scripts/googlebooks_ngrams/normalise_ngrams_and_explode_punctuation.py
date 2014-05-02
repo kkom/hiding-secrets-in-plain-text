@@ -177,17 +177,13 @@ def process_file(descr, max_n):
                 if max_edge_s < 2:
                     continue
 
-                # Limit the maximum number of normalised edge token by the
-                # combined sizes of exploded original edge tokens
-                max_ts = min(max_edge_s, s[0]+s[1])
-
                 # Flatten the original middle tokens
                 l_middle = tuple(itertools.chain.from_iterable(l[1:-1]))
 
                 # Consider every combination of normalised edge tokens -- they
                 # need to be adjacent to the middle tokens
-                for ls in range(1,max_ts):
-                    for rs in range(1,max_ts-ls+1):
+                for ls in range(1,min(max_edge_s,s[0])+1):
+                    for rs in range(1,min(max_edge_s-ls,s[-1])+1):
                         output_ngram(l[0][-ls:] + l_middle + l[-1][:rs],
                                      l_original[-1], out)
 
