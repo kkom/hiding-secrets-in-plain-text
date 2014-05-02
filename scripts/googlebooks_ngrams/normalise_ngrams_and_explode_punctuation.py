@@ -189,12 +189,8 @@ def process_file(descr, max_n):
 
             # There is only one original token
             else:
-                # Maximum number of normalised tokens coming from the original
-                # token
-                max_s = min(max_n,s[0])
-
                 for start in range(s[0]):
-                    for stop in range(start+1, min(start+max_s,s[0])+1):
+                    for stop in range(start+1, min(start+max_n,s[0])+1):
                         output_ngram(l[0][start:stop], l_original[-1], out)
 
     close_output_files(out)
