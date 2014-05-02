@@ -121,7 +121,7 @@ def token_prefix(token, n):
         return "other"
     elif n == 1 or token[0] in __numeric_charset:
         return token[0]
-    elif len(token) == 1 or token[1] not in __alphanumeric_charset:
+    elif len(token) == 1 or token[1] not in __alphabetic_charset:
         return token[0] + "_"
     else:
         return token[:2]
