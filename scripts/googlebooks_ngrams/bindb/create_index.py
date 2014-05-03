@@ -1,7 +1,16 @@
 #!/usr/bin/env python3
 
 descr = """
-This script will create a words index from all Google Books 1grams.
+This script will create an index from unigrams. The index is a text file that
+for each token has one line containing 3 tab separated values:
+
+1. index of the token (from 1 to vocabulary size V)
+2. token
+3. partition of the token
+
+The tokens are first assigned partition, then sorted by partitions (which have a
+certain defined order) and finally alphabetically. The last step is not
+necessary, since ordering between tokens is now specified by their indices.
 """
 
 import argparse
