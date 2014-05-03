@@ -17,6 +17,8 @@ import string
 
 from unidecode import unidecode
 
+from pysteg.common.log import print_status
+
 from pysteg.googlebooks_ngrams.ngrams_analysis import gen_ngram_descriptions
 from pysteg.googlebooks_ngrams.ngrams_analysis import ngram_filename
 
@@ -103,12 +105,6 @@ def output_ngram(l, count, out):
 
     # Write the ngram to the output file
     out[(n, partition)].write("\t".join(l + (count,)))
-
-def print_status(message, filename):
-    """Output status of processing a file to the terminal."""
-
-    time = datetime.datetime.now()
-    print("{time} {message} {filename}".format(**locals()))
 
 def token_bs_partition(token, n):
     """
