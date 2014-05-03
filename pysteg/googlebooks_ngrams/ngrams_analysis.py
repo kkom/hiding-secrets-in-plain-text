@@ -115,17 +115,17 @@ def normalise_and_explode(token):
 
     return tuple(exploded)
 
-def token_bs_partition(token, n):
+def normalised_token_prefix(token, n):
     """
-    Return the partition of a token. After normalisation a token can consist of
-    lowercase letters, digits and punctuation marks, so it suffices to check the
-    first two characters.
+    Return the prefix of a normalised token. After normalisation a token can
+    consist of lowercase letters, digits and punctuation marks, so it suffices
+    to check the first two characters.
     """
 
     if token in ("_START_", "_END_") or token[0] in __punctuation_charset:
         # Special symbols - sentence markers and punctuation
-        return "_"
-    elif token[0] in __numeric_charset:
+        return "other"
+    elif n == 1 or token[0] in __numeric_charset:
         # Numeric partitions are single character
         return token[0]
     elif len(token) == 1 or token[1] in __nonalphabetic_charset:
