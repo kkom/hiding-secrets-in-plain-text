@@ -20,7 +20,7 @@ from pysteg.common.log import print_status
 from pysteg.googlebooks_ngrams.ngrams_analysis import gen_ngram_descriptions
 from pysteg.googlebooks_ngrams.ngrams_analysis import ngram_filename
 from pysteg.googlebooks_ngrams.ngrams_analysis import normalise_and_explode
-from pysteg.googlebooks_ngrams.ngrams_analysis import token_bs_partition
+from pysteg.googlebooks_ngrams.ngrams_analysis import normalised_token_prefix
 
 def close_output_files(out):
     """Close the output files and remove them from the dictionary."""
@@ -50,8 +50,8 @@ def output_ngram(l, count, out):
     n = len(l)
 
     # See if an appropriate output file is already open
-    partition = token_bs_partition(l[0], n)
-    if (n, partition) not in out:
+    prefix = normalised_token_prefix(l[0], n)
+    if (n, prefix) not in out:
         # Close all files if too many are open. The elegant way would be to
         # maintain the files in the order of last access and close only the one
         # that was accessed longest time ago, but this hack works for now and
@@ -59,12 +59,12 @@ def output_ngram(l, count, out):
         if len(out) > 1000:
             close_output_files(out)
 
-        filename = ngram_filename(n, partition)
+        filename = ngram_filename(n, prefix)
         path = os.path.join(args.output, filename)
-        out[(n, partition)] = open(path, "a")
+        out[(n, prefix)] = open(path, "a")
 
     # Write the ngram to the output file
-    out[(n, partition)].write("\t".join(l + (count,)))
+    out[(n, prefix)].write("\t".join(l + (count,)))
 
 def process_file(descr, max_n):
     """
