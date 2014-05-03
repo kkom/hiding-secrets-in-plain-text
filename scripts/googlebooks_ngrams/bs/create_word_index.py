@@ -30,13 +30,13 @@ if __name__ == '__main__':
     # belong to the respective partitions. Most 1-gram prefixes, i.e. other than
     # BS_SPECIAL_PREFIXES, correspond 1:1 to partitions. There is also a special
     # partition "_" that words from BS_SPECIAL_PREFIXES belong to.
-    schedule = {p:(p,) for p in ngrams["1"] if p not in BS_SPECIAL_PREFIXES}
-    schedule["_"] = BS_SPECIAL_PREFIXES
+    part2pref = {p:(p,) for p in ngrams["1"] if p not in BS_SPECIAL_PREFIXES}
+    part2pref["_"] = BS_SPECIAL_PREFIXES
 
     # Verify that the implicitly created partitions are correct
-    assert(set(schedule.keys()) == set(BS_PARTITION_NAMES))
+    assert(set(part2pref.keys()) == set(BS_PARTITION_NAMES))
 
-    # Go over the schedule
+    # Go over all partitions and read words from the corresponding prefix files
     gen_index = count(1)
     with open(args.output, "w") as fo:
         for part in BS_PARTITION_NAMES:
@@ -47,7 +47,7 @@ if __name__ == '__main__':
                 words = set()
 
             # Read words from respective prefix files
-            for pref in schedule[part]:
+            for pref in part2pref[part]:
                 path = os.path.join(args.input, ngram_filename(1, pref))
                 if os.path.isfile(path):
                     with open(path, "r") as fi:
