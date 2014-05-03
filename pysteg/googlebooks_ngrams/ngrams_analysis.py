@@ -71,3 +71,31 @@ def ngram_filename(n, prefix):
     """Return a standard ngram filename from its order and prefix."""
 
     return "googlebooks-eng-us-all-{n}gram-20120701-{prefix}".format(**locals())
+
+__alphabetic_charset = frozenset(string.ascii_lowercase)
+__numeric_charset = frozenset(string.digits)
+__punctuation_charset = frozenset(string.punctuation)
+__alphanumeric_charset = __alphabetic_charset.union(__numeric_charset)
+__nonalphabetic_charset = __numeric_charset.union(__punctuation_charset)
+__normalised_charset = __alphanumeric_charset.union(__punctuation_charset)
+
+def token_bs_partition(token, n):
+    """
+    Return the partition of a token. After normalisation a token can consist of
+    lowercase letters, digits and punctuation marks, so it suffices to check the
+    first two characters.
+    """
+
+    if token in ("_START_", "_END_") or token[0] in __punctuation_charset:
+        # Special symbols - sentence markers and punctuation
+        return "_"
+    elif token[0] in __numeric_charset:
+        # Numeric partitions are single character
+        return token[0]
+    elif len(token) == 1 or token[1] in __nonalphabetic_charset:
+        # Single character alphabetic partitions or those where the second
+        # character is not a letter
+        return token[0] + "_"
+    else:
+        # Standard two-character letter partitions
+        return token[:2]

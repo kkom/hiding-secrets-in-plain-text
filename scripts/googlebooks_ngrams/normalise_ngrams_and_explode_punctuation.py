@@ -21,13 +21,7 @@ from pysteg.common.log import print_status
 
 from pysteg.googlebooks_ngrams.ngrams_analysis import gen_ngram_descriptions
 from pysteg.googlebooks_ngrams.ngrams_analysis import ngram_filename
-
-__alphabetic_charset = frozenset(string.ascii_lowercase)
-__numeric_charset = frozenset(string.digits)
-__punctuation_charset = frozenset(string.punctuation)
-__alphanumeric_charset = __alphabetic_charset.union(__numeric_charset)
-__nonalphabetic_charset = __numeric_charset.union(__punctuation_charset)
-__normalised_charset = __alphanumeric_charset.union(__punctuation_charset)
+from pysteg.googlebooks_ngrams.ngrams_analysis import token_bs_partition
 
 def allowed(c):
     """Check if a character is allowed through normalisation."""
@@ -105,27 +99,6 @@ def output_ngram(l, count, out):
 
     # Write the ngram to the output file
     out[(n, partition)].write("\t".join(l + (count,)))
-
-def token_bs_partition(token, n):
-    """
-    Return the partition of a token. After normalisation a token can consist of
-    lowercase letters, digits and punctuation marks, so it suffices to check the
-    first two characters.
-    """
-
-    if token in ("_START_", "_END_") or token[0] in __punctuation_charset:
-        # Special symbols - sentence markers and punctuation
-        return "_"
-    elif token[0] in __numeric_charset:
-        # Numeric partitions are single character
-        return token[0]
-    elif len(token) == 1 or token[1] in __nonalphabetic_charset:
-        # Single character alphabetic partitions or those where the second
-        # character is not a letter
-        return token[0] + "_"
-    else:
-        # Standard two-character letter partitions
-        return token[:2]
 
 def process_file(descr, max_n):
     """
