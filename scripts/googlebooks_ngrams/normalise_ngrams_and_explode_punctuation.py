@@ -24,6 +24,7 @@ __alphabetic_charset = frozenset(string.ascii_lowercase)
 __numeric_charset = frozenset(string.digits)
 __punctuation_charset = frozenset(string.punctuation)
 __alphanumeric_charset = __alphabetic_charset.union(__numeric_charset)
+__nonalphabetic_charset = __numeric_charset.union(__punctuation_charset)
 __normalised_charset = __alphanumeric_charset.union(__punctuation_charset)
 
 def allowed(c):
@@ -87,8 +88,8 @@ def output_ngram(l, count, out):
     n = len(l)
 
     # See if an appropriate output file is already open
-    prefix = token_prefix(l[0], n)
-    if (n, prefix) not in out:
+    partition = token_bs_partition(l[0], n)
+    if (n, partition) not in out:
         # Close all files if too many are open. The elegant way would be to
         # maintain the files in the order of last access and close only the one
         # that was accessed longest time ago, but this hack works for now and
@@ -96,12 +97,12 @@ def output_ngram(l, count, out):
         if len(out) > 1000:
             close_output_files(out)
 
-        filename = ngram_filename(n, prefix)
+        filename = ngram_filename(n, partition)
         path = os.path.join(args.output, filename)
-        out[(n, prefix)] = open(path, "a")
+        out[(n, partition)] = open(path, "a")
 
-    # Write the positive count to the output file
-    out[(n, prefix)].write("\t".join(l + (count,)))
+    # Write the ngram to the output file
+    out[(n, partition)].write("\t".join(l + (count,)))
 
 def print_status(message, filename):
     """Output status of processing a file to the terminal."""
@@ -109,21 +110,25 @@ def print_status(message, filename):
     time = datetime.datetime.now()
     print("{time} {message} {filename}".format(**locals()))
 
-def token_prefix(token, n):
+def token_bs_partition(token, n):
     """
-    Return the prefix of a token. After normalisation a token can consist of
+    Return the partition of a token. After normalisation a token can consist of
     lowercase letters, digits and punctuation marks, so it suffices to check the
-    first character (in case of 1-grams) or the first two characters (in case of
-    2-grams).
+    first two characters.
     """
 
-    if token in ("_START_", "_END_") or token[0] not in __alphanumeric_charset:
-        return "other"
-    elif n == 1 or token[0] in __numeric_charset:
+    if token in ("_START_", "_END_") or token[0] in __punctuation_charset:
+        # Special symbols - sentence markers and punctuation
+        return "_"
+    elif token[0] in __numeric_charset:
+        # Numeric partitions are single character
         return token[0]
-    elif len(token) == 1 or token[1] not in __alphabetic_charset:
+    elif len(token) == 1 or token[1] in __nonalphabetic_charset:
+        # Single character alphabetic partitions or those where the second
+        # character is not a letter
         return token[0] + "_"
     else:
+        # Standard two-character letter partitions
         return token[:2]
 
 def process_file(descr, max_n):
