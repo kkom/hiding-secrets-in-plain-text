@@ -6,9 +6,9 @@ This script will create a words index from all Google Books 1grams.
 
 import argparse
 import json
+import os
 
 from itertools import count, repeat
-from os.path import join
 
 from pysteg.googlebooks_ngrams.ngrams_analysis import ngram_filename
 from pysteg.googlebooks_ngrams.ngrams_analysis import BS_PARTITION_NAMES
@@ -26,9 +26,11 @@ if __name__ == '__main__':
     with open(args.ngrams, "r") as f:
         ngrams = json.load(f)
 
-    # Create 1:many partitions to prefixes correspondence schedule
-    schedule = {p:frozenset({p}) for p in ngrams["1"]
-                if p not in BS_SPECIAL_PREFIXES}
+    # Create a dictionary whose keys are partitions and values are prefixes that
+    # belong to the respective partitions. Most 1-gram prefixes, i.e. other than
+    # BS_SPECIAL_PREFIXES, correspond 1:1 to partitions. There is also a special
+    # partition "_" that words from BS_SPECIAL_PREFIXES belong to.
+    schedule = {p:(p,) for p in ngrams["1"] if p not in BS_SPECIAL_PREFIXES}
     schedule["_"] = BS_SPECIAL_PREFIXES
 
     # Verify that the implicitly created partitions are correct
@@ -46,11 +48,12 @@ if __name__ == '__main__':
 
             # Read words from respective prefix files
             for pref in schedule[part]:
-                path = join(args.input, ngram_filename(1, pref))
-                with open(path, "r") as fi:
-                    for line in fi:
-                        words.add(line[:-1].split("\t")[0])
-                print("Read words from {path}".format(**locals()))
+                path = os.path.join(args.input, ngram_filename(1, pref))
+                if os.path.isfile(path):
+                    with open(path, "r") as fi:
+                        for line in fi:
+                            words.add(line.split("\t")[0])
+                    print("Read words from {path}".format(**locals()))
 
             # Dump words to the index file
             for w, i in zip(sorted(words), gen_index):
