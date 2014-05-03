@@ -15,17 +15,12 @@ import itertools
 import os
 import string
 
-from unidecode import unidecode
-
 from pysteg.common.log import print_status
 
 from pysteg.googlebooks_ngrams.ngrams_analysis import gen_ngram_descriptions
 from pysteg.googlebooks_ngrams.ngrams_analysis import ngram_filename
+from pysteg.googlebooks_ngrams.ngrams_analysis import normalise_and_explode
 from pysteg.googlebooks_ngrams.ngrams_analysis import token_bs_partition
-
-def allowed(c):
-    """Check if a character is allowed through normalisation."""
-    return c in __normalised_charset
 
 def close_output_files(out):
     """Close the output files and remove them from the dictionary."""
@@ -33,34 +28,9 @@ def close_output_files(out):
         out[i].close()
         del out[i]
 
-def explode(token):
-    """Explode the token by punctuation characters."""
-
-    if len(token) == 0:
-        return tuple()
-
-    exploded = []
-
-    interval_start = 0
-    current_punctuation = False
-    previous_punctuation = False
-
-    for i in range(len(token)):
-        current_punctuation = token[i] in __punctuation_charset
-
-        if i != 0 and current_punctuation or previous_punctuation:
-            exploded.append(token[interval_start:i])
-            interval_start = i
-
-        previous_punctuation = current_punctuation
-
-    exploded.append(token[interval_start:])
-
-    return tuple(exploded)
-
-def normalise(token):
+def process_token(token):
     """
-    Normalise the token. A sentence marker will stay unchanged, a token without
+    Process the token. A sentence marker will stay unchanged, a token without
     punctuation will be normalised to its alphanumerical representation
     (possibly empty in case it only consists of special characters), and a token
     with punctuation will be split by punctuation.
@@ -69,12 +39,8 @@ def normalise(token):
         # Sentence delimiters stay unchanged
         return (token,)
     else:
-        # Convert token from Unicode to the best ASCII representation and
-        # leave only the allowed characters
-        token = ''.join(filter(allowed, unidecode(token).lower()))
-
-        # Explode the token by punctuation characters
-        return explode(token)
+        # Normalise and explode the token by punctuation characters
+        return normalise_and_explode(token)
 
 def output_ngram(l, count, out):
     """
@@ -125,7 +91,7 @@ def process_file(descr, max_n):
             l_original = line.split("\t")
 
             # Normalise and explode original tokens
-            l = tuple(normalise(w) for w in l_original[:-1])
+            l = tuple(process_token(token) for token in l_original[:-1])
 
             # Count the exploded size of each original token
             s = tuple(len(token) for token in l)

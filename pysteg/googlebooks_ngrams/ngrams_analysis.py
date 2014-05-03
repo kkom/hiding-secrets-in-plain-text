@@ -2,6 +2,15 @@ import json
 import re
 import string
 
+from unidecode import unidecode
+
+__alphabetic_charset = frozenset(string.ascii_lowercase)
+__numeric_charset = frozenset(string.digits)
+__punctuation_charset = frozenset(string.punctuation)
+__alphanumeric_charset = __alphabetic_charset.union(__numeric_charset)
+__nonalphabetic_charset = __numeric_charset.union(__punctuation_charset)
+__normalised_charset = __alphanumeric_charset.union(__punctuation_charset)
+
 BS_PARTITION_NAMES = tuple(string.digits + "_" + string.ascii_lowercase)
 BS_SPECIAL_PREFIXES = frozenset({"other", "punctuation"})
 
@@ -72,12 +81,39 @@ def ngram_filename(n, prefix):
 
     return "googlebooks-eng-us-all-{n}gram-20120701-{prefix}".format(**locals())
 
-__alphabetic_charset = frozenset(string.ascii_lowercase)
-__numeric_charset = frozenset(string.digits)
-__punctuation_charset = frozenset(string.punctuation)
-__alphanumeric_charset = __alphabetic_charset.union(__numeric_charset)
-__nonalphabetic_charset = __numeric_charset.union(__punctuation_charset)
-__normalised_charset = __alphanumeric_charset.union(__punctuation_charset)
+def normalise_and_explode(token):
+    """Normalise and then explode the token by punctuation characters."""
+
+    def allowed(c):
+        """Check if a character is allowed through normalisation."""
+        return c in __normalised_charset
+
+    # Convert token from Unicode to the best ASCII representation and
+    # leave only the allowed characters
+    token = ''.join(filter(allowed, unidecode(token).lower()))
+
+    # If no characters are left, return the token as an empty tuple
+    if len(token) == 0:
+        return tuple()
+
+    exploded = []
+
+    interval_start = 0
+    current_punctuation = False
+    previous_punctuation = False
+
+    for i in range(len(token)):
+        current_punctuation = token[i] in __punctuation_charset
+
+        if i != 0 and current_punctuation or previous_punctuation:
+            exploded.append(token[interval_start:i])
+            interval_start = i
+
+        previous_punctuation = current_punctuation
+
+    exploded.append(token[interval_start:])
+
+    return tuple(exploded)
 
 def token_bs_partition(token, n):
     """
