@@ -1,56 +1,85 @@
 #!/usr/bin/env python3
 
 descr = """
-This script will translate all words in Google Books Ngrams files to integer
-indices, sort them alphabetically and save in a binary file including the
-cumulative frequencies.
+This script will translate all tokens from Google Books Ngrams files to integer
+indices, sort them alphabetically, deduplicate ngrams keeping total counts and
+save them in bindb format.
 
-Each line of the index file line has to consist of an integer and a
-corresponding word, separated by a tab.
+The bindb format specifies separately for each ngram order n a single binary
+file storing ngram counts. Ngrams are output sorted by their indices. For each
+ngram the following bytes are saved in little endian order:
+
+n * 4 byte integers with indices of tokens
+    8 byte integer with ngram count
 """
 
 import argparse
 import json
+import os
 import struct
 
-from itertools import chain, count
-from os import path
+from itertools import count
 
 from numpy import zeros
+
+from pysteg.common.log import print_status
+
+from pysteg.googlebooks_ngrams.bindb import read_index_t2ip
 
 from pysteg.googlebooks_ngrams.ngrams_analysis import ngram_filename
 from pysteg.googlebooks_ngrams.ngrams_analysis import BS_PARTITION_NAMES
 from pysteg.googlebooks_ngrams.ngrams_analysis import BS_SPECIAL_PREFIXES
 
 def write_ngrams_table(n, prefixes):
-    """Writes a cumulative frequencies ngrams table for a particular n."""
+    """Writes ngrams counts table for a particular n."""
 
-    # Prepare a schedule of reading ngrams from prefix files
-    schedule = {part:set() for part in BS_PARTITION_NAMES}
+    def pref_path(pref):
+        """Give path to a prefix file."""
+        return os.path.join(args.input, ngram_filename(n,pref))
+
+    # Prepare a part2pref dictionary of prefixes corresponding to partitions
+    part2pref = {part:set() for part in BS_PARTITION_NAMES}
     for pref in prefixes:
-        if pref in BS_SPECIAL_PREFIXES:
-            schedule["_"].add(pref)
-        else:
-            schedule[pref[0]].add(pref)
+        # Determine which prefix files actually exist. This introduces a race
+        # condition, however the assumption is that database will not be
+        # modified while this script is running.
+        if os.path.exists(pref_path(pref)):
+            if pref in BS_SPECIAL_PREFIXES:
+                part2pref["_"].add(pref)
+            else:
+                part2pref[pref[0]].add(pref)
 
-    # Create the file with all ngrams
-    output_path = path.join(args.output, "{n}gram".format(**locals()))
+    # Format specifier for a line of the bindb file
+    fmt = (
+        "<" +     # little-endian byte order (native for x86 and x86-64 CPUs)
+        n * "i" + # n * 4 byte integers with token indices
+        "q"       # 8 byte integer with ngram count
+    )
+
+    # Format specifier for the numpy matrix used for sorting the ngrams
+    dtp = (
+        [("w{}".format(i),"<i4") for i in range(n)] + # n * little-endian 4 byte
+                                                      # integers with token
+                                                      # indices
+        [("f","<i8")]                                 # little-endian 8 byte
+                                                      # integer with ngram
+                                                      # count
+    )
+
+    # Create the bindb file
+    output_path = os.path.join(args.output, "{n}gram".format(**locals()))
     with open(output_path, "wb") as fo:
-        # Prepare the line format specifier
-        fmt = "<" + n * "i" + "q"
-        dtp = [("w{}".format(i),"<i4") for i in range(n)] + [("f","<i4")]
-
-        # Write the first line consisting of all columns equal to 0
-        cf = 0
-        fo.write(struct.pack(fmt, *n*(0,) + (cf,)))
-
-        # Go over the partitions schedule
+        # Go over the prefix files for each possible partitions
         for part in BS_PARTITION_NAMES:
-            # Count the maximum number of ngrams in the partition
+            # Which prefixes will contribute to this partition, sort them to
+            # take advantage of partial sorting by granular division of
+            # partitions into prefixes
+            prefs = sorted(part2pref[part])
+
+            # Calculate the maximum number of ngrams in the partition by
+            # counting total number of lines in each prefix file
             ngrams_maxn = sum(
-                sum(1 for line
-                    in open(path.join(args.input, ngram_filename(n,pref)), "r"))
-                for pref in schedule[part]
+                sum(1 for line in open(pref_path(pref), "r")) for pref in prefs
             )
 
             # Create a numpy array that can contain all potential ngrams
@@ -58,38 +87,59 @@ def write_ngrams_table(n, prefixes):
 
             # Read one by one prefix files corresponding to the partition
             i = 0
-            for pref in schedule[part]:
+            for pref in prefs:
                 # Simultaneously read ngrams from the prefix file and write
                 # those which don't match to the error file
-                filename = ngram_filename(n,pref)
-                input_path = path.join(args.input, filename)
-                error_path = path.join(args.error, filename)
+                filename = ngram_filename(n, pref)
+                input_path = os.path.join(args.input, filename)
+                error_path = os.path.join(args.error, filename)
                 with open(input_path, "r") as fi, open(error_path, "w") as fe:
                     for line in fi:
                         ngram = line[:-1].split("\t")
                         try:
-                            # Translate all words into their indices
-                            ixs = tuple(map(lambda x: w2i[x][0], ngram[:-1]))
+                            # Translate all tokens to their indices
+                            ixs = tuple(t2ip[token][0] for token in ngram[:-1])
                             # Assert that the partition is correct
-                            assert(w2i[ngram[0]][1] == part)
+                            assert(t2ip[ngram[0]][1] == part)
                             # Add the ngram
                             ngrams[i] = ixs + (int(ngram[-1]),)
                             i+=1
-                        # If the partition doesn't match or the word cannot be
+                        # If the partition doesn't match or the token cannot be
                         # found in the index
                         except (AssertionError, KeyError):
                             fe.write(line)
-                    print("Read ngrams from {input_path}".format(**locals()))
+                print_status("Read and indexed ngrams from", input_path)
             ngrams_n = i
 
-            # Sort and dump the partition
+            # Sort the partition
             ngrams = ngrams[:ngrams_n]
             ngrams.sort(order=["w{}".format(i) for i in range(n)])
+            print_status(ngrams_n, "ngrams sorted")
+
+            # Write lines to the binary counts file
+            out_count = 0
+            current_ngram = tuple()
+            current_f = 0
             for i in range(ngrams_n):
-                cf += ngrams[i]["f"]
-                fo.write(struct.pack(fmt, *tuple(ngrams[i])[:-1] + (cf,)))
-            print("Dumped indexed and cumulated ngrams partition {part} to "
-                  "{output_path}".format(**locals()))
+                ngram_i = tuple(ngrams[i])[:-1]
+
+                # Compare this ngram to the currently deduplicated ngram
+                if ngram_i == current_ngram:
+                    current_f += ngrams[i]["f"]
+                else:
+                    if i != 0:
+                        fo.write(struct.pack(fmt, *current_ngram+(current_f,)))
+                        out_count += 1
+                    current_ngram = ngram_i
+                    current_f = ngrams[i]["f"]
+
+                # Write a line in the last loop iteration
+                if i == ngrams_n-1:
+                    fo.write(struct.pack(fmt, *current_ngram+(current_f,)))
+                    out_count += 1
+
+            print_status(out_count, "ngrams integrated and saved to",
+                         output_path)
 
 if __name__ == '__main__':
     # Define and parse arguments
@@ -100,22 +150,20 @@ if __name__ == '__main__':
     parser.add_argument("ngrams", help="JSON file listing all the ngram files")
     parser.add_argument("index", help="index file")
     parser.add_argument("input", help="input directory of ngram files")
-    parser.add_argument("output", help="output directory of ngram files")
+    parser.add_argument("output", help="output directory of bindb files")
     parser.add_argument("error", help="output directory for discarded ngrams")
     args = parser.parse_args()
 
-    # Read the index of words
-    def read_index_line(line):
-        """Given an index file line returns a (word, (ix, partition)) tuple."""
-        line_split = line[:-1].split("\t")
-        return (line_split[1], (int(line_split[0]), line_split[2]))
+    # Read the index of tokens
+    print_status("Started loading index from", args.index)
     with open(args.index, "r") as f:
-        w2i = dict(map(read_index_line, f))
+        t2ip = read_index_t2ip(f)
+    print_status("Finished loading index")
 
-    # Load the ngram descriptions
+    # Load the ngram files descriptions
     with open(args.ngrams, "r") as f:
          ngram_descriptions = json.load(f)
 
-    # Create all bytes ngram tables
+    # Create all bindb tables
     for n, prefixes in ngram_descriptions.items():
         write_ngrams_table(int(n), prefixes)
