@@ -126,12 +126,12 @@ def normalised_token_prefix(token, n):
         # Special symbols - sentence markers and punctuation
         return "other"
     elif n == 1 or token[0] in __numeric_charset:
-        # Numeric partitions are single character
+        # Numeric prefixes are single character, 1-grams are also prefixed by a
+        # single character
         return token[0]
     elif len(token) == 1 or token[1] in __nonalphabetic_charset:
-        # Single character alphabetic partitions or those where the second
-        # character is not a letter
+        # Single character word or the second character is not a letter
         return token[0] + "_"
     else:
-        # Standard two-character letter partitions
+        # Standard two-character letter prefix
         return token[:2]
