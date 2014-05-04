@@ -54,12 +54,10 @@ def write_ngrams_table(n, prefixes):
 
     # Format specifier for the numpy matrix used for sorting the ngrams
     dtp = (
-        [("w{}".format(i),"<i4") for i in range(n)] + # n * little-endian 4 byte
-                                                      # integers with token
-                                                      # indices
-        [("f","<i8")]                                 # little-endian 8 byte
-                                                      # integer with ngram
-                                                      # count
+        # n * little-endian 4 byte integers with token indices
+        [("w{}".format(i),"<i4") for i in range(n)] +
+        # little-endian 8 byte integer with ngram count
+        [("f","<i8")]
     )
 
     # Create the bindb file
@@ -67,9 +65,9 @@ def write_ngrams_table(n, prefixes):
     with open(output_path, "wb") as fo:
         # Go over the prefix files for each possible partitions
         for part in BS_PARTITION_NAMES:
-            # Which prefixes will contribute to this partition, sort them to
-            # take advantage of partial sorting by granular division of
-            # partitions into prefixes
+            # Sort the set of prefixes which will contribute to this partition
+            # to take advantage of partial sorting (ngrams belonging to the same
+            # prefix will still be adjacent in the sorted partition)
             prefs = sorted(part2pref[part])
 
             # Calculate the maximum number of ngrams in the partition by
