@@ -1,3 +1,6 @@
+import functools
+import struct
+
 class BinDBIndex:
     """
     Index of the bindb database. Provides fast methods to go between indices and
@@ -38,6 +41,7 @@ class BinDBIndex:
         """Return the partition of a token."""
         return self.index_dict[t][1]
 
+@functools.lru_cache(maxsize=8)
 def fmt(n):
     """Format specifier for a line of the bindb file of particular order n."""
     return (
@@ -45,3 +49,19 @@ def fmt(n):
         n * "i" + # n * 4 byte integers with token indices
         "q"       # 8 byte integer with ngram count
     )
+
+def read_line(f, n, l):
+    """
+    Return the l'th (1-indexed) line of a bindb file as an (ngram, count) tuple.
+    """
+
+    # 4 bytes for each word index and 8 bytes for the count
+    line_size = 4*n+8
+
+    # Go to the l'th line
+    f.seek((l-1)*line_size)
+
+    # Unpack the line
+    line = struct.unpack(fmt(n), f.read(line_size))
+
+    return (line[:-1], line[-1])
