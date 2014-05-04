@@ -3,8 +3,8 @@ import struct
 
 class BinDBIndex:
     """
-    Index of the bindb database. Provides fast methods to go between indices and
-    tokens.
+    Index of a bindb database. Provides fast methods to go between indices and
+    string of tokens.
     """
 
     def __init__(self, f):
@@ -13,7 +13,7 @@ class BinDBIndex:
         a single line containing 3 tab separated values:
 
         1. index of the token (from 1 to vocabulary size V)
-        2. token
+        2. string corresponding to the token
         3. partition of the token
 
         The index has to be already sorted by 1.
@@ -29,21 +29,21 @@ class BinDBIndex:
 
         self.index_tuple = tuple(index_list)
 
-    def i2t(self, i):
-        """Return the token gives its index."""
+    def i2s(self, i):
+        """Return the string of a token given its index."""
         return self.index_tuple[i-1]
 
-    def t2i(self, t):
-        """Return the index of a token."""
+    def s2i(self, t):
+        """Return the index of a token given its string."""
         return self.index_dict[t][0]
 
-    def t2p(self, t):
-        """Return the partition of a token."""
+    def s2p(self, t):
+        """Return the partition of a token given its string."""
         return self.index_dict[t][1]
 
 @functools.lru_cache(maxsize=8)
 def fmt(n):
-    """Format specifier for a line of the bindb file of particular order n."""
+    """Format specifier for a line of bindb file of order n."""
     return (
         "<" +     # little-endian byte order (native for x86 and x86-64 CPUs)
         n * "i" + # n * 4 byte integers with token indices

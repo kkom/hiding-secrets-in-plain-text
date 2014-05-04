@@ -34,7 +34,7 @@ single_line_pattern = re.compile("^\d+$")
 range_pattern = re.compile("^(?P<start>\d+):((?P<step>\d+):)?(?P<stop>\d+)$")
 
 # Function to represent a token based on its integer index
-token_repr = index.i2t if args.translate else str
+token_repr = index.i2s if args.translate else str
 
 with open(args.bindb, "rb") as b:
     while True:
