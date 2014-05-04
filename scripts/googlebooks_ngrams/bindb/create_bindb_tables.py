@@ -24,7 +24,7 @@ from numpy import zeros
 
 from pysteg.common.log import print_status
 
-from pysteg.googlebooks_ngrams.bindb import read_index_t2ip
+from pysteg.googlebooks_ngrams.bindb import BinDBIndex
 
 from pysteg.googlebooks_ngrams.ngrams_analysis import ngram_filename
 from pysteg.googlebooks_ngrams.ngrams_analysis import BS_PARTITION_NAMES
@@ -98,9 +98,9 @@ def write_ngrams_table(n, prefixes):
                         ngram = line[:-1].split("\t")
                         try:
                             # Translate all tokens to their indices
-                            ixs = tuple(t2ip[token][0] for token in ngram[:-1])
+                            ixs = tuple(map(index.t2i, ngram[:-1]))
                             # Assert that the partition is correct
-                            assert(t2ip[ngram[0]][1] == part)
+                            assert(index.t2p(ngram[0]) == part)
                             # Add the ngram
                             ngrams[i] = ixs + (int(ngram[-1]),)
                             i+=1
@@ -157,7 +157,7 @@ if __name__ == '__main__':
     # Read the index of tokens
     print_status("Started loading index from", args.index)
     with open(args.index, "r") as f:
-        t2ip = read_index_t2ip(f)
+        index = BinDBIndex(f)
     print_status("Finished loading index")
 
     # Load the ngram files descriptions
