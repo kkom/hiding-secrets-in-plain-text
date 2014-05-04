@@ -24,7 +24,7 @@ from numpy import zeros
 
 from pysteg.common.log import print_status
 
-from pysteg.googlebooks_ngrams.bindb import BinDBIndex
+from pysteg.googlebooks_ngrams import bindb
 
 from pysteg.googlebooks_ngrams.ngrams_analysis import ngram_filename
 from pysteg.googlebooks_ngrams.ngrams_analysis import BS_PARTITION_NAMES
@@ -50,11 +50,7 @@ def write_ngrams_table(n, prefixes):
                 part2pref[pref[0]].add(pref)
 
     # Format specifier for a line of the bindb file
-    fmt = (
-        "<" +     # little-endian byte order (native for x86 and x86-64 CPUs)
-        n * "i" + # n * 4 byte integers with token indices
-        "q"       # 8 byte integer with ngram count
-    )
+    fmt = bindb.fmt(n)
 
     # Format specifier for the numpy matrix used for sorting the ngrams
     dtp = (
@@ -157,7 +153,7 @@ if __name__ == '__main__':
     # Read the index of tokens
     print_status("Started loading index from", args.index)
     with open(args.index, "r") as f:
-        index = BinDBIndex(f)
+        index = bindb.BinDBIndex(f)
     print_status("Finished loading index")
 
     # Load the ngram files descriptions
