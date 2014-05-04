@@ -92,9 +92,9 @@ def write_ngrams_table(n, prefixes):
                         ngram = line[:-1].split("\t")
                         try:
                             # Translate all tokens to their indices
-                            ixs = tuple(map(index.t2i, ngram[:-1]))
+                            ixs = tuple(map(index.s2i, ngram[:-1]))
                             # Assert that the partition is correct
-                            assert(index.t2p(ngram[0]) == part)
+                            assert(index.s2p(ngram[0]) == part)
                             # Add the ngram
                             ngrams[i] = ixs + (int(ngram[-1]),)
                             i+=1
