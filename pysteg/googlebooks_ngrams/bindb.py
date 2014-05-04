@@ -37,3 +37,11 @@ class BinDBIndex:
     def t2p(self, t):
         """Return the partition of a token."""
         return self.index_dict[t][1]
+
+def fmt(n):
+    """Format specifier for a line of the bindb file of particular order n."""
+    return (
+        "<" +     # little-endian byte order (native for x86 and x86-64 CPUs)
+        n * "i" + # n * 4 byte integers with token indices
+        "q"       # 8 byte integer with ngram count
+    )
