@@ -91,6 +91,12 @@ def right_integrate(path, n):
         [("count","<i8")]
     )
 
+    # Progress bar code
+    stages = tuple(range(1,26))
+    milestones = collections.deque(map(
+        lambda s: (round(s / stages[-1] * ngrams_number), s), stages
+    ))
+
     # Dump all right mgrams to a numpy array
     mgrams = numpy.zeros(ngrams_number, dtype=dtp)
     i = 0
@@ -99,6 +105,10 @@ def right_integrate(path, n):
         for l in bindb.gen_bindb_lines(f, n):
             mgrams[i] = l.ngram[1:] + (l.count,)
             i += 1
+
+            if i == milestones[0][0]:
+                done = round(100 / milestones[-1][1] * milestones.popleft()[1])
+                print_status("{done}%".format(**locals()))
 
     # Sort the numpy array
     print_status("Sorting right integrated {n}grams".format(**locals()))
