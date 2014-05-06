@@ -1,6 +1,10 @@
 import functools
 import struct
 
+from collections import namedtuple
+
+BinDBLine = namedtuple('bindb_line', 'ngram count')
+
 class BinDBIndex:
     """
     Index of a bindb database. Provides fast methods to go between indices and
@@ -52,31 +56,35 @@ def fmt(n):
 
 def gen_bindb_lines(f, n):
     """
-    Generate an iterator over the lines of a bindb file.
+    Generate an iterator over the lines of a BinDB file.
     """
 
-    # 4 bytes for each word index and 8 bytes for the count
-    line_size = 4*n+8
-
-    bindb_line = f.read(line_size)
+    bindb_line = f.read(line_size(n))
     while len(bindb_line) != 0:
         yield unpack_line(bindb_line, n)
-        bindb_line = f.read(line_size)
+        bindb_line = f.read(line_size(n))
 
-def read_line(f, n, l):
-    """
-    Return the l'th (1-indexed) line of a bindb file as an (ngram, count) tuple.
-    """
-
+def line_size(n):
+    """Return the size in bytes of a BinDB line of order n."""
     # 4 bytes for each word index and 8 bytes for the count
-    line_size = 4*n+8
+    return 4*n+8
 
-    # Go to the l'th line
-    f.seek((l-1)*line_size)
+def pack_line(bindb_line):
+    """Pack a BinDB line into bytes."""
+    return struct.pack(fmt(len(bindb_line.ngram)),
+                       *bindb_line.ngram+(bindb_line.count,))
 
-    return unpack_line(f.read(line_size), n)
+def read_line(f, n, i):
+    """
+    Return the i'th (1-indexed) line of a bindb file as an (ngram, count) tuple.
+    """
+
+    # Go to the i'th line
+    f.seek((i-1)*line_size(n))
+
+    return unpack_line(f.read(line_size(n)), n)
 
 def unpack_line(line_bytes, n):
-    """Unpacks a bindb line of order n."""
+    """Unpack from bytes a BinDB line of order n."""
     line = struct.unpack(fmt(n), line_bytes)
-    return (line[:-1], line[-1])
+    return BinDBLine(line[:-1], line[-1])
