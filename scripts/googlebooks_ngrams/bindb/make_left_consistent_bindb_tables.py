@@ -22,6 +22,8 @@ import os
 import shutil
 import struct
 
+from pysteg.common.log import print_status
+
 from pysteg.googlebooks_ngrams import bindb
 
 def ngrams2left_mgrams(ngrams):
@@ -55,13 +57,17 @@ def process_file(n):
 
     # The highest order table is consistent by definition
     if n == args.max_n:
+        print_status("Copying", ngrams_input_path, "to", ngrams_output_path)
         shutil.copyfile(ngrams_input_path, ngrams_output_path)
+        print_status("Finished copying")
     else:
         # We need to use the already left-consistent table, hence reading from
         # the output directory
         ograms_filename = "{}gram".format(n+1)
         ograms_input_path = os.path.join(args.output, ograms_filename)
         error_path = os.path.join(args.error, ngrams_filename)
+
+        print_status("Checking consistency of", ngrams_input_path)
 
         with open(ograms_input_path, "rb") as ograms_input, \
              open(ngrams_input_path, "rb") as ngrams_input, \
@@ -73,6 +79,10 @@ def process_file(n):
                 ngrams_output.write(struct.pack(bindb.fmt(n),
                                                 *ngram[0]+(ngram[1],)))
                 return l+1
+
+            def log_inconsistency(msg):
+                print(msg)
+                error.write(msg + "\n")
 
             ngrams = bindb.gen_bindb_lines(ngrams_input, n)
             ograms = bindb.gen_bindb_lines(ograms_input, n+1)
@@ -99,24 +109,27 @@ def process_file(n):
                             l = write_bindb_line(ngram, l)
                         else:
                             l = write_bindb_line(integrated_ogram, l)
-                            error.write(
+
+                            log_inconsistency(
                                 "{l}: {ngram} and integrated {integrated_ogram}"
-                                " inconsistent\n".format(**locals()))
+                                " are inconsistent".format(**locals())
+                            )
                         break
 
                     else:
                         # We have skipped ngram corresponding to the integrated
                         # ogram, need to create it based on the integrated ogram
                         l = write_bindb_line(integrated_ogram, l)
-                        error.write("{l}: {integrated_ogram} doesn't"
-                                    " exist\n".format(**locals()))
 
-                        # Save to the buffer the ngram that was read ahead
+                        # Put in a buffer the ngram that was read ahead
                         ngrams_buffer = iter((ngram,))
+
+                        log_inconsistency("{l}: {integrated_ogram} doesn't"
+                                          " exist".format(**locals()))
+
                         break
 
-
-
+        print_status("Saved consistent ngrams to", ngrams_output_path)
 
 # Define and parse arguments
 parser = argparse.ArgumentParser(
