@@ -50,6 +50,19 @@ def fmt(n):
         "q"       # 8 byte integer with ngram count
     )
 
+def gen_bindb_lines(f, n):
+    """
+    Generate an iterator over the lines of a bindb file.
+    """
+
+    # 4 bytes for each word index and 8 bytes for the count
+    line_size = 4*n+8
+
+    bindb_line = f.read(line_size)
+    while len(bindb_line) != 0:
+        yield unpack_line(bindb_line, n)
+        bindb_line = f.read(line_size)
+
 def read_line(f, n, l):
     """
     Return the l'th (1-indexed) line of a bindb file as an (ngram, count) tuple.
@@ -61,7 +74,9 @@ def read_line(f, n, l):
     # Go to the l'th line
     f.seek((l-1)*line_size)
 
-    # Unpack the line
-    line = struct.unpack(fmt(n), f.read(line_size))
+    return unpack_line(f.read(line_size), n)
 
+def unpack_line(line_bytes, n):
+    """Unpacks a bindb line of order n."""
+    line = struct.unpack(fmt(n), line_bytes)
     return (line[:-1], line[-1])
