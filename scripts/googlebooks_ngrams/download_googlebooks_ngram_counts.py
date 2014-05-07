@@ -75,7 +75,7 @@ def process_file(descr):
 
         # Generate iterators over ngrams
         source_ngrams = iter_remote_gzip(remote_path)
-        processed_ngrams = integrate_pure_ngram_counts(source_ngrams, int(n))
+        processed_ngrams = integrate_pure_ngram_counts(source_ngrams, n)
 
         # Save the integrated ngram counts to a file
         ngrams_iter2file(processed_ngrams, f)
