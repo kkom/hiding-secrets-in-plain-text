@@ -79,14 +79,14 @@ def maximise_counts(bindb_lines1, bindb_lines2):
 def right_integrate(path, n):
     """
     Given the path to a BinDB file of order n, generate an iterator over
-    sorted (mgram, count) tuples created by integrating out the first token.
+    sorted ((n-1)gram, count) tuples created by integrating out the first token.
     """
 
     print_status("Dumping", path, "to memory")
 
     ngrams_number = os.path.getsize(path) / bindb.line_size(n)
 
-    # Format specifier for the numpy matrix used for sorting the ngrams
+    # Format specifier for the numpy matrix used for sorting the mgrams
     dtp = (
         # (n-1) * little-endian 4 byte integers with token indices
         [("w{}".format(i),"<i4") for i in range(n-1)] +
