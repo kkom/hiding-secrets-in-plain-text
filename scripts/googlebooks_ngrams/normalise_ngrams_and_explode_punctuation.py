@@ -75,8 +75,6 @@ def process_file(n, prefix):
     script needs to be restarted from scratch if interrupted midway.
     """
 
-    n = int(n)
-
     filename = ngram_filename(n, prefix)
     path = os.path.join(args.input, filename)
 

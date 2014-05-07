@@ -74,7 +74,7 @@ def gen_ngram_descriptions(filename):
 
     for n in sorted(ngrams.keys()):
         for prefix in ngrams[n]:
-            yield (n, prefix)
+            yield (int(n), prefix)
 
 def ngram_filename(n, prefix):
     """Return a standard ngram filename from its order and prefix."""
