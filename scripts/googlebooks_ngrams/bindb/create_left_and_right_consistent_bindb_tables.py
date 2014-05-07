@@ -1,15 +1,14 @@
 #!/usr/bin/env python3
 
 descr = """
-This script will make the BinDB tables counts consistent, i.e.:
-
-The count of each ngram is greater or equal to whichever is greater:
+This script will make the BinDB tables counts-consistent, i.e. such that the
+count of each ngram is greater or equal to both:
 
 - total count of all (n+1)grams whose first n tokens are equal to the ngram
 - total count of all (n+1)grams whose last n tokens are equal to the ngram
 
-Counts consistency is ensured by increasing lower-order ngram counts based on
-higher-order counts.
+Counts consistency is ensured by increasing lower-order counts based on higher-
+order counts.
 """
 
 import argparse
@@ -30,8 +29,8 @@ def drop_last_token(bindb_line):
 def integrate(bindb_lines):
     """
     Given an iterator over sorted (ngram, count) tuples generate an iterator
-    over (ngram, total count) tuples created by integrating the counts of the
-    same ngrams.
+    over (ngram, total count) tuples created by integrating the counts of
+    identical ngrams.
     """
 
     current_ngram = None
@@ -52,7 +51,11 @@ def integrate(bindb_lines):
 def maximise_counts(bindb_lines1, bindb_lines2):
     """
     Given two iterators over sorted (ngram, count) tuples generate an iterator
-    over the maximum of the counts.
+    over sorted (ngram, max(count1, count2)) tuples. I.e. for each ngram return
+    the larger of its counts found in the two iterators.
+
+    If an ngram is entirely missing from one of the iterators, it is still
+    returned with a count from the iterator where it exists.
 
     For performance reasons, the second iterator should be the "denser" one,
     i.e. more frequently contain ngrams that are not in the other iterator.
@@ -130,11 +133,12 @@ def process_file(n):
     ngrams_output_path = os.path.join(args.output, ngrams_filename)
 
     # The highest order table is consistent by definition
-    if n == args.max_n:
+    if n == args.n_max:
         print_status("Copying", ngrams_input_path, "to", ngrams_output_path)
         shutil.copyfile(ngrams_input_path, ngrams_output_path)
     else:
-        print_status("Creating consistent {n}grams".format(**locals()))
+        print_status("Creating counts-consistent {n}gram BinDB file".format(
+            **locals()))
 
         # We need to use the already consistent table, hence reading ograms from
         # theoutput directory
@@ -162,20 +166,20 @@ def process_file(n):
             for l in maximised_ngrams:
                 ngrams_output_f.write(bindb.pack_line(l, n))
 
-    print_status("Saved consistent {n}grams to".format(**locals()),
-                 ngrams_output_path)
+    print_status("Saved counts-consistent {n}gram BinDB file "
+                 "to".format(**locals()), ngrams_output_path)
 
 # Define and parse arguments
 parser = argparse.ArgumentParser(
     description=descr,
     formatter_class=argparse.RawDescriptionHelpFormatter
 )
-parser.add_argument("max_n", metavar="n", type=int, help="order of the model")
-parser.add_argument("input", help="input directory of inconsistent bindb files")
+parser.add_argument("n_max", metavar="n", type=int, help="order of the model")
+parser.add_argument("input", help="input directory of inconsistent BinDB files")
 parser.add_argument("output",
-    help="output directory of left-consistent bindb files")
+    help="output directory of counts-consistent BinDB files")
 args = parser.parse_args()
 
 # Process the files
-for n in range(args.max_n,0,-1):
+for n in range(args.n_max,0,-1):
     process_file(n)
