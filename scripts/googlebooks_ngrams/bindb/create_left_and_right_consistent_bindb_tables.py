@@ -102,7 +102,7 @@ def right_integrate(path, n):
     i = 0
 
     with open(path, "rb") as f:
-        for l in bindb.gen_bindb_lines(f, n):
+        for l in bindb.iter_bindb_file(f, n):
             mgrams[i] = l.ngram[1:] + (l.count,)
             i += 1
 
@@ -145,7 +145,7 @@ def process_file(n):
              open(ngrams_input_path, "rb") as ngrams_input_f, \
              open(ngrams_output_path, "wb") as ngrams_output_f:
 
-            ograms = bindb.gen_bindb_lines(ograms_f, n+1)
+            ograms = bindb.iter_bindb_file(ograms_f, n+1)
 
             # Make iterator over left and right integrated ograms
             left_integrated_ograms = integrate(map(drop_last_token, ograms))
@@ -156,7 +156,7 @@ def process_file(n):
                                                 right_integrated_ograms)
 
             # Maximise counts of ngrams and integrated ograms
-            ngrams = bindb.gen_bindb_lines(ngrams_input_f, n)
+            ngrams = bindb.iter_bindb_file(ngrams_input_f, n)
             maximised_ngrams = maximise_counts(integrated_ograms, ngrams)
 
             for l in maximised_ngrams:

@@ -84,8 +84,8 @@ def process_file(n):
                 print(msg)
                 error.write(msg + "\n")
 
-            ngrams = bindb.gen_bindb_lines(ngrams_input, n)
-            ograms = bindb.gen_bindb_lines(ograms_input, n+1)
+            ngrams = bindb.iter_bindb_file(ngrams_input, n)
+            ograms = bindb.iter_bindb_file(ograms_input, n+1)
             integrated_ograms = ngrams2left_mgrams(ograms)
 
             # If there is no ngram for the integrated ogram, we will find out by
