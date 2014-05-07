@@ -66,7 +66,7 @@ def output_ngram(l, count, out):
     # Write the ngram to the output file
     out[(n, prefix)].write("\t".join(l + (count,)))
 
-def process_file(descr, max_n):
+def process_file(n, prefix):
     """
     Process a single file. Since ngrams will change size and partition, they
     will be appended to existing files containing ngram counts from other prefix
@@ -75,7 +75,6 @@ def process_file(descr, max_n):
     script needs to be restarted from scratch if interrupted midway.
     """
 
-    n, prefix = descr
     n = int(n)
 
     filename = ngram_filename(n, prefix)
@@ -109,7 +108,7 @@ def process_file(descr, max_n):
 
                 # Count the maximum number of normalised tokens that can come
                 # from the original edge tokens
-                max_edge_s = max_n - middle_s
+                max_edge_s = args.n_max - middle_s
 
                 # There are too many exploded middle tokens -- the normalised
                 # ngram including at least one normalised token from each
@@ -130,7 +129,7 @@ def process_file(descr, max_n):
             # There is only one original token
             else:
                 for start in range(s[0]):
-                    for stop in range(start+1, min(start+max_n,s[0])+1):
+                    for stop in range(start+1, min(start+args.n_max,s[0])+1):
                         output_ngram(l[0][start:stop], l_original[-1], out)
 
     close_output_files(out)
@@ -142,7 +141,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=descr)
     parser.add_argument("ngrams",
         help="JSON file listing all ngram file descriptions")
-    parser.add_argument("n_max", type=int,
+    parser.add_argument("n_max", metavar="n", type=int,
         help="maximum order of output ngrams")
     parser.add_argument("input",
         help="input directory with original ngram counts")
@@ -156,4 +155,4 @@ if __name__ == '__main__':
           "script.".format(**locals()))
 
     for ngram in ngram_descriptions:
-        process_file(ngram, args.n_max)
+        process_file(*ngram)
