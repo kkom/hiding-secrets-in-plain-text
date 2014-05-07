@@ -3,24 +3,24 @@ import struct
 
 from collections import namedtuple
 
-BinDBLine = namedtuple('bindb_line', 'ngram count')
+BinDBLine = namedtuple('BinDBLine', 'ngram count')
 
 class BinDBIndex:
     """
-    Index of a bindb database. Provides fast methods to go between indices and
+    Index of a BinDB database. Provides fast methods to go between indices and
     string of tokens.
     """
 
     def __init__(self, f):
         """
-        Initialise the index. The index is a text file that for each token has
-        a single line containing 3 tab separated values:
+        Initialise the index. The index file is a text file that for each token
+        has a single line containing 3 tab separated values:
 
         1. index of the token (from 1 to vocabulary size V)
         2. string corresponding to the token
         3. partition of the token
 
-        The index has to be already sorted by 1.
+        The index file has to be already sorted by the first column.
         """
 
         self.index_dict = {}
@@ -47,7 +47,7 @@ class BinDBIndex:
 
 @functools.lru_cache(maxsize=8)
 def fmt(n):
-    """Format specifier for a line of bindb file of order n."""
+    """Format specifier for a BinDBLine of order n."""
     return (
         "<" +     # little-endian byte order (native for x86 and x86-64 CPUs)
         n * "i" + # n * 4 byte integers with token indices
@@ -56,7 +56,7 @@ def fmt(n):
 
 def gen_bindb_lines(f, n):
     """
-    Generate an iterator over the lines of a BinDB file.
+    Iterate over the lines of a BinDB file. Lines are given in BinDBLine format.
     """
 
     bindb_line = f.read(line_size(n))
@@ -65,18 +65,17 @@ def gen_bindb_lines(f, n):
         bindb_line = f.read(line_size(n))
 
 def line_size(n):
-    """Return the size in bytes of a BinDB line of order n."""
+    """Return the size in bytes of a BinDBLine of order n."""
     # 4 bytes for each word index and 8 bytes for the count
     return 4*n+8
 
-def pack_line(bindb_line):
-    """Pack a BinDB line into bytes."""
-    return struct.pack(fmt(len(bindb_line.ngram)),
-                       *bindb_line.ngram+(bindb_line.count,))
+def pack_line(bindb_line, n):
+    """Pack a BinDB line of order n into bytes."""
+    return struct.pack(fmt(n), *bindb_line.ngram+(bindb_line.count,))
 
 def read_line(f, n, i):
     """
-    Return the i'th (1-indexed) line of a bindb file as an (ngram, count) tuple.
+    Return the i'th (1-indexed) line of a BinDB file as a BinDBLine.
     """
 
     # Go to the i'th line
@@ -85,6 +84,6 @@ def read_line(f, n, i):
     return unpack_line(f.read(line_size(n)), n)
 
 def unpack_line(line_bytes, n):
-    """Unpack from bytes a BinDB line of order n."""
+    """Unpack a BinDBLine of order n from bytes."""
     line = struct.unpack(fmt(n), line_bytes)
     return BinDBLine(line[:-1], line[-1])

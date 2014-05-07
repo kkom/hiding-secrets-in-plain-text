@@ -160,7 +160,7 @@ def process_file(n):
             maximised_ngrams = maximise_counts(integrated_ograms, ngrams)
 
             for l in maximised_ngrams:
-                ngrams_output_f.write(bindb.pack_line(l))
+                ngrams_output_f.write(bindb.pack_line(l, n))
 
     print_status("Saved consistent {n}grams to".format(**locals()),
                  ngrams_output_path)
