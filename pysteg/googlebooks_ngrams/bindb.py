@@ -1,9 +1,8 @@
+import collections
 import functools
 import struct
 
-from collections import namedtuple
-
-BinDBLine = namedtuple('BinDBLine', 'ngram count')
+BinDBLine = collections.namedtuple('BinDBLine', 'ngram count')
 
 class BinDBIndex:
     """
