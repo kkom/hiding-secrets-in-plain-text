@@ -54,7 +54,7 @@ def fmt(n):
         "q"       # 8 byte integer with ngram count
     )
 
-def gen_bindb_lines(f, n):
+def iter_bindb_file(f, n):
     """
     Iterate over the lines of a BinDB file. Lines are given in BinDBLine format.
     """
