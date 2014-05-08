@@ -44,6 +44,19 @@ class BinDBIndex:
         """Return the partition of a token given its string."""
         return self.index_dict[t][1]
 
+class BinDBLM:
+    """
+    A BinDB-based language model. Gives conditional probability intervals and
+    find the next token given the history and probability intervals it needs to
+    be around.
+    """
+
+    def __init__(self, bindb_dir, n_max, start, end):
+        self.bindb_dir = bindb_dir  # Directory with the BinDB tables
+        self.n_max = n_max          # Order of the model
+        self.start = start          # Indices of the _START_ and _END_ tokens
+        self.end = end
+
 @functools.lru_cache(maxsize=8)
 def fmt(n):
     """Format specifier for a BinDBLine of order n."""
