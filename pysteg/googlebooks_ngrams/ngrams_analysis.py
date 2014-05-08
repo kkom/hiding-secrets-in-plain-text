@@ -81,16 +81,27 @@ def ngram_filename(n, prefix):
 
     return "googlebooks-eng-us-all-{n}gram-20120701-{prefix}".format(**locals())
 
-def normalise_and_explode_token(token):
-    """Normalise and then explode the token by punctuation characters."""
 
-    def allowed(c):
-        """Check if a character is allowed through normalisation."""
-        return c in __normalised_charset
+def normal_character(c):
+    """Check if a character is allowed through normalisation."""
+    return c in __normalised_charset
+
+def explode_token(token):
+    """
+    Normalise and then explode a token by punctuation characters. A sentence
+    marker will stay unchanged, a token without punctuation will be normalised
+    to its alphanumerical representation (possibly empty in case it only
+    consists of special characters), and a token with punctuation will be split
+    by punctuation.
+    """
+
+    # Sentence delimiters stay unchanged
+    if token in ("_START_", "_END_"):
+        return (token,)
 
     # Convert token from Unicode to the best ASCII representation and
     # leave only the allowed characters
-    token = ''.join(filter(allowed, unidecode(token).lower()))
+    token = ''.join(filter(normal_character, unidecode(token).lower()))
 
     # If no characters are left, return the token as an empty tuple
     if len(token) == 0:
