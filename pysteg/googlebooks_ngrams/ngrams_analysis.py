@@ -81,7 +81,7 @@ def ngram_filename(n, prefix):
 
     return "googlebooks-eng-us-all-{n}gram-20120701-{prefix}".format(**locals())
 
-def normalise_and_explode(token):
+def normalise_and_explode_token(token):
     """Normalise and then explode the token by punctuation characters."""
 
     def allowed(c):
