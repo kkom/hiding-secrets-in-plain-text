@@ -1,3 +1,4 @@
+import itertools
 import json
 import re
 import string
@@ -81,10 +82,25 @@ def ngram_filename(n, prefix):
 
     return "googlebooks-eng-us-all-{n}gram-20120701-{prefix}".format(**locals())
 
-
 def normal_character(c):
     """Check if a character is allowed through normalisation."""
     return c in __normalised_charset
+
+def explode_text(text):
+    """
+    Process text by normalising its characters and exploding the tokens by
+    punctuation.
+    """
+
+    # Multiple whitespace characters signify a sentence boundary
+    text_as_sentences = re.sub(r"\s{2,}", " _END_ _START_ ", text.strip())
+
+    raw_tokens = ["_START_"] + text_as_sentences.split() + ["_END_"]
+
+    nested_exploded_tokens = map(explode_token, raw_tokens)
+
+    # Flatten the exploded tokens and return as a tuple
+    return tuple(itertools.chain.from_iterable(nested_exploded_tokens))
 
 def explode_token(token):
     """
