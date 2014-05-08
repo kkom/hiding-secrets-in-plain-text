@@ -5,8 +5,8 @@ This script will first find the closest ASCII equivalent of each token. It will
 then remove all characters which are not digits, letters or standard
 punctuation. All tokens will be exploded by punctuation marks -- a valid token
 will consist of any number of alphanumeric characters or a single punctuation
-mark. Induced ngrams of the order not exceeding the original order of the input
-database will be then output.
+mark. Normalised ngrams of order not exceeding maximum order of the input
+database will be then saved to the output directory.
 """
 
 import argparse
@@ -128,9 +128,9 @@ if __name__ == '__main__':
     parser.add_argument("n_max", metavar="n", type=int,
         help="maximum order of output ngrams")
     parser.add_argument("input",
-        help="input directory with original ngram counts")
+        help="input directory with original ngram counts (text format)")
     parser.add_argument("output",
-        help="output directory for counts of l ngram")
+        help="output directory for normalised ngram counts (text format)")
     args = parser.parse_args()
 
     ngram_descriptions = gen_ngram_descriptions(args.ngrams)
