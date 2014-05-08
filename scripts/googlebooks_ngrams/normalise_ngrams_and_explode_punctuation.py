@@ -19,7 +19,7 @@ from pysteg.common.log import print_status
 
 from pysteg.googlebooks_ngrams.ngrams_analysis import gen_ngram_descriptions
 from pysteg.googlebooks_ngrams.ngrams_analysis import ngram_filename
-from pysteg.googlebooks_ngrams.ngrams_analysis import normalise_and_explode
+from pysteg.googlebooks_ngrams.ngrams_analysis import normalise_and_explode_token
 from pysteg.googlebooks_ngrams.ngrams_analysis import normalised_token_prefix
 
 def close_output_files(out):
@@ -40,7 +40,7 @@ def process_token(token):
         return (token,)
     else:
         # Normalise and explode the token by punctuation characters
-        return normalise_and_explode(token)
+        return normalise_and_explode_token(token)
 
 def output_ngram(l, count, out):
     """
