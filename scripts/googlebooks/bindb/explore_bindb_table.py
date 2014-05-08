@@ -10,6 +10,7 @@ start:stop or start:step:stop notation. Type q to quit.
 
 import argparse
 import re
+import readline
 import struct
 
 from pysteg.common.log import print_status
