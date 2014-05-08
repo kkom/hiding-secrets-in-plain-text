@@ -19,7 +19,7 @@ from pysteg.common.log import print_status
 
 from pysteg.googlebooks_ngrams.ngrams_analysis import gen_ngram_descriptions
 from pysteg.googlebooks_ngrams.ngrams_analysis import ngram_filename
-from pysteg.googlebooks_ngrams.ngrams_analysis import normalise_and_explode_token
+from pysteg.googlebooks_ngrams.ngrams_analysis import explode_token
 from pysteg.googlebooks_ngrams.ngrams_analysis import normalised_token_prefix
 
 def close_output_files(out):
@@ -27,20 +27,6 @@ def close_output_files(out):
     for i in tuple(out.keys()):
         out[i].close()
         del out[i]
-
-def process_token(token):
-    """
-    Process the token. A sentence marker will stay unchanged, a token without
-    punctuation will be normalised to its alphanumerical representation
-    (possibly empty in case it only consists of special characters), and a token
-    with punctuation will be split by punctuation.
-    """
-    if token == "_START_" or token == "_END_":
-        # Sentence delimiters stay unchanged
-        return (token,)
-    else:
-        # Normalise and explode the token by punctuation characters
-        return normalise_and_explode_token(token)
 
 def output_ngram(l, count, out):
     """
@@ -88,7 +74,7 @@ def process_file(n, prefix):
             l_original = line.split("\t")
 
             # Normalise and explode original tokens
-            l = tuple(process_token(token) for token in l_original[:-1])
+            l = tuple(explode_token(token) for token in l_original[:-1])
 
             # Count the exploded size of each original token
             s = tuple(len(token) for token in l)
