@@ -21,7 +21,7 @@ parser = argparse.ArgumentParser(description=descr)
 parser.add_argument("n", type=int, help="order of the BinDB table")
 parser.add_argument("bindb", help="BinDB file")
 parser.add_argument("-t", "--translate", metavar="index",
-                    help="translate indices to tokens using an index file")
+    help="translate token indices to strings using an index file")
 args = parser.parse_args()
 
 if args.translate:
