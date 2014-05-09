@@ -103,12 +103,12 @@ def explode_text(text):
 
     raw_tokens = ["_START_"] + text_as_sentences.split() + ["_END_"]
 
-    nested_exploded_tokens = map(explode_token, raw_tokens)
+    nested_exploded_tokens = map(normalise_and_explode_token, raw_tokens)
 
     # Flatten the exploded tokens and return as a tuple
     return tuple(itertools.chain.from_iterable(nested_exploded_tokens))
 
-def explode_token(token):
+def normalise_and_explode_token(token):
     """
     Normalise and then explode a token by punctuation characters. A sentence
     marker will stay unchanged, a token without punctuation will be normalised

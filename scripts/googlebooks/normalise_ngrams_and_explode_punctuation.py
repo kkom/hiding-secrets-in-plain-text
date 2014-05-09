@@ -19,7 +19,7 @@ from pysteg.common.log import print_status
 
 from pysteg.googlebooks.ngrams_analysis import gen_ngram_descriptions
 from pysteg.googlebooks.ngrams_analysis import ngram_filename
-from pysteg.googlebooks.ngrams_analysis import explode_token
+from pysteg.googlebooks.ngrams_analysis import normalise_and_explode_token
 from pysteg.googlebooks.ngrams_analysis import normalised_token_prefix
 
 def close_output_files(out):
@@ -74,10 +74,10 @@ def process_file(n, prefix):
             l_original = line.split("\t")
 
             # Normalise and explode original tokens
-            l = tuple(explode_token(token) for token in l_original[:-1])
+            l = tuple(normalise_and_explode_token(t) for t in l_original[:-1])
 
             # Count the exploded size of each original token
-            s = tuple(len(token) for token in l)
+            s = tuple(len(t) for t in l)
 
             # Discard ngrams with empty original edge tokens - a lower order
             # ngram already handles these counts
