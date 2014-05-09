@@ -15,6 +15,16 @@ __normalised_charset = __alphanumeric_charset.union(__punctuation_charset)
 BS_PARTITION_NAMES = tuple(string.digits + "_" + string.ascii_lowercase)
 BS_SPECIAL_PREFIXES = frozenset({"other", "punctuation"})
 
+def add_sentence_markers(text):
+    """
+    Add sentence markers to text. Multiple whitespace characters are assumed to
+    delimit sentences.
+    """
+
+    sentence_delimited_text = re.sub(r"\s{2,}", " _END_ _START_ ", text.strip())
+
+    return "_START_ " + sentence_delimited_text + " _END_"
+
 def integrate_pure_ngram_counts(source_ngrams, n):
     """
     Given an iterator over the lines of a Google Books Ngram corpus file return
@@ -92,16 +102,13 @@ def normal_character(c):
     """Check if a character is allowed through normalisation."""
     return c in __normalised_charset
 
-def explode_text(text):
+def normalise_and_explode_text(text):
     """
     Process text by normalising its characters and exploding the tokens by
     punctuation.
     """
 
-    # Multiple whitespace characters signify a sentence boundary
-    text_as_sentences = re.sub(r"\s{2,}", " _END_ _START_ ", text.strip())
-
-    raw_tokens = ["_START_"] + text_as_sentences.split() + ["_END_"]
+    raw_tokens = add_sentence_markers(text).split()
 
     nested_exploded_tokens = map(normalise_and_explode_token, raw_tokens)
 
