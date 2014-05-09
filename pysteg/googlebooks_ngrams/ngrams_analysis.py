@@ -71,13 +71,16 @@ def integrate_pure_ngram_counts(source_ngrams, n):
         yield (tuple(current_ngram), current_ngram_count)
 
 def gen_ngram_descriptions(filename):
-    """Yields ngram descriptions from a file."""
+    """
+    Returns an iterator with ngram prefix file descriptions read from a JSON
+    file.
+    """
 
-    with open(filename, 'r') as f:
+    with open(filename, "r") as f:
         ngrams = json.load(f)
 
     for n in sorted(ngrams.keys()):
-        for prefix in ngrams[n]:
+        for prefix in sorted(ngrams[n]):
             yield (int(n), prefix)
 
 def ngram_filename(n, prefix):
