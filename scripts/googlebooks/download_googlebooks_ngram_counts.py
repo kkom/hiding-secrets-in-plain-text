@@ -22,9 +22,9 @@ from pysteg.common.files import open_file_to_process, FileAlreadyProcessed
 from pysteg.common.streaming import iter_remote_gzip
 from pysteg.common.streaming import ngrams_iter2file
 
-from pysteg.googlebooks_ngrams.ngrams_analysis import gen_ngram_descriptions
-from pysteg.googlebooks_ngrams.ngrams_analysis import integrate_pure_ngram_counts
-from pysteg.googlebooks_ngrams.ngrams_analysis import ngram_filename
+from pysteg.googlebooks.ngrams_analysis import gen_ngram_descriptions
+from pysteg.googlebooks.ngrams_analysis import integrate_pure_ngram_counts
+from pysteg.googlebooks.ngrams_analysis import ngram_filename
 
 def allowed_to_dispatch():
     """Check if the script is allowed to dispatch another job to the pool."""

@@ -11,8 +11,8 @@ import os
 import psycopg2
 
 from pysteg.common.db import get_table_name
-from pysteg.googlebooks_ngrams.psql import get_partition
-from pysteg.googlebooks_ngrams.ngrams_analysis import ngram_filename
+from pysteg.googlebooks.psql import get_partition
+from pysteg.googlebooks.ngrams_analysis import ngram_filename
 
 def partition_ngrams(ngram_descriptions):
     """Returns ngram descriptions dictionary with the prefixes partitioned."""

@@ -24,7 +24,7 @@ import struct
 
 from pysteg.common.log import print_status
 
-from pysteg.googlebooks_ngrams import bindb
+from pysteg.googlebooks import bindb
 
 def ngrams2left_mgrams(ngrams):
     """

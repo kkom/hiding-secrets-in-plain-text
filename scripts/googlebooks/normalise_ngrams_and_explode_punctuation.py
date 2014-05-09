@@ -17,10 +17,10 @@ import string
 
 from pysteg.common.log import print_status
 
-from pysteg.googlebooks_ngrams.ngrams_analysis import gen_ngram_descriptions
-from pysteg.googlebooks_ngrams.ngrams_analysis import ngram_filename
-from pysteg.googlebooks_ngrams.ngrams_analysis import explode_token
-from pysteg.googlebooks_ngrams.ngrams_analysis import normalised_token_prefix
+from pysteg.googlebooks.ngrams_analysis import gen_ngram_descriptions
+from pysteg.googlebooks.ngrams_analysis import ngram_filename
+from pysteg.googlebooks.ngrams_analysis import explode_token
+from pysteg.googlebooks.ngrams_analysis import normalised_token_prefix
 
 def close_output_files(out):
     """Close the output files and remove them from the dictionary."""

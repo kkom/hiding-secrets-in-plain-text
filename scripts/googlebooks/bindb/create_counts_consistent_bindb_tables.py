@@ -20,7 +20,7 @@ import shutil
 
 from pysteg.common.log import print_status
 
-from pysteg.googlebooks_ngrams import bindb
+from pysteg.googlebooks import bindb
 
 def drop_last_token(bindb_line):
     """Return the BinDB line with the last token removed."""
