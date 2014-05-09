@@ -15,7 +15,7 @@ import struct
 
 from pysteg.common.log import print_status
 
-from pysteg.googlebooks_ngrams import bindb
+from pysteg.googlebooks import bindb
 
 parser = argparse.ArgumentParser(description=descr)
 parser.add_argument("n", type=int, help="order of the BinDB table")

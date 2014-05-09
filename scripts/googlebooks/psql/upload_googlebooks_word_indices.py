@@ -22,7 +22,7 @@ import tempfile
 import psycopg2
 
 from pysteg.common.files import path_append_flag
-from pysteg.googlebooks_ngrams.ngrams_analysis import ngram_filename
+from pysteg.googlebooks.ngrams_analysis import ngram_filename
 
 # Define and parse arguments
 parser = argparse.ArgumentParser(

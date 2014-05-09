@@ -19,9 +19,9 @@ import os
 
 from itertools import count, repeat
 
-from pysteg.googlebooks_ngrams.ngrams_analysis import ngram_filename
-from pysteg.googlebooks_ngrams.ngrams_analysis import BS_PARTITION_NAMES
-from pysteg.googlebooks_ngrams.ngrams_analysis import BS_SPECIAL_PREFIXES
+from pysteg.googlebooks.ngrams_analysis import ngram_filename
+from pysteg.googlebooks.ngrams_analysis import BS_PARTITION_NAMES
+from pysteg.googlebooks.ngrams_analysis import BS_SPECIAL_PREFIXES
 
 if __name__ == '__main__':
     # Define and parse the script arguments

@@ -24,11 +24,11 @@ from numpy import zeros
 
 from pysteg.common.log import print_status
 
-from pysteg.googlebooks_ngrams import bindb
+from pysteg.googlebooks import bindb
 
-from pysteg.googlebooks_ngrams.ngrams_analysis import ngram_filename
-from pysteg.googlebooks_ngrams.ngrams_analysis import BS_PARTITION_NAMES
-from pysteg.googlebooks_ngrams.ngrams_analysis import BS_SPECIAL_PREFIXES
+from pysteg.googlebooks.ngrams_analysis import ngram_filename
+from pysteg.googlebooks.ngrams_analysis import BS_PARTITION_NAMES
+from pysteg.googlebooks.ngrams_analysis import BS_SPECIAL_PREFIXES
 
 def write_ngrams_table(n, prefixes):
     """Writes ngrams counts table for a particular n."""
