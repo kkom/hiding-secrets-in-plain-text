@@ -44,5 +44,8 @@ while True:
     print(" ".join(token_strings))
 
     if args.index:
-        token_indices = tuple(map(index.s2i, token_strings))
-        print(token_indices)
+        try:
+            token_indices = tuple(map(index.s2i, token_strings))
+            print(token_indices)
+        except KeyError as e:
+            print("KeyError: {e} is not in the index".format(**locals()))
