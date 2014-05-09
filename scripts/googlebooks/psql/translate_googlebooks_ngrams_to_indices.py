@@ -15,7 +15,7 @@ import multiprocessing
 import os
 
 from pysteg.common.files import open_file_to_process, FileAlreadyProcessed
-from pysteg.googlebooks import get_partition
+from pysteg.googlebooks_ngrams.psql import get_partition
 from pysteg.googlebooks_ngrams.ngrams_analysis import gen_ngram_descriptions
 
 def read_index(index_file):

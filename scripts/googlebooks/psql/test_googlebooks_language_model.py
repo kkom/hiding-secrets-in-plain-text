@@ -2,7 +2,7 @@
 
 from sympy import Rational
 
-from pysteg.googlebooks import GooglebooksNgramsLanguageModel
+from pysteg.googlebooks_ngrams.psql import GooglebooksNgramsLanguageModel
 
 def show(n1, n2):
     print(float(n1), float(n2))
