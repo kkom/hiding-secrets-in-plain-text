@@ -163,10 +163,10 @@ def normalised_token_prefix(token, n):
         # Standard two-character letter prefix
         return token[:2]
 
-def text2string_tokens(text):
+def text2token_strings(text):
     """
-    Convert text to a tuple of string tokens. Sentences in the input need to be
-    delimited by a sequence of more than 1 whitespace characters.
+    Convert text to a sequence of token strings. Sentences in the input text
+    need to be delimited by a sequence of more than 1 whitespace characters.
     """
 
     # A very simple input sanitisation scheme -- special tokens "_START_" and
@@ -175,8 +175,8 @@ def text2string_tokens(text):
     #
     # ^|\s and $|\s are needed so that only substrings that would be separate
     # tokens are substituted
-    text = re.sub(r"^|\s_START_$|\s", " _ START _ ", text)
-    text = re.sub(r"^|\s_END_$|\s", " _ END _ ", text)
+    text = re.sub(r"(^|\s)_START_($|\s)", " _ START _ ", text)
+    text = re.sub(r"(^|\s)_END_($|\s)", " _ END _ ", text)
 
     # Find and explicitly write sentence delimiters
     sentence_delimited_text = re.sub(r"\s{2,}", " _END_ _START_ ", text.strip())
