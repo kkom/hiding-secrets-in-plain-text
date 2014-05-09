@@ -67,6 +67,9 @@ def integrate_pure_ngram_counts(source_ngrams, n):
             current_ngram_count = int(data[n+1])
             current_ngram_valid = valid_ngram(current_ngram)
 
+    if current_ngram_valid:
+        yield (tuple(current_ngram), current_ngram_count)
+
 def gen_ngram_descriptions(filename):
     """Yields ngram descriptions from a file."""
 
