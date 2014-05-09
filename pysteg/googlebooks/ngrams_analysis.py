@@ -15,16 +15,6 @@ __normalised_charset = __alphanumeric_charset.union(__punctuation_charset)
 BS_PARTITION_NAMES = tuple(string.digits + "_" + string.ascii_lowercase)
 BS_SPECIAL_PREFIXES = frozenset({"other", "punctuation"})
 
-def add_sentence_markers(text):
-    """
-    Add sentence markers to text. Multiple whitespace characters are assumed to
-    delimit sentences.
-    """
-
-    sentence_delimited_text = re.sub(r"\s{2,}", " _END_ _START_ ", text.strip())
-
-    return "_START_ " + sentence_delimited_text + " _END_"
-
 def integrate_pure_ngram_counts(source_ngrams, n):
     """
     Given an iterator over the lines of a Google Books Ngram corpus file return
@@ -102,15 +92,12 @@ def normal_character(c):
     """Check if a character is allowed through normalisation."""
     return c in __normalised_charset
 
-def normalise_and_explode_text(text):
+def normalise_and_explode_tokens(text):
     """
-    Process text by normalising its characters and exploding the tokens by
-    punctuation.
+    Normalise and then explode token strings from a tuple.
     """
 
-    raw_tokens = add_sentence_markers(text).split()
-
-    nested_exploded_tokens = map(normalise_and_explode_token, raw_tokens)
+    nested_exploded_tokens = map(normalise_and_explode_token, text)
 
     # Flatten the exploded tokens and return as a tuple
     return tuple(itertools.chain.from_iterable(nested_exploded_tokens))
@@ -175,3 +162,22 @@ def normalised_token_prefix(token, n):
     else:
         # Standard two-character letter prefix
         return token[:2]
+
+def text2string_tokens(text):
+    """
+    Convert text to a tuple of string tokens. Sentences in the input need to be
+    delimited by a sequence of more than 1 whitespace characters.
+    """
+
+    # A very simple input sanitisation scheme -- special tokens "_START_" and
+    # "_END_" that exist in the input text are converted to "_ START _" and
+    # "_ END _" respectively
+    #
+    # ^|\s and $|\s are needed so that only substrings that would be separate
+    # tokens are substituted
+    text = re.sub(r"^|\s_START_$|\s", " _ START _ ", text)
+    text = re.sub(r"^|\s_END_$|\s", " _ END _ ", text)
+
+    # Find and explicitly write sentence delimiters
+    sentence_delimited_text = re.sub(r"\s{2,}", " _END_ _START_ ", text.strip())
+    return ("_START_",) + tuple(sentence_delimited_text.split()) + ("_END_",)
