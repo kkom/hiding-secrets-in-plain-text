@@ -9,7 +9,7 @@ import argparse
 import json
 import os
 
-from pysteg.googlebooks import get_partition
+from pysteg.googlebooks_ngrams.psql import get_partition
 from pysteg.googlebooks_ngrams.ngrams_analysis import ngram_filename
 
 def calculate_cumfreq(path):
