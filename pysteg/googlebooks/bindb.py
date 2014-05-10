@@ -145,6 +145,9 @@ class BinDBLM:
     def _raw_conditional_interval(self, token, context, backed_off):
         """"Internal version of the conditional probability interval method."""
 
+        # _START_ token has a 100% probability of occurring at the beginning of
+        # a sentence (empty context and not backed-off) or after the _END_
+        # token. All other occurrences are a mistake.
         if token == self.start:
             if ((len(context) == 0 and backed_off is None) or
                 (len(context) > 0 and context[-1] == self.end)):
@@ -168,7 +171,7 @@ class BinDBLM:
         ngrams = iter_bindb_file(self.f[n], n, low_i, high_i-low_i+1)
 
         if backed_off is None:
-            # If we didn't back off, do not reject any ngrams
+            # If we didn't back-off, do not reject any ngrams
             rejects = ()
         else:
             # If we backed-off from a higher order context, do not consider the
@@ -222,13 +225,13 @@ class BinDBLM:
 #             print("leftover_probability_mass: " + str(leftover_probability_mass))
 #             print("backoff_pseudocount: " + str(backoff_pseudocount))
 
-        def make_rational_interval(start, stop):
+        def make_rational_interval(pre, post):
             """
             Make a rational interval given its pre- and post-cumulative counts.
             """
             all_counts = total_accepted_count + backoff_pseudocount
-            return (sympy.Rational(start, all_counts),
-                    sympy.Rational(stop, all_counts))
+            return (sympy.Rational(pre, all_counts),
+                    sympy.Rational(post, all_counts))
 
         if token_cumulative_counts:
             # If the token was found in the ngrams, report its interval
