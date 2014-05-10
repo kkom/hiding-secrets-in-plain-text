@@ -134,13 +134,24 @@ class BinDBLM:
             return None
 
     def conditional_interval(self, token, context):
-        """Return the interval of the token given its context."""
-        return self._raw_conditional_interval(token, context[-(self.n_max-1):],
-                                              None)
+        """Return the conditional probability interval of a token."""
+
+        # Only use context within the order of the model
+        context = context[-(self.n_max-1):]
+
+        return self._raw_conditional_interval(token, context, None)
 
     @functools.lru_cache(maxsize=512)
     def _raw_conditional_interval(self, token, context, backed_off):
-        """"Internal and cached support for the interval method."""
+        """"Internal version of the conditional probability interval method."""
+
+        if token == self.start:
+            if ((len(context) == 0 and backed_off is None) or
+                (len(context) > 0 and context[-1] == self.end)):
+                return (sympy.Rational(0), sympy.Rational(1))
+            else:
+                raise Exception("_START_ token in an incorrect position.")
+
         n = len(context) + 1
 
         # Find ngrams matching the context
@@ -157,7 +168,7 @@ class BinDBLM:
         ngrams = iter_bindb_file(self.f[n], n, low_i, high_i-low_i+1)
 
         if backed_off is None:
-            # If we didn't back off - consider all ngrams
+            # If we didn't back off, do not reject any ngrams
             rejects = ()
         else:
             # If we backed-off from a higher order context, do not consider the
@@ -217,7 +228,7 @@ class BinDBLM:
             """
             all_counts = total_accepted_count + backoff_pseudocount
             return (sympy.Rational(start, all_counts),
-                    sympy.Rational(start, all_counts))
+                    sympy.Rational(stop, all_counts))
 
         if token_cumulative_counts:
             # If the token was found in the ngrams, report its interval
