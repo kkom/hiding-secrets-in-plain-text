@@ -2,6 +2,20 @@ import collections
 
 from itertools import chain, islice
 
+def __output_tuple_fun(tuple_type):
+    """Return a function to output an unnamed or named tuple."""
+
+    if tuple_type is tuple:
+        def output_fun(object, count):
+            """Output a normal, unnamed tuple."""
+            return (object, count)
+    else:
+        def output_fun(object, count):
+            """Output a specified named tuple."""
+            return tuple_type(object, count)
+
+    return output_fun
+
 def consume(iterator, n=None):
     "Advance the iterator n-steps ahead. If n is none, consume entirely."
     # Use functions that consume iterators at C speed.
@@ -12,12 +26,14 @@ def consume(iterator, n=None):
         # advance to the empty slice starting at position n
         next(islice(iterator, n, n), None)
 
-def integrate_counts(iterator):
+def integrate_counts(iterator, tuple_type=tuple):
     """
     Given an iterator over (object, count) tuples generate an iterator over
     (object, total count) tuples created by summing the counts of identical
     objects. Only identical objects occurring next to each other are clustered.
     """
+
+    output_fun = __output_tuple_fun(tuple_type)
 
     current_object = None
     current_count = None
@@ -27,13 +43,13 @@ def integrate_counts(iterator):
             current_count += item[1]
         else:
             if current_object is not None:
-                yield (current_object, current_count)
+                yield output_fun(current_object, current_count)
             (current_object, current_count) = item
 
     if current_object is not None:
-        yield (current_object, current_count)
+        yield output_fun(current_object, current_count)
 
-def maximise_counts(iterator1, iterator2):
+def maximise_counts(iterator1, iterator2, tuple_type=tuple):
     """
     Given two iterators over sorted (object, count) tuples generate an iterator
     over sorted (object, max(count1, count2)) tuples. I.e. for each object
@@ -47,6 +63,8 @@ def maximise_counts(iterator1, iterator2):
     i.e. more frequently contain objects that are not in the other iterator.
     """
 
+    output_fun = __output_tuple_fun(tuple_type)
+
     buffer = tuple()
 
     for item1 in iterator1:
@@ -55,7 +73,7 @@ def maximise_counts(iterator1, iterator2):
                 yield item2
                 continue
             elif item2[0] == item1[0]:
-                yield (item1[0], max(item1[1], item2[1]))
+                yield output_fun(item1[0], max(item1[1], item2[1]))
                 break
             else:
                 buffer = iter((item2,))

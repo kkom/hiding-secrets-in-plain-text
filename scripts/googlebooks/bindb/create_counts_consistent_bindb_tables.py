@@ -74,7 +74,7 @@ def right_integrate_counts(path, n):
         """
         return bindb.BinDBLine(tuple(numpy_row)[:-1], numpy_row["count"])
 
-    return integrate(map(numpy_row2bindb_line, mgrams))
+    return integrate_counts(map(numpy_row2bindb_line, mgrams), bindb.BinDBLine)
 
 def process_file(n):
     """Create a counts consistent BinDB table of order n."""
@@ -102,19 +102,22 @@ def process_file(n):
             ograms = bindb.iter_bindb_file(ograms_f, n+1)
 
             # Make iterators over left and right integrated ograms
-            left_integrated_ograms = integrate_counts(map(drop_last_token,
-                                                          ograms))
+            left_integrated_ograms = integrate_counts(
+                map(drop_last_token, ograms), bindb.BinDBLine
+            )
             right_integrated_ograms = right_integrate_counts(ograms_path, n+1)
 
             # Maximise counts of left and right integrated ograms
-            integrated_ograms = maximise_counts(left_integrated_ograms,
-                                                right_integrated_ograms)
+            integrated_ograms = maximise_counts(
+                left_integrated_ograms, right_integrated_ograms, bindb.BinDBLine
+            )
 
             # Maximise counts of ngrams and integrated ograms
             ngrams = bindb.iter_bindb_file(ngrams_input_f, n)
-            maximised_ngrams = maximise_counts(integrated_ograms, ngrams)
+            maximised_ngrams = maximise_counts(integrated_ograms, ngrams,
+                                               bindb.BinDBLine)
 
-            for l in map(bindb.BinDBLine._make, maximised_ngrams):
+            for l in maximised_ngrams:
                 ngrams_output_f.write(bindb.pack_line(l, n))
 
     print_status("Saved counts-consistent {n}gram BinDB file "
