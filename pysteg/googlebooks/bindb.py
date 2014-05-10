@@ -70,11 +70,13 @@ class BinDBLM:
         for f in self.f.values():
             f.close()
 
-    def bs(self, n, mgram, imin=1, imax=None):
+    def bs(self, n, mgram, imin=1, imax=None, mode="low"):
         """
         Binary search for the first ngram with first m tokens equal to the given
         mgram.
         """
+
+        assert(mode in ("low", "high"))
 
         m = len(mgram)
 
@@ -92,12 +94,18 @@ class BinDBLM:
             imax = self.size[n]
 
         while imin < imax:
-            imid = math.floor((imin+imax)/2)
-
-            if get_ngram(imid) < mgram:
-                imin = imid + 1
+            if mode == "low":
+                imid = math.floor((imin+imax)/2)
+                if get_ngram(imid) < mgram:
+                    imin = imid + 1
+                else:
+                    imax = imid
             else:
-                imax = imid
+                imid = math.ceil((imin+imax)/2)
+                if get_ngram(imid) > mgram:
+                    imax = imid - 1
+                else:
+                    imin = imid
 
         if get_ngram(imin) == mgram:
             return imin
