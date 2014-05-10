@@ -79,3 +79,23 @@ def maximise_counts(iterator1, iterator2, tuple_type=tuple):
                 buffer = iter((item2,))
                 yield item1
                 break
+
+def difference(iterator1, iterator2):
+    """
+    Return an iterator over (object, *) tuples containing objects which are in
+    iterator1 but not in iterator2. Both iterators need to contain unique and
+    sorted items.
+    """
+
+    buffer = tuple()
+
+    for item2 in iterator2:
+        for item1 in chain(buffer, iterator1):
+            if item1[0] < item2[0]:
+                yield item1
+                continue
+            elif item1[0] == item2[0]:
+                break
+            else:
+                buffer = iter((item1,))
+                break
