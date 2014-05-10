@@ -127,8 +127,11 @@ class BinDBLM:
         mgram.
         """
         low_i = self.bs(n, mgram, mode="low")
-        high_i = self.bs(n, mgram, imin=low_i, mode="high", ratio=0.1)
-        return (low_i, high_i)
+        if low_i is not None:
+            high_i = self.bs(n, mgram, imin=low_i, mode="high", ratio=0.1)
+            return (low_i, high_i)
+        else:
+            return None
 
     def conditional_interval(self, token, context):
         """Return the interval of the token given its context."""
@@ -140,12 +143,23 @@ class BinDBLM:
         """"Internal and cached support for the interval method."""
         n = len(context) + 1
 
-        # Find ngrams matching the context in this level of the conditional
-        # probability tree
-        (low_i, high_i) = self.range_search(n, context)
+        # Find ngrams matching the context
+        ngrams_range = self.range_search(n, context)
+
+        # If there are no matching ngrams, the back-off pseudo-count is going to
+        # be 100% of the probability mass, so we can directly report the
+        # backed-off conditional probability
+        if ngrams_range is None:
+            return self._raw_conditional_interval(token, context[1:], None)
+
+        # Make an iterator of ngrams matching the context
+        (low_i, high_i) = ngrams_range
         ngrams = iter_bindb_file(self.f[n], n, low_i, high_i-low_i+1)
 
-        if backed_off is not None:
+        if backed_off is None:
+            # If we didn't back off - consider all ngrams
+            rejects = ()
+        else:
             # If we backed-off from a higher order context, do not consider the
             # ngrams which were already covered by the higher order model
             (low_i, high_i) = self.range_search(n+1, (backed_off,) + context)
@@ -154,17 +168,16 @@ class BinDBLM:
             # Ngrams which should not be considered in this level of the
             # conditional probability tree
             rejects = map(lambda l: l.ngram[1:], ograms)
-        else:
-            # If we didn't back off - consider all ngrams
-            rejects = ()
 
         filtered_ngrams = reject(ngrams, rejects)
 
-        # Find all necessary cumulative counts
+        # Find all cumulative counts needed to calculate the conditional
+        # probability interval
         token_cumulative_counts = None
         total_accepted_count = 0
         total_rejected_count = 0
         for i in filtered_ngrams:
+            # Always reject the unigram _START_ - it cannot be freely chosen
             if i.reject or (n == 1 and i.item.ngram[0] == self.start):
                 total_rejected_count += i.item.count
             else:
@@ -198,25 +211,27 @@ class BinDBLM:
 #             print("leftover_probability_mass: " + str(leftover_probability_mass))
 #             print("backoff_pseudocount: " + str(backoff_pseudocount))
 
+        def make_rational_interval(start, stop):
+            """
+            Make a rational interval given its pre- and post-cumulative counts.
+            """
+            all_counts = total_accepted_count + backoff_pseudocount
+            return (sympy.Rational(start, all_counts),
+                    sympy.Rational(start, all_counts))
+
         if token_cumulative_counts:
-            return (
-                sympy.Rational(token_cumulative_counts[0],
-                               total_accepted_count + backoff_pseudocount),
-                sympy.Rational(token_cumulative_counts[1],
-                               total_accepted_count + backoff_pseudocount)
-            )
+            # If the token was found in the ngrams, report its interval
+            return make_rational_interval(*token_cumulative_counts)
         else:
+            # Otherwise, back-off the model and report the backed-off interval
+            # within the probability mass assigned for back-off
             backedoff_interval = self._raw_conditional_interval(
                 token, context[1:], context[0]
             )
 
-            return (
-                sympy.Rational(total_accepted_count + backedoff_interval[0]
-                                                      * backoff_pseudocount,
-                               total_accepted_count + backoff_pseudocount),
-                sympy.Rational(total_accepted_count + backedoff_interval[1]
-                                                      * backoff_pseudocount,
-                               total_accepted_count + backoff_pseudocount)
+            return make_rational_interval(
+                total_accepted_count + backedoff_interval[0]*backoff_pseudocount,
+                total_accepted_count + backedoff_interval[1]*backoff_pseudocount
             )
 
 @functools.lru_cache(maxsize=8)
