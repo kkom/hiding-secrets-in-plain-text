@@ -2,6 +2,8 @@ import collections
 
 from itertools import chain, islice
 
+FilteredTuple = collections.namedtuple('FilteredTuple', 'reject item')
+
 def __output_tuple_fun(tuple_type):
     """Return a function to output an unnamed or named tuple."""
 
@@ -80,22 +82,27 @@ def maximise_counts(iterator1, iterator2, tuple_type=tuple):
                 yield item1
                 break
 
-def difference(iterator1, iterator2):
+def reject(iterator, rejects):
     """
-    Return an iterator over (object, *) tuples containing objects which are in
-    iterator1 but not in iterator2. Both iterators need to contain unique and
-    sorted items.
+    Return an iterator over (True/False, (object, *)) tuples. iterator contains
+    (object, *) tuples, rejects contains just the object items. True/False
+    will indicate whether object from iterator is in rejects. Both iterators
+    need to be sorted and unique by object.
     """
 
     buffer = tuple()
 
-    for item2 in iterator2:
-        for item1 in chain(buffer, iterator1):
-            if item1[0] < item2[0]:
-                yield item1
+    for reject in rejects:
+        for item in chain(buffer, iterator):
+            if item[0] < reject:
+                yield FilteredTuple(False, item)
                 continue
-            elif item1[0] == item2[0]:
+            elif item[0] == reject:
+                yield FilteredTuple(True, item)
                 break
             else:
-                buffer = iter((item1,))
+                buffer = iter((item,))
                 break
+
+    for item in iterator:
+        yield FilteredTuple(False, item)

@@ -1,8 +1,12 @@
 import collections
 import functools
+import itertools
 import math
 import os
 import struct
+import sympy
+
+from pysteg.common.itertools import reject
 
 BinDBLine = collections.namedtuple('BinDBLine', 'ngram count')
 
@@ -117,15 +121,103 @@ class BinDBLM:
         else:
             return None
 
-    def interval(self, token, context):
+    def range_search(self, n, mgram):
+        """
+        Search for the range of ngrams with first m tokens equal to the given
+        mgram.
+        """
+        low_i = self.bs(n, mgram, mode="low")
+        high_i = self.bs(n, mgram, imin=low_i, mode="high", ratio=0.1)
+        return (low_i, high_i)
+
+    def conditional_interval(self, token, context):
         """Return the interval of the token given its context."""
-        return _raw_interval(token, context[-(self.n_max-1):], False)
+        return self._raw_conditional_interval(token, context[-(self.n_max-1):],
+                                              None)
 
     @functools.lru_cache(maxsize=512)
-    def _raw_interval(self, token, context, backed_off):
+    def _raw_conditional_interval(self, token, context, backed_off):
         """"Internal and cached support for the interval method."""
+        n = len(context) + 1
 
-        print((token, context, backed_off))
+        # Find ngrams matching the context in this level of the conditional
+        # probability tree
+        (low_i, high_i) = self.range_search(n, context)
+        ngrams = iter_bindb_file(self.f[n], n, low_i, high_i-low_i+1)
+
+        if backed_off is not None:
+            # If we backed-off from a higher order context, do not consider the
+            # ngrams which were already covered by the higher order model
+            (low_i, high_i) = self.range_search(n+1, (backed_off,) + context)
+            ograms = iter_bindb_file(self.f[n+1], n+1, low_i, high_i-low_i+1)
+
+            # Ngrams which should not be considered in this level of the
+            # conditional probability tree
+            rejects = map(lambda l: l.ngram[1:], ograms)
+        else:
+            # If we didn't back off - consider all ngrams
+            rejects = ()
+
+        filtered_ngrams = reject(ngrams, rejects)
+
+        # Find all necessary cumulative counts
+        token_cumulative_counts = None
+        total_accepted_count = 0
+        total_rejected_count = 0
+        for i in filtered_ngrams:
+            if i.reject or (n == 1 and i.item.ngram[0] == self.start):
+                total_rejected_count += i.item.count
+            else:
+                if i.item.ngram[-1] == token:
+                    token_cumulative_counts = (
+                        total_accepted_count,
+                        total_accepted_count + i.item.count
+                    )
+                total_accepted_count += i.item.count
+
+#         print("total_accepted_count: " + str(total_accepted_count))
+#         print("total_rejected_count: " + str(total_rejected_count))
+#         print("token_cumulative_counts: " + str(token_cumulative_counts))
+
+        # Calculate the back-off pseudo-count
+        if n == 1:
+            backoff_pseudocount = 0
+        else:
+            total_context_count = read_line(
+                self.f[n-1], n-1, self.bs(n-1, context)
+            ).count
+            context_count = total_context_count - total_rejected_count
+            leftover_probability_mass = context_count - total_accepted_count
+            backoff_pseudocount = math.ceil(
+                self.alpha * leftover_probability_mass
+                + self.beta * context_count
+            )
+
+#             print("total_context_count: " + str(total_context_count))
+#             print("context_count: " + str(context_count))
+#             print("leftover_probability_mass: " + str(leftover_probability_mass))
+#             print("backoff_pseudocount: " + str(backoff_pseudocount))
+
+        if token_cumulative_counts:
+            return (
+                sympy.Rational(token_cumulative_counts[0],
+                               total_accepted_count + backoff_pseudocount),
+                sympy.Rational(token_cumulative_counts[1],
+                               total_accepted_count + backoff_pseudocount)
+            )
+        else:
+            backedoff_interval = self._raw_conditional_interval(
+                token, context[1:], context[0]
+            )
+
+            return (
+                sympy.Rational(total_accepted_count + backedoff_interval[0]
+                                                      * backoff_pseudocount,
+                               total_accepted_count + backoff_pseudocount),
+                sympy.Rational(total_accepted_count + backedoff_interval[1]
+                                                      * backoff_pseudocount,
+                               total_accepted_count + backoff_pseudocount)
+            )
 
 @functools.lru_cache(maxsize=8)
 def fmt(n):
@@ -136,15 +228,22 @@ def fmt(n):
         "q"       # 8 byte integer with ngram count
     )
 
-def iter_bindb_file(f, n):
+def iter_bindb_file(f, n, start=1, number_iters=float("Inf")):
     """
     Iterate over the lines of a BinDB file. Lines are given in BinDBLine format.
     """
 
+    # Go to the start line
+    f.seek((start-1)*line_size(n))
+
+    # Read the first line in bytes
+    i = 1
     bindb_line = f.read(line_size(n))
-    while len(bindb_line) != 0:
+
+    while len(bindb_line) != 0 and i <= number_iters:
         yield unpack_line(bindb_line, n)
         bindb_line = f.read(line_size(n))
+        i += 1
 
 def line_size(n):
     """Return the size in bytes of a BinDBLine of order n."""
