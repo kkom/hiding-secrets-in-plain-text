@@ -53,10 +53,14 @@ class BinDBLM:
     be around.
     """
 
-    def __init__(self, bindb_dir, n_max, start, end):
+    def __init__(self, bindb_dir, n_max, start, end, alpha, beta):
         self.n_max = n_max          # Order of the model
         self.start = start          # Indices of the _START_ and _END_ tokens
         self.end = end
+        self.alpha = alpha          # Proportion of leftover ML probability mass
+                                    # assigned to the back-off path
+        self.beta = beta            # Extra probability mass assigned to the
+                                    # back-off path
 
         paths = dict((n, os.path.join(bindb_dir, "{n}gram".format(**locals())))
                      for n in range(1,n_max+1))
@@ -112,6 +116,16 @@ class BinDBLM:
             return imin
         else:
             return None
+
+    def interval(self, token, context):
+        """Return the interval of the token given its context."""
+        return _raw_interval(token, context[-(self.n_max-1):], False)
+
+    @functools.lru_cache(maxsize=512)
+    def _raw_interval(self, token, context, backed_off):
+        """"Internal and cached support for the interval method."""
+
+        print((token, context, backed_off))
 
 @functools.lru_cache(maxsize=8)
 def fmt(n):
