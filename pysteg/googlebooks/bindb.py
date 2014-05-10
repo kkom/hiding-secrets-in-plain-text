@@ -1,5 +1,7 @@
 import collections
 import functools
+import math
+import os
 import struct
 
 BinDBLine = collections.namedtuple('BinDBLine', 'ngram count')
@@ -52,10 +54,55 @@ class BinDBLM:
     """
 
     def __init__(self, bindb_dir, n_max, start, end):
-        self.bindb_dir = bindb_dir  # Directory with the BinDB tables
         self.n_max = n_max          # Order of the model
         self.start = start          # Indices of the _START_ and _END_ tokens
         self.end = end
+
+        paths = dict((n, os.path.join(bindb_dir, "{n}gram".format(**locals())))
+                     for n in range(1,n_max+1))
+
+        self.f = dict((n, open(path, "rb")) for n, path in paths.items())
+
+        self.size = dict((n, int(os.path.getsize(path)/line_size(n)))
+                         for n, path in paths.items())
+
+    def __del__(self):
+        for f in self.f.values():
+            f.close()
+
+    def bs(self, n, mgram, imin=1, imax=None):
+        """
+        Binary search for the first ngram with first m tokens equal to the given
+        mgram.
+        """
+
+        m = len(mgram)
+
+        # mgram size cannot be larger than the order of the searched table
+        assert(m <= n)
+
+        def get_ngram(i):
+            """
+            Return i'th ngram from the specified table truncated to the size of
+            the searched mgram.
+            """
+            return read_line(self.f[n], n, i).ngram[:m]
+
+        if imax == None:
+            imax = self.size[n]
+
+        while imin < imax:
+            imid = math.floor((imin+imax)/2)
+
+            if get_ngram(imid) < mgram:
+                imin = imid + 1
+            else:
+                imax = imid
+
+        if get_ngram(imin) == mgram:
+            return imin
+        else:
+            return None
 
 @functools.lru_cache(maxsize=8)
 def fmt(n):
