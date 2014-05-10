@@ -72,8 +72,9 @@ class BinDBLM:
 
     def bs(self, n, mgram, imin=1, imax=None, mode="low", ratio=0.5):
         """
-        Binary search for the first ngram with first m tokens equal to the given
-        mgram.
+        Binary search for the first or last ngram with first m tokens equal to
+        the given mgram. The ratio parameter specifies where the midpoint
+        between imin and imax should be located.
         """
 
         assert(mode in ("low", "high"))
