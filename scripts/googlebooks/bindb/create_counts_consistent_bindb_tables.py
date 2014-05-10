@@ -19,64 +19,14 @@ import os
 import shutil
 
 from pysteg.common.log import print_status
-
+from pysteg.common.itertools import integrate_counts, maximise_counts
 from pysteg.googlebooks import bindb
 
 def drop_last_token(bindb_line):
     """Return the BinDB line with the last token removed."""
     return bindb.BinDBLine(bindb_line.ngram[:-1], bindb_line.count)
 
-def integrate(bindb_lines):
-    """
-    Given an iterator over sorted (ngram, count) tuples generate an iterator
-    over (ngram, total count) tuples created by integrating the counts of
-    identical ngrams.
-    """
-
-    current_ngram = None
-    current_count = None
-
-    for l in bindb_lines:
-        if l.ngram == current_ngram:
-            current_count += l.count
-        else:
-            if current_ngram is not None:
-                yield bindb.BinDBLine(current_ngram, current_count)
-            current_ngram = l.ngram
-            current_count = l.count
-
-    if current_ngram is not None:
-        yield bindb.BinDBLine(current_ngram, current_count)
-
-def maximise_counts(bindb_lines1, bindb_lines2):
-    """
-    Given two iterators over sorted (ngram, count) tuples generate an iterator
-    over sorted (ngram, max(count1, count2)) tuples. I.e. for each ngram return
-    the larger of its counts found in the two iterators.
-
-    If an ngram is entirely missing from one of the iterators, it is still
-    returned with a count from the iterator where it exists.
-
-    For performance reasons, the second iterator should be the "denser" one,
-    i.e. more frequently contain ngrams that are not in the other iterator.
-    """
-
-    buffer = tuple()
-
-    for l1 in bindb_lines1:
-        for l2 in itertools.chain(buffer, bindb_lines2):
-            if l2.ngram < l1.ngram:
-                yield l2
-                continue
-            elif l2.ngram == l1.ngram:
-                yield bindb.BinDBLine(l1.ngram, max(l1.count, l2.count))
-                break
-            else:
-                buffer = iter((l2,))
-                yield l1
-                break
-
-def right_integrate(path, n):
+def right_integrate_counts(path, n):
     """
     Given the path to a BinDB file of order n, generate an iterator over
     sorted ((n-1)gram, count) tuples created by integrating out the first token.
@@ -151,9 +101,10 @@ def process_file(n):
 
             ograms = bindb.iter_bindb_file(ograms_f, n+1)
 
-            # Make iterator over left and right integrated ograms
-            left_integrated_ograms = integrate(map(drop_last_token, ograms))
-            right_integrated_ograms = right_integrate(ograms_path, n+1)
+            # Make iterators over left and right integrated ograms
+            left_integrated_ograms = integrate_counts(map(drop_last_token,
+                                                          ograms))
+            right_integrated_ograms = right_integrate_counts(ograms_path, n+1)
 
             # Maximise counts of left and right integrated ograms
             integrated_ograms = maximise_counts(left_integrated_ograms,
@@ -163,7 +114,7 @@ def process_file(n):
             ngrams = bindb.iter_bindb_file(ngrams_input_f, n)
             maximised_ngrams = maximise_counts(integrated_ograms, ngrams)
 
-            for l in maximised_ngrams:
+            for l in map(bindb.BinDBLine._make, maximised_ngrams):
                 ngrams_output_f.write(bindb.pack_line(l, n))
 
     print_status("Saved counts-consistent {n}gram BinDB file "
