@@ -10,11 +10,11 @@ def create_interval(base_count, length_count, all_counts=1):
         sympy.Rational(length_count, all_counts)
     )
 
-def select_subinterval(outer, inner):
+def select_subinterval(interval, subinterval):
     """
-    Return a subinterval of the outer interval defined by the inner interval.
+    Return a subinterval of an interval.
     """
     return Interval(
-        outer.b + inner.b * outer.l,
-        outer.l * inner.l
+        interval.b + subinterval.b * interval.l,
+        interval.l * subinterval.l
     )
