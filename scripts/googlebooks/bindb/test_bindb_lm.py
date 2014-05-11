@@ -19,10 +19,6 @@ ngram = (322578, 587568, 4223883, 3455033)
 token = ngram[-1]
 context = ngram[:-1]
 
-print(lm.conditional_interval(token, context))
-print(lm.old_conditional_interval(token, context))
-quit()
-
 with open("/Users/kkom/Desktop/bindb-normalised/index", "r") as f:
     index = bindb.BinDBIndex(f)
 

@@ -359,14 +359,13 @@ class BinDBLM:
         else:
             # Otherwise, back-off the model and report the backed-off interval
             # within the probability mass assigned for back-off
-            backoff_interval = create_interval(total_accepted_count, all_counts,
-                                               all_counts)
+            backoff_interval = create_interval(total_accepted_count,
+                                               backoff_pseudocount, all_counts)
             backoff_subinterval = self._raw_conditional_interval(
                 token, context[1:], context[0]
             )
 
             return select_subinterval(backoff_interval, backoff_subinterval)
-
 
 @functools.lru_cache(maxsize=8)
 def fmt(n):
