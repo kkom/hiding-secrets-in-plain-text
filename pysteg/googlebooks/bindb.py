@@ -232,6 +232,12 @@ class BinDBLM:
                 self.f[n-1], n-1, self.bs(n-1, context)
             ).count
             context_count = total_context_count - total_rejected_count
+
+            # If all context was already explored, back-off is the only option
+            if context_count == 0:
+                yield TokenCount(self.backoff, 0, 1)
+                return
+
             leftover_probability_mass = context_count - total_accepted_count
             backoff_pseudocount = math.ceil(
                 self.alpha * leftover_probability_mass

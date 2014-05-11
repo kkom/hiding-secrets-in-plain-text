@@ -17,9 +17,7 @@ def create_interval(base, length, divisor=1):
     return Interval(b, l)
 
 def scale_interval(superinterval, interval):
-    """
-    Scale interval as if the superinterval was [0,1).
-    """
+    """Scale interval as if the superinterval was [0,1)."""
 
     return Interval(
         (interval.b - superinterval.b) / superinterval.l,
@@ -27,11 +25,22 @@ def scale_interval(superinterval, interval):
     )
 
 def find_subinterval(interval, ratio):
-    """
-    Return a subinterval - a ratio of a given interval.
-    """
+    """Return a subinterval that is a ratio of a given interval."""
 
     return Interval(
         interval.b + ratio.b * interval.l,
         interval.l * ratio.l
     )
+
+def decode(next_fun, interval):
+    """Decode an interval using the supplied next token function."""
+
+    context = []
+    search_result = next_fun(interval, tuple(context))
+
+    while search_result is not None:
+        print(search_result[0])
+        context.append(search_result[0])
+        search_result = next_fun(search_result[1], tuple(context))
+
+    return context
