@@ -6,12 +6,14 @@ import os
 import struct
 import sympy
 
-from pysteg.coding.rational_ac import create_interval, select_subinterval
-
 from pysteg.common.itertools import reject
 
+from pysteg.coding.rational_ac import create_interval,
+from pysteg.coding.rational_ac import find_subinterval
+from pysteg.coding.rational_ac import scale_interval
+
 BinDBLine = collections.namedtuple('BinDBLine', 'ngram count')
-TokenCount = collections.namedtuple('TokenCount', 'token base length')
+TokenCount = collections.namedtuple('TokenCount', 'token b l')
 
 class BinDBIndex:
     """
@@ -151,6 +153,14 @@ class BinDBLM:
 
         return self._raw_conditional_interval(token, context, None)
 
+    def next(self, interval, context):
+        """Return the next token given current context and interval."""
+
+        # Only use context within the order of the model
+        context = context[-(self.n_max-1):]
+
+        return self._raw_next(interval, context, None)
+
     def _gen_matching_tokens(self, context, backed_off):
         """
         Yield BinDB lines matching a particular context of length (n-1),
@@ -232,7 +242,7 @@ class BinDBLM:
 
     @functools.lru_cache(maxsize=512)
     def _raw_conditional_interval(self, token, context, backed_off):
-        """"Internal version of the conditional probability interval method."""
+        """Internal version of the conditional probability interval method."""
 
         match = None
         backoff_token = None
@@ -242,22 +252,72 @@ class BinDBLM:
                 match = i
             if i.token == self.backoff:
                 backoff_token = i
-            full_count = i.base + i.length
+            full_count = i.b + i.l
 
         if match is not None:
             # If the token was found in the ngrams, report its interval
-            return create_interval(match.base, match.length, full_count)
+            return create_interval(match.b, match.l, full_count)
         elif backoff_token is not None:
             # Otherwise, back-off the model and report the backed-off interval
             # within the probability mass assigned to back-off
             backoff_interval = create_interval(
-                backoff_token.base, backoff_token.length, full_count)
+                backoff_token.b, backoff_token.l, full_count)
             backoff_subinterval = self._raw_conditional_interval(
                 token, context[1:], context[0]
             )
-            return select_subinterval(backoff_interval, backoff_subinterval)
+            return find_subinterval(backoff_interval, backoff_subinterval)
         else:
             raise Exception('Impossible sentence.')
+
+    @functools.lru_cache(maxsize=512)
+    def _raw_next(self, search_interval, context, backed_off):
+        """Internal version of the next token method."""
+
+        tokens = tuple(self._gen_matching_tokens(context, backed_off))
+
+        # Find correct scaled interval
+        full_count = tokens[-1].b + tokens[-1].l
+        base = sympy.floor(search_interval.b * full_count)
+        end = sympy.ceiling((search_interval.b+search_interval.l) * full_count)
+        length = end - base
+
+        def interval_bs(tokens, base, end):
+            """
+            Find using binary search a token whose counts are a superinterval of
+            [base, end].
+            """
+            imin = 0
+            imax = len(tokens)-1
+
+            while imin <= imax:
+                imid = round((imin+imax)/2)
+
+                if (tokens[imid].b <= base and
+                    tokens[imid].b + tokens[imid].l >= base + length):
+                    return imid
+                elif tokens[imid].b + tokens[imid].l <= base:
+                    imin = imid + 1
+                else:
+                    imax = imid - 1
+
+        i = interval_bs(tokens, base, end)
+
+        if i is None:
+            # No token can be found
+            return None
+        else:
+            # We have found a token -- standard or back-off
+            token = tokens[i]
+            token_interval = create_interval(token.b, token.l, full_count)
+            scaled_search_interval = scale_interval(token_interval,
+                                                    search_interval)
+
+            if token.token == self.backoff:
+                return self._raw_next(scaled_search_interval, context[1:],
+                                      context[0])
+
+            else:
+                return (token.token, scaled_search_interval)
 
 @functools.lru_cache(maxsize=8)
 def fmt(n):
