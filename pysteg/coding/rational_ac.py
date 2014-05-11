@@ -16,11 +16,22 @@ def create_interval(base, length, divisor=1):
 
     return Interval(b, l)
 
-def select_subinterval(interval, subinterval):
+def scale_interval(superinterval, interval):
     """
-    Return a subinterval of an interval.
+    Scale interval as if the superinterval was [0,1).
     """
+
     return Interval(
-        interval.b + subinterval.b * interval.l,
-        interval.l * subinterval.l
+        (interval.b - superinterval.b) / superinterval.l,
+        interval.l / superinterval.l
+    )
+
+def find_subinterval(interval, ratio):
+    """
+    Return a subinterval - a ratio of a given interval.
+    """
+
+    return Interval(
+        interval.b + ratio.b * interval.l,
+        interval.l * ratio.l
     )
