@@ -11,6 +11,7 @@ from pysteg.coding.rational_ac import create_interval, select_subinterval
 from pysteg.common.itertools import reject
 
 BinDBLine = collections.namedtuple('BinDBLine', 'ngram count')
+TokenCount = collections.namedtuple('TokenCount', 'token count')
 
 class BinDBIndex:
     """
@@ -76,6 +77,9 @@ class BinDBLM:
         self.size = dict((n, int(os.path.getsize(path)/line_size(n)))
                          for n, path in paths.items())
 
+        # A pseudo-token for back-off
+        self.backoff = self.size[1] + 1
+
     def __del__(self):
         for f in self.f.values():
             f.close()
@@ -128,6 +132,10 @@ class BinDBLM:
         Search for the range of ngrams with first m tokens equal to the given
         mgram.
         """
+
+        if len(mgram) == 0:
+            return (1, self.size[n])
+
         low_i = self.bs(n, mgram, mode="low")
         if low_i is not None:
             high_i = self.bs(n, mgram, imin=low_i, mode="high", ratio=0.1)
@@ -142,6 +150,74 @@ class BinDBLM:
         context = context[-(self.n_max-1):]
 
         return self._raw_conditional_interval(token, context, None)
+
+    def _iter_matching_tokens(self, context, backed_off):
+        """
+        Yield BinDB lines matching a particular context of length (n-1),
+        optionally excluding ngrams which would be covered by a higher order
+        model.
+        """
+
+        # At the beginning of a sentence or directly after an _END_ token, the
+        # only option is a _START_ token.
+        if ((len(context) == 0 and backed_off is None) or
+            (len(context) > 0 and context[-1] == self.end)):
+            yield TokenCount(self.start, 1)
+            return
+
+        # Find ngrams matching the context
+        n = len(context) + 1
+        ngrams_range = self.range_search(n, context)
+
+        # If there are no matching ngrams, back-off is the only option
+        if ngrams_range is None:
+            yield TokenCount(self.backoff, 1)
+            return
+
+        # Make an iterator of ngrams matching the context
+        (low_i, high_i) = ngrams_range
+        ngrams = iter_bindb_file(self.f[n], n, low_i, high_i-low_i+1)
+
+        if backed_off is None:
+            # If we didn't back-off, do not reject any ngrams
+            rejects = ()
+        else:
+            # If we backed-off from a higher order context, do not consider the
+            # ngrams which were already covered by the higher order model
+            (low_i, high_i) = self.range_search(n+1, (backed_off,) + context)
+            ograms = iter_bindb_file(self.f[n+1], n+1, low_i, high_i-low_i+1)
+
+            # Ngrams which should not be considered in this level of the
+            # conditional probability tree
+            rejects = map(lambda l: l.ngram[1:], ograms)
+
+        filtered_ngrams = reject(ngrams, rejects)
+
+        # Yield accepted tokens and find cumulative counts needed for
+        # calculating the back-off weight
+        total_accepted_count = 0
+        total_rejected_count = 0
+        for i in filtered_ngrams:
+            # Always reject the case when the next token is _START_ - there are
+            # special rules for this token covered in the beginning
+            if i.reject or i.item.ngram[-1] == self.start:
+                total_rejected_count += i.item.count
+            else:
+                total_accepted_count += i.item.count
+                yield TokenCount(i.item.ngram[-1], i.item.count)
+
+        # Calculate the back-off pseudo-count
+        if n > 1:
+            total_context_count = read_line(
+                self.f[n-1], n-1, self.bs(n-1, context)
+            ).count
+            context_count = total_context_count - total_rejected_count
+            leftover_probability_mass = context_count - total_accepted_count
+            backoff_pseudocount = math.ceil(
+                self.alpha * leftover_probability_mass
+                + self.beta * context_count
+            )
+            yield TokenCount(self.backoff, backoff_pseudocount)
 
     @functools.lru_cache(maxsize=512)
     def _raw_conditional_interval(self, token, context, backed_off):
