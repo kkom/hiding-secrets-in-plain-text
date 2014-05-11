@@ -50,8 +50,8 @@ for i in range(len(token_indices)):
     token = token_indices[i]
     context = token_indices[:i]
     interval = lm.conditional_interval(token, context)
-    total_size = total_size * (interval[1] - interval[0])
-    entropy = N(-log(interval[1] - interval[0], 2))
+    total_size = total_size * interval.l
+    entropy = N(-log(interval.l, 2))
 
     intervals.append(interval)
     entropies.append(entropy)
@@ -70,5 +70,3 @@ print("total interval size: {total_size}".format(**locals()))
 print("total entropy: {total_entropy}".format(**locals()))
 print("bits per character: {entropy_per_character}".format(**locals()))
 print("bits per word: {entropy_per_token}".format(**locals()))
-
-

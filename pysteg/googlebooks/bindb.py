@@ -6,6 +6,8 @@ import os
 import struct
 import sympy
 
+from pysteg.coding.rational_ac import create_interval, select_subinterval
+
 from pysteg.common.itertools import reject
 
 BinDBLine = collections.namedtuple('BinDBLine', 'ngram count')
@@ -151,7 +153,7 @@ class BinDBLM:
         if token == self.start:
             if ((len(context) == 0 and backed_off is None) or
                 (len(context) > 0 and context[-1] == self.end)):
-                return (sympy.Rational(0), sympy.Rational(1))
+                return create_interval(0,1)
             else:
                 raise Exception("_START_ token in an incorrect position.")
 
@@ -162,7 +164,9 @@ class BinDBLM:
 
         # If there are no matching ngrams, the back-off pseudo-count is going to
         # be 100% of the probability mass, so we can directly report the
-        # backed-off conditional probability
+        # backed-off conditional probability. Since there are no matching ngrams
+        # in this level of the tree, the lower-order conditional probability is
+        # calculated as if it wasn't backed-off (consider all possible ngrams).
         if ngrams_range is None:
             return self._raw_conditional_interval(token, context[1:], None)
 
@@ -187,7 +191,7 @@ class BinDBLM:
 
         # Find all cumulative counts needed to calculate the conditional
         # probability interval
-        token_cumulative_counts = None
+        token_interval_counts = None
         total_accepted_count = 0
         total_rejected_count = 0
         for i in filtered_ngrams:
@@ -196,15 +200,12 @@ class BinDBLM:
                 total_rejected_count += i.item.count
             else:
                 if i.item.ngram[-1] == token:
-                    token_cumulative_counts = (
-                        total_accepted_count,
-                        total_accepted_count + i.item.count
-                    )
+                    token_interval_counts = (total_accepted_count, i.item.count)
                 total_accepted_count += i.item.count
 
 #         print("total_accepted_count: " + str(total_accepted_count))
 #         print("total_rejected_count: " + str(total_rejected_count))
-#         print("token_cumulative_counts: " + str(token_cumulative_counts))
+#         print("token_interval_counts: " + str(token_interval_counts))
 
         # Calculate the back-off pseudo-count
         if n == 1:
@@ -225,28 +226,22 @@ class BinDBLM:
 #             print("leftover_probability_mass: " + str(leftover_probability_mass))
 #             print("backoff_pseudocount: " + str(backoff_pseudocount))
 
-        def make_rational_interval(pre, post):
-            """
-            Make a rational interval given its pre- and post-cumulative counts.
-            """
-            all_counts = total_accepted_count + backoff_pseudocount
-            return (sympy.Rational(pre, all_counts),
-                    sympy.Rational(post, all_counts))
+        all_counts = total_accepted_count + backoff_pseudocount
 
-        if token_cumulative_counts:
+        if token_interval_counts:
             # If the token was found in the ngrams, report its interval
-            return make_rational_interval(*token_cumulative_counts)
+            return create_interval(token_interval_counts[0],
+                                   token_interval_counts[1], all_counts)
         else:
             # Otherwise, back-off the model and report the backed-off interval
             # within the probability mass assigned for back-off
-            backedoff_interval = self._raw_conditional_interval(
+            backoff_interval = create_interval(total_accepted_count, all_counts,
+                                               all_counts)
+            backoff_subinterval = self._raw_conditional_interval(
                 token, context[1:], context[0]
             )
 
-            return make_rational_interval(
-                total_accepted_count + backedoff_interval[0]*backoff_pseudocount,
-                total_accepted_count + backedoff_interval[1]*backoff_pseudocount
-            )
+            return select_subinterval(backoff_interval, backoff_subinterval)
 
 @functools.lru_cache(maxsize=8)
 def fmt(n):
