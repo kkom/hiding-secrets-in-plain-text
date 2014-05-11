@@ -5,10 +5,16 @@ import sympy
 Interval = collections.namedtuple("Interval", "b l")
 
 def create_interval(base_count, length_count, all_counts=1):
-    return Interval(
-        sympy.Rational(base_count, all_counts),
-        sympy.Rational(length_count, all_counts)
-    )
+    b = sympy.Rational(base_count, all_counts)    # interval base
+    l = sympy.Rational(length_count, all_counts)  # interval length
+
+    # Interval has to be a subinterval of [0,1) and have a positive length
+    assert(b >= 0)
+    assert(b < 1)
+    assert(l > 0)
+    assert(b+l <= 1)
+
+    return Interval(b, l)
 
 def select_subinterval(interval, subinterval):
     """
