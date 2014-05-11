@@ -11,7 +11,7 @@ from pysteg.coding.rational_ac import create_interval, select_subinterval
 from pysteg.common.itertools import reject
 
 BinDBLine = collections.namedtuple('BinDBLine', 'ngram count')
-TokenCount = collections.namedtuple('TokenCount', 'token count')
+TokenCount = collections.namedtuple('TokenCount', 'token base length')
 
 class BinDBIndex:
     """
@@ -151,7 +151,7 @@ class BinDBLM:
 
         return self._raw_conditional_interval(token, context, None)
 
-    def _iter_matching_tokens(self, context, backed_off):
+    def _gen_matching_tokens(self, context, backed_off):
         """
         Yield BinDB lines matching a particular context of length (n-1),
         optionally excluding ngrams which would be covered by a higher order
@@ -162,7 +162,7 @@ class BinDBLM:
         # only option is a _START_ token.
         if ((len(context) == 0 and backed_off is None) or
             (len(context) > 0 and context[-1] == self.end)):
-            yield TokenCount(self.start, 1)
+            yield TokenCount(self.start, 0, 1)
             return
 
         # Find ngrams matching the context
@@ -171,7 +171,7 @@ class BinDBLM:
 
         # If there are no matching ngrams, back-off is the only option
         if ngrams_range is None:
-            yield TokenCount(self.backoff, 1)
+            yield TokenCount(self.backoff, 0, 1)
             return
 
         # Make an iterator of ngrams matching the context
@@ -203,8 +203,9 @@ class BinDBLM:
             if i.reject or i.item.ngram[-1] == self.start:
                 total_rejected_count += i.item.count
             else:
+                yield TokenCount(i.item.ngram[-1],
+                                 total_accepted_count, i.item.count)
                 total_accepted_count += i.item.count
-                yield TokenCount(i.item.ngram[-1], i.item.count)
 
         # Calculate the back-off pseudo-count
         if n > 1:
@@ -217,7 +218,8 @@ class BinDBLM:
                 self.alpha * leftover_probability_mass
                 + self.beta * context_count
             )
-            yield TokenCount(self.backoff, backoff_pseudocount)
+            yield TokenCount(self.backoff,
+                             total_accepted_count, backoff_pseudocount)
 
     @functools.lru_cache(maxsize=512)
     def _raw_conditional_interval(self, token, context, backed_off):
