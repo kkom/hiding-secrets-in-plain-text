@@ -2,48 +2,38 @@
 
 from sympy import log, N, Rational
 
+from pysteg.googlebooks import bindb
+
 from pysteg.googlebooks.ngrams_analysis import normalise_and_explode_tokens
 from pysteg.googlebooks.ngrams_analysis import text2token_strings
 
-from pysteg.googlebooks import bindb
-
+# Set language model parameters
+n = 5
+start = 322578
+end = 322577
 alpha = 0.5
 beta = 0.1
 
+print("n: {n}".format(**locals()))
+print("start: {start}".format(**locals()))
+print("end: {end}".format(**locals()))
 print("alpha: {alpha}".format(**locals()))
 print("beta: {beta}".format(**locals()))
+print()
 
-lm = bindb.BinDBLM("/Users/kkom/Desktop/bindb-normalised/counts-consistent-tables", 5, 322578, 322577, alpha, beta)
+# Load language model
+lm = bindb.BinDBLM("/Users/kkom/Desktop/bindb-normalised/counts-consistent-tables", n, start, end, alpha, beta)
 
-ngram = (322578, 587568, 4223883, 3455033)
-token = ngram[-1]
-context = ngram[:-1]
-
+# Load index
 with open("/Users/kkom/Desktop/bindb-normalised/index", "r") as f:
     index = bindb.BinDBIndex(f)
 
-text = """
-"No, not exactly because of it," answered Porfiry.  "In his article all
-men are divided into 'ordinary' and 'extraordinary.'  Ordinary men have
-to live in submission, have no right to transgress the law, because,
-don't you see, they are ordinary.  But extraordinary men have a right to
-commit any crime and to transgress the law in any way, just because they
-are extraordinary.  That was your idea, if I am not mistaken?"
-
-"What do you mean?  That can't be right?"  Razumihin muttered in
-bewilderment.
-
-Raskolnikov smiled again.  He saw the point at once, and knew where they
-wanted to drive him.  He decided to take up the challenge.
-"""
-
-text = """
-At the Primorsky polling station in Mariupol, a large crowd is gathered outside,
-waiting to vote.  There is a crush of people inside.  Organisation is chaotic at
-best.  There are no polling booths: people vote at the registration desks.
- People's details are hastily scribbled on generic forms.  There is also a
-collection for money towards funding the Donetsk People's Republic.
-"""
+text = """At the Primorsky polling station in Mariupol, a large crowd is
+gathered outside, waiting to vote.  There is a crush of people inside.
+ Organisation is chaotic at best.  There are no polling booths: people vote at
+the registration desks.  People's details are hastily scribbled on generic
+forms.  There is also a collection for money towards funding the Donetsk
+People's Republic."""
 
 token_strings = normalise_and_explode_tokens(text2token_strings(text))
 token_indices = tuple(map(index.s2i, token_strings))
@@ -69,7 +59,7 @@ for i in range(len(token_indices)):
     entropies.append(entropy)
 
     token_string = token_strings[i]
-    context_string = " ".join((token_strings[:i])[-4:])
+    context_string = " ".join((token_strings[:i])[-(n-1):])
 
     print("P({token_string} | {context_string}) = {interval} with entropy {entropy}".format(**locals()))
 
