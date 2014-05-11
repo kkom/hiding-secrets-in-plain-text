@@ -184,12 +184,19 @@ class BinDBLM:
         else:
             # If we backed-off from a higher order context, do not consider the
             # ngrams which were already covered by the higher order model
-            (low_i, high_i) = self.range_search(n+1, (backed_off,) + context)
-            ograms = iter_bindb_file(self.f[n+1], n+1, low_i, high_i-low_i+1)
+            ograms_range = self.range_search(n+1, (backed_off,) + context)
 
-            # Ngrams which should not be considered in this level of the
-            # conditional probability tree
-            rejects = map(lambda l: l.ngram[1:], ograms)
+            if ograms_range is None:
+                # There are no matching higher order tokens, so no rejects
+                rejects = ()
+            else:
+                # Reject tokens which would be matched by a higher order model
+                (low_i, high_i) = ograms_range
+                ograms = iter_bindb_file(self.f[n+1], n+1, low_i, high_i-low_i+1)
+
+                # Ngrams which should not be considered in this level of the
+                # conditional probability tree
+                rejects = map(lambda l: l.ngram[1:], ograms)
 
         filtered_ngrams = reject(ngrams, rejects)
 
@@ -198,8 +205,10 @@ class BinDBLM:
         total_accepted_count = 0
         total_rejected_count = 0
         for i in filtered_ngrams:
-            # Always reject the case when the next token is _START_ - there are
-            # special rules for this token covered in the beginning
+            # Always reject the case when the last token is _START_. In practice
+            # this will only happen when considering unigrams. The reason for it
+            # is that _START_ is only possible in certain situations, which are
+            # covered in the beginning.
             if i.reject or i.item.ngram[-1] == self.start:
                 total_rejected_count += i.item.count
             else:
@@ -225,101 +234,30 @@ class BinDBLM:
     def _raw_conditional_interval(self, token, context, backed_off):
         """"Internal version of the conditional probability interval method."""
 
-        # _START_ token has a 100% probability of occurring at the beginning of
-        # a sentence (empty context and not backed-off) or after the _END_
-        # token. All other occurrences are a mistake.
-        if token == self.start:
-            if ((len(context) == 0 and backed_off is None) or
-                (len(context) > 0 and context[-1] == self.end)):
-                return create_interval(0,1)
-            else:
-                raise Exception("_START_ token in an incorrect position.")
+        match = None
+        backoff_token = None
 
-        n = len(context) + 1
+        for i in self._gen_matching_tokens(context, backed_off):
+            if i.token == token:
+                match = i
+            if i.token == self.backoff:
+                backoff_token = i
+            full_count = i.base + i.length
 
-        # Find ngrams matching the context
-        ngrams_range = self.range_search(n, context)
-
-        # If there are no matching ngrams, the back-off pseudo-count is going to
-        # be 100% of the probability mass, so we can directly report the
-        # backed-off conditional probability. Since there are no matching ngrams
-        # in this level of the tree, the lower-order conditional probability is
-        # calculated as if it wasn't backed-off (consider all possible ngrams).
-        if ngrams_range is None:
-            return self._raw_conditional_interval(token, context[1:], None)
-
-        # Make an iterator of ngrams matching the context
-        (low_i, high_i) = ngrams_range
-        ngrams = iter_bindb_file(self.f[n], n, low_i, high_i-low_i+1)
-
-        if backed_off is None:
-            # If we didn't back-off, do not reject any ngrams
-            rejects = ()
-        else:
-            # If we backed-off from a higher order context, do not consider the
-            # ngrams which were already covered by the higher order model
-            (low_i, high_i) = self.range_search(n+1, (backed_off,) + context)
-            ograms = iter_bindb_file(self.f[n+1], n+1, low_i, high_i-low_i+1)
-
-            # Ngrams which should not be considered in this level of the
-            # conditional probability tree
-            rejects = map(lambda l: l.ngram[1:], ograms)
-
-        filtered_ngrams = reject(ngrams, rejects)
-
-        # Find all cumulative counts needed to calculate the conditional
-        # probability interval
-        token_interval_counts = None
-        total_accepted_count = 0
-        total_rejected_count = 0
-        for i in filtered_ngrams:
-            # Always reject the unigram _START_ - it cannot be freely chosen
-            if i.reject or (n == 1 and i.item.ngram[0] == self.start):
-                total_rejected_count += i.item.count
-            else:
-                if i.item.ngram[-1] == token:
-                    token_interval_counts = (total_accepted_count, i.item.count)
-                total_accepted_count += i.item.count
-
-#         print("total_accepted_count: " + str(total_accepted_count))
-#         print("total_rejected_count: " + str(total_rejected_count))
-#         print("token_interval_counts: " + str(token_interval_counts))
-
-        # Calculate the back-off pseudo-count
-        if n == 1:
-            backoff_pseudocount = 0
-        else:
-            total_context_count = read_line(
-                self.f[n-1], n-1, self.bs(n-1, context)
-            ).count
-            context_count = total_context_count - total_rejected_count
-            leftover_probability_mass = context_count - total_accepted_count
-            backoff_pseudocount = math.ceil(
-                self.alpha * leftover_probability_mass
-                + self.beta * context_count
-            )
-
-#             print("total_context_count: " + str(total_context_count))
-#             print("context_count: " + str(context_count))
-#             print("leftover_probability_mass: " + str(leftover_probability_mass))
-#             print("backoff_pseudocount: " + str(backoff_pseudocount))
-
-        all_counts = total_accepted_count + backoff_pseudocount
-
-        if token_interval_counts:
+        if match is not None:
             # If the token was found in the ngrams, report its interval
-            return create_interval(token_interval_counts[0],
-                                   token_interval_counts[1], all_counts)
-        else:
+            return create_interval(match.base, match.length, full_count)
+        elif backoff_token is not None:
             # Otherwise, back-off the model and report the backed-off interval
-            # within the probability mass assigned for back-off
-            backoff_interval = create_interval(total_accepted_count, all_counts,
-                                               all_counts)
+            # within the probability mass assigned to back-off
+            backoff_interval = create_interval(
+                backoff_token.base, backoff_token.length, full_count)
             backoff_subinterval = self._raw_conditional_interval(
                 token, context[1:], context[0]
             )
-
             return select_subinterval(backoff_interval, backoff_subinterval)
+        else:
+            raise Exception('Impossible sentence.')
 
 @functools.lru_cache(maxsize=8)
 def fmt(n):
