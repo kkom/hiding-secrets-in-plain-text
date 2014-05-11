@@ -33,6 +33,14 @@ Raskolnikov smiled again.  He saw the point at once, and knew where they
 wanted to drive him.  He decided to take up the challenge.
 """
 
+text = """
+At the Primorsky polling station in Mariupol, a large crowd is gathered outside,
+waiting to vote.  There is a crush of people inside.  Organisation is chaotic at
+best.  There are no polling booths: people vote at the registration desks.
+ People's details are hastily scribbled on generic forms.  There is also a
+collection for money towards funding the Donetsk People's Republic.
+"""
+
 token_strings = normalise_and_explode_tokens(text2token_strings(text))
 token_indices = tuple(map(index.s2i, token_strings))
 
