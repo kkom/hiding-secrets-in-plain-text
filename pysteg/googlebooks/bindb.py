@@ -8,7 +8,7 @@ import sympy
 
 from pysteg.common.itertools import reject
 
-from pysteg.coding.rational_ac import create_interval,
+from pysteg.coding.rational_ac import create_interval
 from pysteg.coding.rational_ac import find_subinterval
 from pysteg.coding.rational_ac import scale_interval
 
