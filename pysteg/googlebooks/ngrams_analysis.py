@@ -163,6 +163,13 @@ def normalised_token_prefix(token, n):
         # Standard two-character letter prefix
         return token[:2]
 
+def numeric_character(c):
+    return c in __numeric_charset
+
+def numeric_token(token):
+    """Check if a normalised token contains any digits."""
+    return any(map(numeric_character, unidecode(token).lower()))
+
 def text2token_strings(text):
     """
     Convert text to a sequence of token strings. Sentences in the input text
