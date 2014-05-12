@@ -2,7 +2,6 @@
 
 import sympy
 
-from pysteg.coding.rational_ac import Interval
 from pysteg.coding.rational_ac import create_interval
 from pysteg.coding.rational_ac import decode
 
@@ -26,7 +25,7 @@ print()
 lm = bindb.BinDBLM("/Users/kkom/Desktop/bindb-normalised/counts-consistent-tables", n, start, end, alpha, beta)
 
 # Create an interval
-interval = Interval(
+interval = create_interval(
     sympy.Rational(3,7),
     sympy.Rational(1, sympy.Pow(10,200))
 )
