@@ -8,9 +8,9 @@ import sympy
 
 from pysteg.common.itertools import reject
 
-from pysteg.coding.rational_ac import create_interval
-from pysteg.coding.rational_ac import find_subinterval
-from pysteg.coding.rational_ac import scale_interval
+from pysteg.coding.interval import create_interval
+from pysteg.coding.interval import find_subinterval
+from pysteg.coding.interval import scale_interval
 
 BinDBLine = collections.namedtuple('BinDBLine', 'ngram count')
 TokenCount = collections.namedtuple('TokenCount', 'token b l')

@@ -2,9 +2,8 @@
 
 import sympy
 
-from pysteg.coding.rational_ac import create_interval
+from pysteg.coding.interval import create_interval
 from pysteg.coding.rational_ac import decode
-
 from pysteg.googlebooks import bindb
 
 # Set language model parameters
