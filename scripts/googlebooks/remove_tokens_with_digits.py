@@ -9,8 +9,6 @@ import itertools
 import os
 import string
 
-import unidecode
-
 from pysteg.common.files import open_file_to_process, FileAlreadyProcessed
 from pysteg.common.log import print_status
 from pysteg.googlebooks.ngrams_analysis import gen_ngram_descriptions
