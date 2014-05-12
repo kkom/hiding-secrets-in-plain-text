@@ -10,7 +10,6 @@ database will be then saved to the output directory.
 """
 
 import argparse
-import datetime
 import itertools
 import os
 import string
