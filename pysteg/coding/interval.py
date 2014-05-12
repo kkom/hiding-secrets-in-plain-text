@@ -6,8 +6,8 @@ import sympy
 Interval = collections.namedtuple("Interval", "b l")
 
 __half = sympy.Rational(1,2)
-__first_half = create_interval(sympy.Rational(0), sympy.Rational(1,2))
-__second_half = create_interval(sympy.Rational(1,2), sympy.Rational(1,2))
+__first_half = Interval(sympy.Rational(0), sympy.Rational(1,2))
+__second_half = Interval(sympy.Rational(1,2), sympy.Rational(1,2))
 
 def bit2interval(bit):
     """Convert 0 to the [0,0.5) interval and 1 to the [0.5,1) interval."""
