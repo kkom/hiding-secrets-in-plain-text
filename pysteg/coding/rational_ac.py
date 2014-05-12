@@ -19,7 +19,7 @@ def create_interval(base, length, divisor=1):
 def scale_interval(superinterval, interval):
     """Scale interval as if the superinterval was [0,1)."""
 
-    return Interval(
+    return create_interval(
         (interval.b - superinterval.b) / superinterval.l,
         interval.l / superinterval.l
     )
@@ -27,7 +27,7 @@ def scale_interval(superinterval, interval):
 def find_subinterval(interval, ratio):
     """Return a subinterval that is a ratio of a given interval."""
 
-    return Interval(
+    return create_interval(
         interval.b + ratio.b * interval.l,
         interval.l * ratio.l
     )
