@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 
-from pysteg.coding.rational_ac import create_interval
-
+from pysteg.coding.interval import create_interval
 from pysteg.googlebooks import bindb
-
 from pysteg.googlebooks.ngrams_analysis import normalise_and_explode_tokens
 from pysteg.googlebooks.ngrams_analysis import text2token_strings
 
