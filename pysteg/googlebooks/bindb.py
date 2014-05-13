@@ -188,9 +188,14 @@ class BinDBLM:
             yield TokenCount(self.backoff, 0, 1)
             return
 
+        # If the order of the table to iterate is 1, it should be done from the
+        # cache. It has a few million entries and each time it is iterated over
+        # every entry needs to be read.
+        cache = n==1
+
         # Make an iterator of ngrams matching the context
         (ifirst, ilast) = ngrams_range
-        ngrams = iter_bindb_file(self.f[n], n, ifirst, ilast-ifirst+1)
+        ngrams = iter_bindb_file(self.f[n], n, ifirst, ilast-ifirst+1, cache)
 
         if backed_off is None:
             # If we didn't back-off, do not reject any ngrams
@@ -338,22 +343,40 @@ def fmt(n):
         "q"       # 8 byte integer with ngram count
     )
 
-def iter_bindb_file(f, n, start=1, number_iters=float("Inf")):
+__iter_bindb_file_cache = dict()
+
+def iter_bindb_file(f, n, start=1, number_iters=float("Inf"), cache=False):
     """
     Iterate over the lines of a BinDB file. Lines are given in BinDBLine format.
+
+    The result can be cached, but note that the cache is indexed only based on
+    the order of the table. So contents of the first cached file of order n will
+    always be returned, regardless of the path to the actual file.
     """
 
-    # Go to the start line
-    f.seek((start-1)*line_size(n))
+    if cache:
+        # Put the file in cache, if not yet in there
+        if n not in __iter_bindb_file_cache:
+            __iter_bindb_file_cache[n] = tuple(iter_bindb_file(f,n,cache=False))
 
-    # Read the first line in bytes
-    i = 1
-    bindb_line = f.read(line_size(n))
+        # Yield results from the cached table
+        cached_table = __iter_bindb_file_cache[n]
+        for i in range(start-1, min(start+number_iters-1, len(cached_table))):
+            yield cached_table[i]
+        return
 
-    while len(bindb_line) != 0 and i <= number_iters:
-        yield unpack_line(bindb_line, n)
+    else:
+        # Go to the start line
+        f.seek((start-1)*line_size(n))
+
+        # Read the first line in bytes
+        i = 1
         bindb_line = f.read(line_size(n))
-        i += 1
+
+        while len(bindb_line) != 0 and i <= number_iters:
+            yield unpack_line(bindb_line, n)
+            bindb_line = f.read(line_size(n))
+            i += 1
 
 def line_size(n):
     """Return the size in bytes of a BinDBLine of order n."""
