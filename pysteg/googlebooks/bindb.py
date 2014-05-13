@@ -86,23 +86,22 @@ class BinDBLM:
         for f in self.f.values():
             f.close()
 
-    def bs(self, n, mgram, imin=1, imax=None, mode="low", ratio=0.5):
+    def __bs(self, n, mgram, imin=1, imax=None, mode="first", ratio=0.5):
         """
         Binary search for the first or last ngram with first m tokens equal to
         the given mgram. The ratio parameter specifies where the midpoint
         between imin and imax should be located.
         """
 
-        assert(mode in ("low", "high"))
-
-        m = len(mgram)
+        assert(mode in ("first", "last"))
 
         # mgram size cannot be larger than the order of the searched table
+        m = len(mgram)
         assert(m <= n)
 
         def get_ngram(i):
             """
-            Return i'th ngram from the specified table truncated to the size of
+            Return from the specified table i'th ngram truncated to the size of
             the searched mgram.
             """
             return read_line(self.f[n], n, i).ngram[:m]
@@ -110,8 +109,10 @@ class BinDBLM:
         if imax == None:
             imax = self.size[n]
 
+        # Binary search loop with deferred detection of equality to find the
+        # first or last match
         while imin < imax:
-            if mode == "low":
+            if mode == "first":
                 imid = math.floor(imin+ratio*(imax-imin))
                 if get_ngram(imid) < mgram:
                     imin = imid + 1
@@ -129,19 +130,22 @@ class BinDBLM:
         else:
             return None
 
-    def range_search(self, n, mgram):
+    def __bs_range(self, n, mgram):
         """
-        Search for the range of ngrams with first m tokens equal to the given
-        mgram.
+        Binary search for the range of ngrams with first m tokens equal to the
+        given mgram.
         """
 
+        # If the mgram is empty, every ngram in the table matches it
         if len(mgram) == 0:
             return (1, self.size[n])
 
-        low_i = self.bs(n, mgram, mode="low")
-        if low_i is not None:
-            high_i = self.bs(n, mgram, imin=low_i, mode="high", ratio=0.1)
-            return (low_i, high_i)
+        ifirst = self.__bs(n, mgram, mode="first")
+
+        if ifirst is not None:
+            # At least one ngram matches the mgram
+            ilast = self.__bs(n, mgram, imin=ifirst, mode="last", ratio=0.1)
+            return (ifirst, ilast)
         else:
             return None
 
@@ -177,7 +181,7 @@ class BinDBLM:
 
         # Find ngrams matching the context
         n = len(context) + 1
-        ngrams_range = self.range_search(n, context)
+        ngrams_range = self.__bs_range(n, context)
 
         # If there are no matching ngrams, back-off is the only option
         if ngrams_range is None:
@@ -185,8 +189,8 @@ class BinDBLM:
             return
 
         # Make an iterator of ngrams matching the context
-        (low_i, high_i) = ngrams_range
-        ngrams = iter_bindb_file(self.f[n], n, low_i, high_i-low_i+1)
+        (ifirst, ilast) = ngrams_range
+        ngrams = iter_bindb_file(self.f[n], n, ifirst, ilast-ifirst+1)
 
         if backed_off is None:
             # If we didn't back-off, do not reject any ngrams
@@ -194,15 +198,16 @@ class BinDBLM:
         else:
             # If we backed-off from a higher order context, do not consider the
             # ngrams which were already covered by the higher order model
-            ograms_range = self.range_search(n+1, (backed_off,) + context)
+            ograms_range = self.__bs_range(n+1, (backed_off,) + context)
 
             if ograms_range is None:
                 # There are no matching higher order tokens, so no rejects
                 rejects = ()
             else:
                 # Reject tokens which would be matched by a higher order model
-                (low_i, high_i) = ograms_range
-                ograms = iter_bindb_file(self.f[n+1], n+1, low_i, high_i-low_i+1)
+                (ifirst, ilast) = ograms_range
+                ograms = iter_bindb_file(self.f[n+1], n+1, ifirst,
+                                         ilast-ifirst+1)
 
                 # Ngrams which should not be considered in this level of the
                 # conditional probability tree
@@ -229,7 +234,7 @@ class BinDBLM:
         # Calculate the back-off pseudo-count
         if n > 1:
             total_context_count = read_line(
-                self.f[n-1], n-1, self.bs(n-1, context)
+                self.f[n-1], n-1, self.__bs(n-1, context)
             ).count
             context_count = total_context_count - total_rejected_count
 
