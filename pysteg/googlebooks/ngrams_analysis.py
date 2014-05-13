@@ -188,3 +188,19 @@ def text2token_strings(text):
     # Find and explicitly write sentence delimiters
     sentence_delimited_text = re.sub(r"\s{2,}", " _END_ _START_ ", text.strip())
     return ("_START_",) + tuple(sentence_delimited_text.split()) + ("_END_",)
+
+def token_strings2text(tokens):
+    """
+    Convert a sequence of token strings to text. Sentences in the output text
+    will be delimited by two spaces.
+    """
+
+    def delimiter2space(token):
+        if token in ("_START_", "_END_"):
+            return " "
+        else:
+            return token
+
+    sentence_delimited_text = " ".join(map(delimiter2space, tokens))
+
+    return re.sub(r"\s{2,}", "  ", sentence_delimited_text.strip())
