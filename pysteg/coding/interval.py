@@ -48,9 +48,9 @@ def interval2bit(interval, mode):
         # i.e. a point at 1/2 should be matched to the [1/2, 1/2) interval. This
         # is why the order of the conditions matters.
         if interval.b >= __half:
-            return (1, scale_interval(__second_half, interval))
+            return (1, find_ratio(interval, __second_half))
         elif interval.b + interval.l <= __half:
-            return (0, scale_interval(__first_half, interval))
+            return (0, find_ratio(interval, __first_half))
         else:
             return None
     else:
@@ -60,9 +60,9 @@ def interval2bit(interval, mode):
         if bottom_distance <= 0 and top_distance <= 0:
             return None
         if top_distance < bottom_distance:
-            return (1, scale_interval(__second_half, interval, subunit=False))
+            return (1, find_ratio(interval, __second_half, subunit=False))
         else:
-            return (0, scale_interval(__first_half, interval, subunit=False))
+            return (0, find_ratio(interval, __first_half, subunit=False))
 
 def interval2bits(interval, mode):
     """
@@ -126,8 +126,12 @@ def random_interval(n, seed=None):
     """Randomly generate a sub-unit interval corresponding to n bits."""
     return bits2interval(random_bits(n, seed))
 
-def scale_interval(superinterval, interval, subunit=True):
-    """Scale the interval as if the superinterval was [0,1)."""
+def find_ratio(interval, superinterval, subunit=True):
+    """
+    Find the first interval as a ratio of the second interval.
+
+    Result is such that: select_subinterval(superinterval, ratio) == interval
+    """
 
     return create_interval(
         (interval.b - superinterval.b) / superinterval.l,

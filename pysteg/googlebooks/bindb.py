@@ -9,8 +9,8 @@ import sympy
 from pysteg.common.itertools import reject
 
 from pysteg.coding.interval import create_interval
+from pysteg.coding.interval import find_ratio
 from pysteg.coding.interval import select_subinterval
-from pysteg.coding.interval import scale_interval
 
 BinDBLine = collections.namedtuple('BinDBLine', 'ngram count')
 TokenCount = collections.namedtuple('TokenCount', 'token b l')
@@ -315,8 +315,7 @@ class BinDBLM:
             # We have found a token -- standard or back-off
             token = tokens[i]
             token_interval = create_interval(token.b, token.l, full_count)
-            scaled_search_interval = scale_interval(token_interval,
-                                                    search_interval)
+            scaled_search_interval = find_ratio(search_interval, token_interval)
 
             if token.token == self.backoff:
                 return self._raw_next(scaled_search_interval, context[1:],
