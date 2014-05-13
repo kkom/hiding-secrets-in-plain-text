@@ -2,7 +2,7 @@ import itertools
 import operator
 import random
 
-class PasswordTooShortError(Exception):
+class KeyTooShortError(Exception):
     pass
 
 def random_bits(length, seed=None):
@@ -20,30 +20,26 @@ def random_bits(length, seed=None):
 
     return tuple(rng.randrange(2) for i in range(length))
 
-def encrypt(plaintext, password, strict=False, verbose=False):
+def encrypt(plaintext, key, strict=False, verbose=False):
     """
-    Encrypt an information bit sequence using a password bit sequence.
+    Encrypt a plaintext bit sequence using a key bit sequence.
 
-    The password bit sequence is used as a one-time pad. In strict mode an
-    Exception is thrown if the password is shorter than the information
-    sequence.
+    In strict mode, the key is used as a one-time pad and an exception is thrown
+    if the key is shorter than plaintext.
 
-    The password is simply cycled if it is of insufficient length. Thus
-    knowledge of the beginning of the secret sequence allows to trivially guess
-    the rest of the generated password and the secret message.
+    In non-strict mode, the key is cycled to create a simple stream cipher.
     """
 
-    if len(password) < len(plaintext):
-        if verbose: print("Password too short to perfectly encrypt plaintext!")
-        if strict: raise PasswordTooShortError()
+    if len(key) < len(plaintext):
+        if verbose: print("Key too short for a one-time pad cipher!")
+        if strict: raise KeyTooShortError()
 
-    repeated_password = itertools.cycle(password)
+    return tuple(map(operator.xor, plaintext, itertools.cycle(key)))
 
-    return tuple(map(operator.xor, plaintext, repeated_password))
-
-def decrypt(ciphertext, password):
+def decrypt(ciphertext, key):
     """
-    Since the encryption method of encrypt is XOR, it suffices to encrypt the
-    ciphertext with password to recover plaintext.
+    Since the encryption method combines plaintext and key using a XOR
+    operation, to recover plaintext it suffices to re-encrypt ciphertext with
+    the key.
     """
-    return encrypt(ciphertext, password, strict=False, verbose=False)
+    return encrypt(ciphertext, key, strict=False, verbose=False)
