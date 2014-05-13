@@ -3,6 +3,8 @@ import functools
 
 import sympy
 
+from pysteg.coding.crypto import random_bits
+
 Interval = collections.namedtuple("Interval", "b l")
 
 __half = sympy.Rational(1,2)
@@ -86,6 +88,19 @@ def find_subinterval(interval, ratio, subunit=True):
         interval.l * ratio.l,
         subunit=subunit
     )
+
+def is_subinterval(interval, subinterval, proper=False):
+    if proper:
+        return (subinterval.b > interval.b and
+                subinterval.b + subinterval.l < interval.b + interval.l)
+    else:
+        return (subinterval.b >= interval.b and
+                subinterval.b + subinterval.l <= interval.b + interval.l)
+
+def randomly_refine(n, interval, seed=None):
+    """Randomly refine an interval by n bits. Optionally use a specific seed."""
+
+    return find_subinterval(interval, bits2interval(random_bits(n, seed)))
 
 def scale_interval(superinterval, interval, subunit=True):
     """Scale the interval as if the superinterval was [0,1)."""
