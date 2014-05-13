@@ -27,7 +27,7 @@ def bit2interval(bit):
 
 def bits2interval(bits):
     """Convert a sequence of bits to the interval they describe."""
-    return functools.reduce(find_subinterval, map(bit2interval, bits))
+    return functools.reduce(select_subinterval, map(bit2interval, bits))
 
 def interval2bit(interval, mode):
     """
@@ -103,7 +103,7 @@ def create_interval(base, length, divisor=__one, subunit=True):
 
     return Interval(b, l)
 
-def find_subinterval(interval, ratio, subunit=True):
+def select_subinterval(interval, ratio, subunit=True):
     """Return a subinterval of the given interval according to the ratio."""
 
     return create_interval(
