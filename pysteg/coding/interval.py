@@ -97,10 +97,9 @@ def is_subinterval(interval, subinterval, proper=False):
         return (subinterval.b >= interval.b and
                 subinterval.b + subinterval.l <= interval.b + interval.l)
 
-def randomly_refine(n, interval, seed=None):
-    """Randomly refine an interval by n bits. Optionally use a specific seed."""
-
-    return find_subinterval(interval, bits2interval(random_bits(n, seed)))
+def random_interval(n, seed=None):
+    """Randomly generate an interval of n bits."""
+    return bits2interval(random_bits(n, seed))
 
 def scale_interval(superinterval, interval, subunit=True):
     """Scale the interval as if the superinterval was [0,1)."""
