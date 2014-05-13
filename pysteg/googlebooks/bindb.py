@@ -165,11 +165,11 @@ class BinDBLM:
 
         return self._raw_next(interval, context, None)
 
-    def _gen_matching_tokens(self, context, backed_off):
+    def __iter_matching_tokens(self, context, backed_off):
         """
-        Yield BinDB lines matching a particular context of length (n-1),
-        optionally excluding ngrams which would be covered by a higher order
-        model.
+        Iterate over BinDB lines corresponding to ngrams matching a particular
+        context of length (n-1), optionally excluding ngrams which would be
+        covered by a model one order higher.
         """
 
         # At the beginning of a sentence or directly after an _END_ token, the
@@ -258,7 +258,7 @@ class BinDBLM:
         match = None
         backoff_token = None
 
-        for i in self._gen_matching_tokens(context, backed_off):
+        for i in self.__iter_matching_tokens(context, backed_off):
             if i.token == token:
                 match = i
             if i.token == self.backoff:
@@ -284,7 +284,7 @@ class BinDBLM:
     def _raw_next(self, search_interval, context, backed_off):
         """Internal version of the next token method."""
 
-        tokens = tuple(self._gen_matching_tokens(context, backed_off))
+        tokens = tuple(self.__iter_matching_tokens(context, backed_off))
 
         # Find correct scaled interval
         full_count = tokens[-1].b + tokens[-1].l
