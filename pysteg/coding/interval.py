@@ -112,7 +112,9 @@ def select_subinterval(interval, ratio, subunit=True):
         subunit=subunit
     )
 
-def is_subinterval(interval, subinterval, proper=False):
+def is_subinterval(subinterval, interval, proper=False):
+    """Return whether the first interval is a subinterval of the second."""
+
     if proper:
         return (subinterval.b > interval.b and
                 subinterval.b + subinterval.l < interval.b + interval.l)
