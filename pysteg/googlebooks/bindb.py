@@ -9,7 +9,7 @@ import sympy
 from pysteg.common.itertools import reject
 
 from pysteg.coding.interval import create_interval
-from pysteg.coding.interval import find_subinterval
+from pysteg.coding.interval import select_subinterval
 from pysteg.coding.interval import scale_interval
 
 BinDBLine = collections.namedtuple('BinDBLine', 'ngram count')
@@ -271,7 +271,7 @@ class BinDBLM:
             backoff_subinterval = self._raw_conditional_interval(
                 token, context[1:], context[0]
             )
-            return find_subinterval(backoff_interval, backoff_subinterval)
+            return select_subinterval(backoff_interval, backoff_subinterval)
         else:
             raise Exception('Impossible sentence.')
 

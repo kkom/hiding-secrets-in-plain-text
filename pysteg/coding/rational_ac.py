@@ -1,10 +1,10 @@
 import sympy
 
 from pysteg.coding.interval import create_interval
-from pysteg.coding.interval import find_subinterval
 from pysteg.coding.interval import is_subinterval
 from pysteg.coding.interval import random_interval
 from pysteg.coding.interval import scale_interval
+from pysteg.coding.interval import select_subinterval
 
 def decode(next, interval, verbose=False):
     """
@@ -50,8 +50,8 @@ def deep_decode(next, i, end=None, seed=None, verbose=False):
     while True:
         # Refine the input interval by a chosen ratio
         r = random_interval(n, seed=seed)
-        ir = find_subinterval(ir, r)
-        irs = find_subinterval(irs, r)
+        ir = select_subinterval(ir, r)
+        irs = select_subinterval(irs, r)
 
         if verbose: print("Refined input interval by: " + str(r))
 
@@ -92,7 +92,7 @@ def encode(conditional_interval, sequence, verbose=False):
 
     for i in range(len(sequence)):
         if verbose: print(sequence[i])
-        interval = find_subinterval(
+        interval = select_subinterval(
             interval, conditional_interval(sequence[i], sequence[:i])
         )
 
