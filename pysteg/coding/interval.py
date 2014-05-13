@@ -7,8 +7,9 @@ from pysteg.coding.crypto import random_bits
 
 Interval = collections.namedtuple("Interval", "b l")
 
-# The rational number 1/2
+# Rational numbers
 __half = sympy.Rational(1,2)
+__one = sympy.Rational(1)
 
 # Half-unit intervals - [0, 1/2) for 0 and [1/2, 1/2) for 1
 __first_half = Interval(sympy.Rational(0), sympy.Rational(1,2))
@@ -81,7 +82,7 @@ def interval2bits(interval, mode):
 
     return tuple(bits)
 
-def create_interval(base, length, divisor=1, subunit=True):
+def create_interval(base, length, divisor=__one, subunit=True):
     """
     Create an interval. Make sure that its length is positive. In most cases the
     interval should be a sub-unit interval, i.e. a subinterval of [0,1). This is
