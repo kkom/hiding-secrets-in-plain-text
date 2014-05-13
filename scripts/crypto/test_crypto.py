@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-from pysteg.coding.crypto import decrypt
-from pysteg.coding.crypto import encrypt
+from pysteg.crypto import decrypt
+from pysteg.crypto import encrypt
 from pysteg.coding.interval import bits2interval, interval2bits
 from pysteg.coding.rational_ac import decode, deep_decode, encode
 from pysteg.googlebooks import bindb

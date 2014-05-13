@@ -3,7 +3,7 @@ import functools
 
 import sympy
 
-from pysteg.coding.crypto import random_bits
+from pysteg.crypto import random_bits
 
 Interval = collections.namedtuple("Interval", "b l")
 
