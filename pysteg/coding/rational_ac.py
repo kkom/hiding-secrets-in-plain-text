@@ -77,7 +77,7 @@ def deep_decode(next, i, end=None, seed=None, verbose=False):
             # Terminate generating the output sequence if the output interval
             # becomes a subinterval of the actual input interval. Optionally
             # wait for generating the end symbol.
-            if is_subinterval(i, o) and (end is None or symbol == end):
+            if is_subinterval(o, i) and (end is None or symbol == end):
                 return tuple(output_sequence)
 
             search_result = next(irs, tuple(output_sequence))
