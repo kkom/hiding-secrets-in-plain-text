@@ -3,7 +3,6 @@ import sympy
 from pysteg.coding.interval import create_interval
 from pysteg.coding.interval import is_subinterval
 from pysteg.coding.interval import random_interval
-from pysteg.coding.interval import scale_interval
 from pysteg.coding.interval import select_subinterval
 
 def decode(next, interval, verbose=False):
