@@ -28,7 +28,7 @@ def deep_decode(next, i, end=None, seed=None, verbose=False):
     Decode an interval using a randomly chosen refinement of the input interval
     and the supplied "next token" function. The input interval is refined until
     the interval corresponding to the output sequence is its subinterval. The
-    output sequence is optionally repeated until a specified end symbol is
+    output sequence is optionally continued until a specified end symbol is
     generated.
     """
 
