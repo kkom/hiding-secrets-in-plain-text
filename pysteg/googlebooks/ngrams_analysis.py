@@ -5,12 +5,12 @@ import string
 
 from unidecode import unidecode
 
-__alphabetic_charset = frozenset(string.ascii_lowercase)
-__numeric_charset = frozenset(string.digits)
-__punctuation_charset = frozenset(string.punctuation)
-__alphanumeric_charset = __alphabetic_charset.union(__numeric_charset)
-__nonalphabetic_charset = __numeric_charset.union(__punctuation_charset)
-__normalised_charset = __alphanumeric_charset.union(__punctuation_charset)
+_alphabetic_charset = frozenset(string.ascii_lowercase)
+_numeric_charset = frozenset(string.digits)
+_punctuation_charset = frozenset(string.punctuation)
+_alphanumeric_charset = _alphabetic_charset.union(_numeric_charset)
+_nonalphabetic_charset = _numeric_charset.union(_punctuation_charset)
+_normalised_charset = _alphanumeric_charset.union(_punctuation_charset)
 
 BS_PARTITION_NAMES = tuple(string.digits + "_" + string.ascii_lowercase)
 BS_SPECIAL_PREFIXES = frozenset({"other", "punctuation"})
@@ -90,7 +90,7 @@ def ngram_filename(n, prefix):
 
 def normal_character(c):
     """Check if a character is allowed through normalisation."""
-    return c in __normalised_charset
+    return c in _normalised_charset
 
 def normalise_and_explode_tokens(text):
     """
@@ -130,7 +130,7 @@ def normalise_and_explode_token(token):
     previous_punctuation = False
 
     for i in range(len(token)):
-        current_punctuation = token[i] in __punctuation_charset
+        current_punctuation = token[i] in _punctuation_charset
 
         if i != 0 and current_punctuation or previous_punctuation:
             exploded.append(token[interval_start:i])
@@ -149,14 +149,14 @@ def normalised_token_prefix(token, n):
     to check the first two characters.
     """
 
-    if token in ("_START_", "_END_") or token[0] in __punctuation_charset:
+    if token in ("_START_", "_END_") or token[0] in _punctuation_charset:
         # Special symbols - sentence markers and punctuation
         return "other"
-    elif n == 1 or token[0] in __numeric_charset:
+    elif n == 1 or token[0] in _numeric_charset:
         # Numeric prefixes are single character, 1-grams are also prefixed by a
         # single character
         return token[0]
-    elif len(token) == 1 or token[1] in __nonalphabetic_charset:
+    elif len(token) == 1 or token[1] in _nonalphabetic_charset:
         # Single character word or the second character is not a letter
         return token[0] + "_"
     else:
@@ -164,7 +164,7 @@ def normalised_token_prefix(token, n):
         return token[:2]
 
 def numeric_character(c):
-    return c in __numeric_charset
+    return c in _numeric_charset
 
 def numeric_token(token):
     """Check if a normalised token contains any digits."""

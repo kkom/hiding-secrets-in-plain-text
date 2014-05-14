@@ -8,12 +8,12 @@ from pysteg.crypto import random_bits
 Interval = collections.namedtuple("Interval", "b l")
 
 # Rational numbers
-__half = sympy.Rational(1,2)
-__one = sympy.Rational(1)
+_half = sympy.Rational(1,2)
+_one = sympy.Rational(1)
 
 # Half-unit intervals - [0, 1/2) for 0 and [1/2, 1/2) for 1
-__first_half = Interval(sympy.Rational(0), sympy.Rational(1,2))
-__second_half = Interval(sympy.Rational(1,2), sympy.Rational(1,2))
+_first_half = Interval(sympy.Rational(0), sympy.Rational(1,2))
+_second_half = Interval(sympy.Rational(1,2), sympy.Rational(1,2))
 
 def bit2interval(bit):
     """Convert 0 and 1 to their half-unit intervals."""
@@ -21,9 +21,9 @@ def bit2interval(bit):
     assert(bit in (0,1))
 
     if bit == 0:
-        return __first_half
+        return _first_half
     else:
-        return __second_half
+        return _second_half
 
 def bits2interval(bits):
     """Convert a sequence of bits to the interval they describe."""
@@ -47,10 +47,10 @@ def interval2bit(interval, mode):
         # Since all intervals are closed at start and open at the end, [1/2, 0)
         # i.e. a point at 1/2 should be matched to the [1/2, 1/2) interval. This
         # is why the order of the conditions matters.
-        if interval.b >= __half:
-            return (1, find_ratio(interval, __second_half))
-        elif interval.b + interval.l <= __half:
-            return (0, find_ratio(interval, __first_half))
+        if interval.b >= _half:
+            return (1, find_ratio(interval, _second_half))
+        elif interval.b + interval.l <= _half:
+            return (0, find_ratio(interval, _first_half))
         else:
             return None
     else:
@@ -60,9 +60,9 @@ def interval2bit(interval, mode):
         if bottom_distance <= 0 and top_distance <= 0:
             return None
         if top_distance < bottom_distance:
-            return (1, find_ratio(interval, __second_half, subunit=False))
+            return (1, find_ratio(interval, _second_half, subunit=False))
         else:
-            return (0, find_ratio(interval, __first_half, subunit=False))
+            return (0, find_ratio(interval, _first_half, subunit=False))
 
 def interval2bits(interval, mode):
     """
@@ -82,7 +82,7 @@ def interval2bits(interval, mode):
 
     return tuple(bits)
 
-def create_interval(base, length, divisor=__one, subunit=True):
+def create_interval(base, length, divisor=_one, subunit=True):
     """
     Create an interval. Make sure that its length is positive. In most cases the
     interval should be a sub-unit interval, i.e. a subinterval of [0,1). This is
