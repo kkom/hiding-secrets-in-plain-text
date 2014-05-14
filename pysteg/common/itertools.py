@@ -4,7 +4,7 @@ from itertools import chain, islice
 
 FilteredTuple = collections.namedtuple('FilteredTuple', 'reject item')
 
-def __output_tuple_fun(tuple_type):
+def _output_tuple_fun(tuple_type):
     """Return a function to output an unnamed or named tuple."""
 
     if tuple_type is tuple:
@@ -35,7 +35,7 @@ def integrate_counts(iterator, tuple_type=tuple):
     objects. Only identical objects occurring next to each other are clustered.
     """
 
-    output_fun = __output_tuple_fun(tuple_type)
+    output_fun = _output_tuple_fun(tuple_type)
 
     current_object = None
     current_count = None
@@ -65,7 +65,7 @@ def maximise_counts(iterator1, iterator2, tuple_type=tuple):
     i.e. more frequently contain objects that are not in the other iterator.
     """
 
-    output_fun = __output_tuple_fun(tuple_type)
+    output_fun = _output_tuple_fun(tuple_type)
 
     buffer = tuple()
 

@@ -86,7 +86,7 @@ class BinDBLM:
         for f in self.f.values():
             f.close()
 
-    def __bs(self, n, mgram, imin=1, imax=None, mode="first", ratio=0.5):
+    def _bs(self, n, mgram, imin=1, imax=None, mode="first", ratio=0.5):
         """
         Binary search for the first or last ngram with first m tokens equal to
         the given mgram. The ratio parameter specifies where the midpoint
@@ -130,7 +130,7 @@ class BinDBLM:
         else:
             return None
 
-    def __bs_range(self, n, mgram):
+    def _bs_range(self, n, mgram):
         """
         Binary search for the range of ngrams with first m tokens equal to the
         given mgram.
@@ -140,11 +140,11 @@ class BinDBLM:
         if len(mgram) == 0:
             return (1, self.size[n])
 
-        ifirst = self.__bs(n, mgram, mode="first")
+        ifirst = self._bs(n, mgram, mode="first")
 
         if ifirst is not None:
             # At least one ngram matches the mgram
-            ilast = self.__bs(n, mgram, imin=ifirst, mode="last", ratio=0.1)
+            ilast = self._bs(n, mgram, imin=ifirst, mode="last", ratio=0.1)
             return (ifirst, ilast)
         else:
             return None
@@ -165,7 +165,7 @@ class BinDBLM:
 
         return self._raw_next(interval, context, None)
 
-    def __iter_matching_tokens(self, context, backed_off):
+    def _iter_matching_tokens(self, context, backed_off):
         """
         Iterate over BinDB lines corresponding to ngrams matching a particular
         context of length (n-1), optionally excluding ngrams which would be
@@ -181,7 +181,7 @@ class BinDBLM:
 
         # Find ngrams matching the context
         n = len(context) + 1
-        ngrams_range = self.__bs_range(n, context)
+        ngrams_range = self._bs_range(n, context)
 
         # If there are no matching ngrams, back-off is the only option
         if ngrams_range is None:
@@ -203,7 +203,7 @@ class BinDBLM:
         else:
             # If we backed-off from a higher order context, do not consider the
             # ngrams which were already covered by the higher order model
-            ograms_range = self.__bs_range(n+1, (backed_off,) + context)
+            ograms_range = self._bs_range(n+1, (backed_off,) + context)
 
             if ograms_range is None:
                 # There are no matching higher order tokens, so no rejects
@@ -239,7 +239,7 @@ class BinDBLM:
         # Calculate the back-off pseudo-count
         if n > 1:
             total_context_count = read_line(
-                self.f[n-1], n-1, self.__bs(n-1, context)
+                self.f[n-1], n-1, self._bs(n-1, context)
             ).count
             context_count = total_context_count - total_rejected_count
 
@@ -263,7 +263,7 @@ class BinDBLM:
         match = None
         backoff_token = None
 
-        for i in self.__iter_matching_tokens(context, backed_off):
+        for i in self._iter_matching_tokens(context, backed_off):
             if i.token == token:
                 match = i
             if i.token == self.backoff:
@@ -289,7 +289,7 @@ class BinDBLM:
     def _raw_next(self, search_interval, context, backed_off):
         """Internal version of the next token method."""
 
-        tokens = tuple(self.__iter_matching_tokens(context, backed_off))
+        tokens = tuple(self._iter_matching_tokens(context, backed_off))
 
         # Find correct scaled interval
         full_count = tokens[-1].b + tokens[-1].l
@@ -343,7 +343,7 @@ def fmt(n):
         "q"       # 8 byte integer with ngram count
     )
 
-__iter_bindb_file_cache = dict()
+_iter_bindb_file_cache = dict()
 
 def iter_bindb_file(f, n, start=1, number_iters=float("Inf"), cache=False):
     """
@@ -356,11 +356,11 @@ def iter_bindb_file(f, n, start=1, number_iters=float("Inf"), cache=False):
 
     if cache:
         # Put the file in cache, if not yet in there
-        if n not in __iter_bindb_file_cache:
-            __iter_bindb_file_cache[n] = tuple(iter_bindb_file(f,n,cache=False))
+        if n not in _iter_bindb_file_cache:
+            _iter_bindb_file_cache[n] = tuple(iter_bindb_file(f,n,cache=False))
 
         # Yield results from the cached table
-        cached_table = __iter_bindb_file_cache[n]
+        cached_table = _iter_bindb_file_cache[n]
         for i in range(start-1, min(start+number_iters-1, len(cached_table))):
             yield cached_table[i]
         return
