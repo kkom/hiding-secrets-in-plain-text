@@ -5,6 +5,8 @@ import string
 
 from unidecode import unidecode
 
+from pysteg.common.functools import converge
+
 _alphabetic_charset = frozenset(string.ascii_lowercase)
 _numeric_charset = frozenset(string.digits)
 _punctuation_charset = frozenset(string.punctuation)
@@ -178,12 +180,29 @@ def text2token_strings(text):
 
     # A very simple input sanitisation scheme -- special tokens "_START_" and
     # "_END_" that exist in the input text are converted to "_ START _" and
-    # "_ END _" respectively
+    # "_ END _" respectively.
     #
     # ^|\s and $|\s are needed so that only substrings that would be separate
     # tokens are substituted
-    text = re.sub(r"(^|\s)_START_($|\s)", " _ START _ ", text)
-    text = re.sub(r"(^|\s)_END_($|\s)", " _ END _ ", text)
+    #
+    # Since the substitution pattern matches either sentence boundary or a
+    # single whitespace around the token and replaces it with a single space,
+    # the number of whitespace characters between tokens is not changed. Thus,
+    # sentence delimiters are not affected by the sanitisation.
+    #
+    # The substitution function operates on non-overlapping matches, so it needs
+    # to be called repeatedly until convergence.
+
+    startreg = re.compile(r"(^|\s)_START_($|\s)")
+    def startsub(text):
+        return startreg.sub(" _ START _ ", text)
+
+    endreg = re.compile(r"(^|\s)_END_($|\s)")
+    def endsub(text):
+        return endreg.sub(" _ END _ ", text)
+
+    text = converge(startsub, text)
+    text = converge(endsub, text)
 
     # Find and explicitly write sentence delimiters
     sentence_delimited_text = re.sub(r"\s{2,}", " _END_ _START_ ", text.strip())
