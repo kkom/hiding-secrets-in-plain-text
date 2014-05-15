@@ -9,18 +9,18 @@ from pysteg.googlebooks.ngrams_analysis import text2token_strings
 n = 5
 start = 322578
 end = 322577
-alpha = 1
-beta = 0.1
+beta = 1
+gamma = 0.1
 
 print("n: {n}".format(**locals()))
 print("start: {start}".format(**locals()))
 print("end: {end}".format(**locals()))
-print("alpha: {alpha}".format(**locals()))
 print("beta: {beta}".format(**locals()))
+print("gamma: {gamma}".format(**locals()))
 print()
 
 # Load language model
-lm = bindb.BinDBLM("/Users/kkom/Desktop/bindb-normalised/counts-consistent-tables", n, start, end, alpha, beta)
+lm = bindb.BinDBLM("/Users/kkom/Desktop/bindb-normalised/counts-consistent-tables", n, start, end, beta, gamma)
 
 # Load index
 with open("/Users/kkom/Desktop/bindb-normalised/index", "r") as f:

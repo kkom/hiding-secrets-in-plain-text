@@ -13,12 +13,12 @@ from pysteg.googlebooks.ngrams_analysis import token_strings2text
 n = 5
 start = 322578
 end = 322577
-alpha = 0.1
-beta = 0.01
+beta = 0.1
+gamma = 0.01
 
 # Load language model
 print("Loading language model...")
-lm = bindb.BinDBLM("/Users/kkom/Desktop/bindb-normalised/counts-consistent-tables", n, start, end, alpha, beta)
+lm = bindb.BinDBLM("/Users/kkom/Desktop/bindb-normalised/counts-consistent-tables", n, start, end, beta, gamma)
 
 # Load index
 print("Loading words index...")
