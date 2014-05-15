@@ -138,3 +138,16 @@ def find_ratio(interval, superinterval, subunit=True):
         interval.l / superinterval.l,
         subunit=subunit
     )
+
+def find_superinterval(subinterval, ratio, subunit=True):
+    """
+    Given a subinterval and the ratio it is of a superinterval, find the
+    superinterval.
+
+    Result is such that: select_subinterval(superinterval, ratio) == subinterval
+    """
+
+    return create_interval(
+        subinterval.b - sympy.Rational(ratio.b * subinterval.l, ratio.l),
+        subinterval.l / ratio.l
+    )

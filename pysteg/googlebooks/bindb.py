@@ -12,6 +12,8 @@ from pysteg.coding.interval import create_interval
 from pysteg.coding.interval import find_ratio
 from pysteg.coding.interval import select_subinterval
 
+from pysteg.coding.rational_ac import NextSymbolSearchResult
+
 BinDBLine = collections.namedtuple('BinDBLine', 'ngram count')
 TokenCount = collections.namedtuple('TokenCount', 'token b l')
 
@@ -332,7 +334,8 @@ class BinDBLM:
                                       context[0])
 
             else:
-                return (token.token, scaled_search_interval)
+                return NextSymbolSearchResult(token.token,
+                                              scaled_search_interval)
 
 @functools.lru_cache(maxsize=8)
 def fmt(n):
