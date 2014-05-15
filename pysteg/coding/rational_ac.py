@@ -1,9 +1,24 @@
+import collections
+
 import sympy
 
 from pysteg.coding.interval import create_interval
+from pysteg.coding.interval import find_superinterval
 from pysteg.coding.interval import is_subinterval
 from pysteg.coding.interval import random_interval
 from pysteg.coding.interval import select_subinterval
+
+# Result of looking for the next symbol given context and current search
+# interval. The elements of the output tuple are:
+#
+# symbol  - symbol whose conditional interval is a superinterval of the search
+#           interval
+# ssi     - search interval as a ratio of the conditional interval of the symbol
+#           (scaled search interval)
+NextSymbolSearchResult = collections.namedtuple("NextSymbolSearchResult",
+    "symbol ssi")
+
+DecodedSequence = collections.namedtuple("DecodedSequence", "sequence interval")
 
 def decode(next, interval, verbose=False):
     """
@@ -16,11 +31,12 @@ def decode(next, interval, verbose=False):
     search_result = next(interval, tuple(sequence))
 
     while search_result is not None:
-        if verbose: print(search_result[0])
-        sequence.append(search_result[0])
-        search_result = next(search_result[1], tuple(sequence))
+        if verbose: print(search_result.symbol)
+        sequence.append(search_result.symbol)
+        output_interval = find_superinterval(interval, search_result.ssi)
+        search_result = next(search_result.ssi, tuple(sequence))
 
-    return tuple(sequence)
+    return DecodedSequence(tuple(sequence), output_interval)
 
 def deep_decode(next, i, end=None, seed=None, verbose=False):
     """
@@ -60,16 +76,13 @@ def deep_decode(next, i, end=None, seed=None, verbose=False):
         while search_result is not None:
             # The search procedure gives us the next symbol and the refined
             # input interval scaled inside the current output interval
-            (symbol, irs) = search_result
+            (symbol, irs) = (search_result.symbol, search_result.ssi)
             output_sequence.append(symbol)
 
             # Calculate the current output interval using the refined input
             # interval scaled to it and the knowledge of actual refined input
             # interval
-            o = create_interval(
-                ir.b - sympy.Rational(irs.b * ir.l, irs.l),
-                ir.l / irs.l
-            )
+            o = find_superinterval(ir, irs)
 
             if verbose: print(symbol)
 
@@ -77,7 +90,7 @@ def deep_decode(next, i, end=None, seed=None, verbose=False):
             # becomes a subinterval of the actual input interval. Optionally
             # wait for generating the end symbol.
             if is_subinterval(o, i) and (end is None or symbol == end):
-                return tuple(output_sequence)
+                return DecodedSequence(tuple(output_sequence), o)
 
             search_result = next(irs, tuple(output_sequence))
 

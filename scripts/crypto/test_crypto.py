@@ -64,7 +64,7 @@ stegotext_interval = bits2interval(ciphertext_bits)
 print("Stegotext interval: " + str(stegotext_interval), end="\n\n")
 
 # Map stegotext interval to stegotext symbol sequence (deep)
-stegotext_indices = deep_decode(lm.next, stegotext_interval, end=end)
+stegotext_indices = deep_decode(lm.next, stegotext_interval, end=end).sequence
 print("Stegotext token indices: " + str(stegotext_indices), end="\n\n")
 stegotext_strings = tuple(map(index.i2s, stegotext_indices))
 print("Stegotext token strings: " + str(stegotext_strings), end="\n\n")
@@ -93,7 +93,7 @@ decrypted_plaintext_interval = bits2interval(decrypted_plaintext_bits)
 print("Decrypted plaintext interval: " + str(decrypted_plaintext_interval), end="\n\n")
 
 # Get decrypted plaintext token indices and strings
-decrypted_plaintext_token_indices = decode(lm.next, decrypted_plaintext_interval)
+decrypted_plaintext_token_indices = decode(lm.next, decrypted_plaintext_interval).sequence
 print("Decrypted plaintext token indices: " + str(decrypted_plaintext_token_indices), end="\n\n")
 decrypted_plaintext_strings = tuple(map(index.i2s, decrypted_plaintext_token_indices))
 print("Decrypted plaintext token strings: " + str(decrypted_plaintext_strings), end="\n\n")
