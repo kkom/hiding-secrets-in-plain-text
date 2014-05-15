@@ -64,13 +64,13 @@ class BinDBLM:
     be around.
     """
 
-    def __init__(self, bindb_dir, n_max, start, end, alpha, beta):
+    def __init__(self, bindb_dir, n_max, start, end, beta, gamma):
         self.n_max = n_max          # Order of the model
         self.start = start          # Indices of the _START_ and _END_ tokens
         self.end = end
-        self.alpha = alpha          # Proportion of leftover ML probability mass
+        self.beta = beta            # Proportion of leftover ML probability mass
                                     # assigned to the back-off path
-        self.beta = beta            # Extra probability mass assigned to the
+        self.gamma = gamma          # Extra probability mass assigned to the
                                     # back-off path
 
         paths = dict((n, os.path.join(bindb_dir, "{n}gram".format(**locals())))
@@ -252,8 +252,8 @@ class BinDBLM:
 
             leftover_probability_mass = context_count - total_accepted_count
             backoff_pseudocount = math.ceil(
-                self.alpha * leftover_probability_mass
-                + self.beta * context_count
+                self.beta * leftover_probability_mass
+                + self.gamma * context_count
             )
             yield TokenCount(self.backoff,
                              total_accepted_count, backoff_pseudocount)

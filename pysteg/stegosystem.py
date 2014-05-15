@@ -155,9 +155,9 @@ if __name__ == "__main__":
     order = 5
     start = index.s2i("_START_")
     end = index.s2i("_END_")
-    alpha = 0.1
-    beta = 0.01
-    lm = bindb.BinDBLM(bindb_dir, order, start, end, alpha, beta)
+    beta = 0.1
+    gamma = 0.01
+    lm = bindb.BinDBLM(bindb_dir, order, start, end, beta, gamma)
 
     bs = BinaryStegosystem(index, lm)
     p = {}
