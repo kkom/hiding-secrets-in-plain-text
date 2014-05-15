@@ -256,7 +256,7 @@ class BinDBLM:
             yield TokenCount(self.backoff,
                              total_accepted_count, backoff_pseudocount)
 
-    @functools.lru_cache(maxsize=512)
+    @functools.lru_cache(maxsize=8192)
     def _raw_conditional_interval(self, token, context, backed_off):
         """Internal version of the conditional probability interval method."""
 
@@ -285,7 +285,7 @@ class BinDBLM:
         else:
             raise Exception('Impossible sentence.')
 
-    @functools.lru_cache(maxsize=512)
+    @functools.lru_cache(maxsize=8192)
     def _raw_next(self, search_interval, context, backed_off):
         """Internal version of the next token method."""
 
