@@ -146,12 +146,12 @@ if __name__ == "__main__":
     from pysteg.googlebooks import bindb
 
     print("Loading index...")
-    index_path = "/Users/kkom/Desktop/bindb-normalised/index"
+    index_path = "/Users/kkom/Desktop/bindb-normalised-no-digits/index"
     with open(index_path, "r") as f:
         index = bindb.BinDBIndex(f)
 
     print("Loading language model...")
-    bindb_dir = "/Users/kkom/Desktop/bindb-normalised/counts-consistent-tables"
+    bindb_dir = "/Users/kkom/Desktop/bindb-normalised-no-digits/counts-consistent-tables"
     order = 5
     start = index.s2i("_START_")
     end = index.s2i("_END_")
