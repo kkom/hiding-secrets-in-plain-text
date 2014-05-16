@@ -5,7 +5,9 @@ This script translates chosen lines of a bindb table from indices to tokens and
 outputs them to the terminal.
 
 In the interactive window, type a single line number or a range of lines using
-start:stop or start:step:stop notation. Type q to quit.
+start:stop or start:step:stop notation with inclusive bounds.
+
+Type q to quit.
 """
 
 import argparse
@@ -20,13 +22,13 @@ from pysteg.googlebooks import bindb
 parser = argparse.ArgumentParser(description=descr)
 parser.add_argument("n", type=int, help="order of the BinDB table")
 parser.add_argument("bindb", help="BinDB file")
-parser.add_argument("-t", "--translate", metavar="index",
+parser.add_argument("-i", "--index",
     help="translate token indices to strings using an index file")
 args = parser.parse_args()
 
-if args.translate:
-    print_status("Started loading index from", args.translate)
-    with open(args.translate, "r") as f:
+if args.index:
+    print_status("Started loading index from", args.index)
+    with open(args.index, "r") as f:
         index = bindb.BinDBIndex(f)
     print_status("Finished loading index")
 
@@ -35,7 +37,7 @@ single_line_pattern = re.compile("^\d+$")
 range_pattern = re.compile("^(?P<start>\d+):((?P<step>\d+):)?(?P<stop>\d+)$")
 
 # Function to represent a token based on its integer index
-token_repr = index.i2s if args.translate else str
+token_repr = index.i2s if args.index else str
 
 with open(args.bindb, "rb") as b:
     while True:
@@ -54,7 +56,7 @@ with open(args.bindb, "rb") as b:
             stop = start + 1
         elif range_m:
             start = int(range_m.group('start'))
-            stop = int(range_m.group('stop'))
+            stop = int(range_m.group('stop')) + 1
             step = int(range_m.group('step')) if range_m.group('step') else 1
         else:
             continue
