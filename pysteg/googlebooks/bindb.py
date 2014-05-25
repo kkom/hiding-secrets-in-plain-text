@@ -224,39 +224,37 @@ class BinDBLM:
 
         # Yield accepted tokens and find cumulative counts needed for
         # calculating the back-off weight
-        total_accepted_count = 0
-        total_rejected_count = 0
+        accepted_count = 0
+        rejected_count = 0
         for i in filtered_ngrams:
             # Always reject the case when the last token is _START_. In practice
             # this will only happen when considering unigrams. The reason for it
             # is that _START_ is only possible in certain situations, which are
             # covered in the beginning.
             if i.reject or i.item.ngram[-1] == self.start:
-                total_rejected_count += i.item.count
+                rejected_count += i.item.count
             else:
-                yield TokenCount(i.item.ngram[-1],
-                                 total_accepted_count, i.item.count)
-                total_accepted_count += i.item.count
+                yield TokenCount(i.item.ngram[-1], accepted_count, i.item.count)
+                accepted_count += i.item.count
 
         # Calculate the back-off pseudo-count
         if n > 1:
-            total_context_count = read_line(
+            context_count = read_line(
                 self.f[n-1], n-1, self._bs(n-1, context)
             ).count
-            context_count = total_context_count - total_rejected_count
+            total_context_count = context_count - rejected_count
 
             # If all context was already explored, back-off is the only option
-            if context_count == 0:
+            if total_context_count == 0:
                 yield TokenCount(self.backoff, 0, 1)
                 return
 
-            leftover_probability_mass = context_count - total_accepted_count
+            leftover_context_count = total_context_count - accepted_count
             backoff_pseudocount = math.ceil(
-                self.beta * leftover_probability_mass
-                + self.gamma * context_count
+                self.beta * leftover_context_count
+                + self.gamma * total_context_count
             )
-            yield TokenCount(self.backoff,
-                             total_accepted_count, backoff_pseudocount)
+            yield TokenCount(self.backoff, accepted_count, backoff_pseudocount)
 
     @functools.lru_cache(maxsize=8192)
     def _raw_conditional_interval(self, token, context, backed_off):
