@@ -222,6 +222,10 @@ class BinDBLM:
 
         filtered_ngrams = reject(ngrams, rejects)
 
+        # Check whether we are directly following a _START_ token
+        sentence_start = ((len(context) > 0 and context[-1] == self.start) or
+                          (len(context) == 0 and backed_off == self.start))
+
         # Yield accepted tokens and find cumulative counts needed for
         # calculating the back-off weight
         accepted_count = 0
@@ -231,7 +235,12 @@ class BinDBLM:
             # this will only happen when considering unigrams. The reason for it
             # is that _START_ is only possible in certain situations, which are
             # covered in the beginning.
-            if i.reject or i.item.ngram[-1] == self.start:
+            #
+            # Also, if we are directly following the _START_ of a sentence, we
+            # are not allowed to put an _END_ token -- this sentence would
+            # disappear in parsing.
+            if (i.reject or i.item.ngram[-1] == self.start or
+                (sentence_start and i.item.ngram[-1] == self.end)):
                 rejected_count += i.item.count
             else:
                 yield TokenCount(i.item.ngram[-1], accepted_count, i.item.count)
