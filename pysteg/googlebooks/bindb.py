@@ -7,11 +7,10 @@ import struct
 import sympy
 
 from pysteg.common.itertools import reject
-
+from pysteg.common.listtools import take
 from pysteg.coding.interval import create_interval
 from pysteg.coding.interval import find_ratio
 from pysteg.coding.interval import select_subinterval
-
 from pysteg.coding.rational_ac import NextSymbolSearchResult
 
 BinDBLine = collections.namedtuple('BinDBLine', 'ngram count')
@@ -65,6 +64,10 @@ class BinDBLM:
     """
 
     def __init__(self, bindb_dir, n_max, start, end, beta, gamma):
+        # Only models of order 2 or more are allowed -- this is because sentence
+        # continuity needs to be maintained
+        assert(n_max > 1)
+
         self.n_max = n_max          # Order of the model
         self.start = start          # Indices of the _START_ and _END_ tokens
         self.end = end
@@ -155,7 +158,7 @@ class BinDBLM:
         """Return the conditional probability interval of a token."""
 
         # Only use context within the order of the model
-        context = context[-(self.n_max-1):]
+        context = take(context, -(self.n_max-1))
 
         return self._raw_conditional_interval(token, context, None)
 
@@ -163,7 +166,7 @@ class BinDBLM:
         """Return the next token given current context and interval."""
 
         # Only use context within the order of the model
-        context = context[-(self.n_max-1):]
+        context = take(context, -(self.n_max-1))
 
         return self._raw_next(interval, context, None)
 
