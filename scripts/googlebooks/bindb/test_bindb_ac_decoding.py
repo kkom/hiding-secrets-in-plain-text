@@ -12,16 +12,18 @@ start = 322578
 end = 322577
 beta = 1
 gamma = 0.1
+offset = 0
 
 print("n: {n}".format(**locals()))
 print("start: {start}".format(**locals()))
 print("end: {end}".format(**locals()))
 print("beta: {beta}".format(**locals()))
 print("gamma: {gamma}".format(**locals()))
+print("offset: {offset}".format(**locals()))
 print()
 
 # Load language model
-lm = bindb.BinDBLM("/Users/kkom/Desktop/bindb-normalised/counts-consistent-tables", n, start, end, beta, gamma)
+lm = bindb.BinDBLM("/Users/kkom/Desktop/bindb-normalised/counts-consistent-tables", n, start, end, beta, gamma, offset)
 
 # Create an interval
 interval = create_interval(

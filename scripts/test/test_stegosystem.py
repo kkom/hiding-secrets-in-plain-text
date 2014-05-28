@@ -15,7 +15,8 @@ start = index.s2i("_START_")
 end = index.s2i("_END_")
 beta = 0.1
 gamma = 0.01
-lm = bindb.BinDBLM(bindb_dir, order, start, end, beta, gamma)
+offset = 35
+lm = bindb.BinDBLM(bindb_dir, order, start, end, beta, gamma, offset)
 
 bs = BinaryStegosystem(index, lm)
 p = {}
