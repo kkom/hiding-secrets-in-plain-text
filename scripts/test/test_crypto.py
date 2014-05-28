@@ -15,10 +15,11 @@ start = 322578
 end = 322577
 beta = 0.1
 gamma = 0.01
+offset = 0
 
 # Load language model
 print("Loading language model...")
-lm = bindb.BinDBLM("/Users/kkom/Desktop/bindb-normalised/counts-consistent-tables", n, start, end, beta, gamma)
+lm = bindb.BinDBLM("/Users/kkom/Desktop/bindb-normalised/counts-consistent-tables", n, start, end, beta, gamma, offset)
 
 # Load index
 print("Loading words index...")
