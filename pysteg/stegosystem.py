@@ -133,10 +133,10 @@ class BinaryStegosystem:
         """Encrypt plaintext with key and return encrypted stegotext."""
 
         bits = encrypt(p.bits, k.bits)
-        return Stegotext(index, lm, "decode_bits", bits)
+        return Stegotext(self.index, self.lm, "decode_bits", bits)
 
     def sk2p(self, s, k):
         """Decrypt encrypted stegotext with key and return plaintext."""
 
         bits = decrypt(s.bits, k.bits)
-        return Plaintext(index, lm, "decode_bits", bits)
+        return Plaintext(self.index, self.lm, "decode_bits", bits)
