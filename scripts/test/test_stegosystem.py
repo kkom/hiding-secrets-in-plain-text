@@ -19,44 +19,27 @@ offset = 35
 lm = bindb.BinDBLM(bindb_dir, order, start, end, beta, gamma, offset)
 
 bs = BinaryStegosystem(index, lm)
-p = {}
-k = {}
-s = {}
-dp = {}
-fdp = {}
 
-p[1] = Plaintext(index, lm, "save", "Kim and Kanye wed in Florence.")
-print("p[1]:", end="\n\n")
-print(p[1], end="\n\n\n\n\n\n")
+plaintext = Plaintext(index, lm, "save", "Come in the morning with the documents.")
+print("plaintext:", end="\n\n")
+print(plaintext, end="\n\n\n\n\n\n")
 
-k[1] = Key(index, lm, "save", "Fog patches or mist may form around midnight.")
-print("k[1]:", end="\n\n")
-print(k[1], end="\n\n\n\n\n\n")
+real_key = Key(index, lm, "save", "Light rain on Monday morning.")
+print("real_key:", end="\n\n")
+print(real_key, end="\n\n\n\n\n\n")
 
-k[2] = Key(index, lm, "generate", 64)
-print("automatically generated k[2]:", end="\n\n")
-print(k[2], end="\n\n\n\n\n\n")
+false_key = Key(index, lm, "save", "Early light rain or drizzle will soon die out.")
+print("false_key:", end="\n\n")
+print(false_key, end="\n\n\n\n\n\n")
 
-k[3] = Key(index, lm, "save", "Obama makes surprise Afghan visit.")
-print("fake k[3]:", end="\n\n")
-print(k[3], end="\n\n\n\n\n\n")
+stegotext = bs.pk2s(plaintext, real_key)
+print("plaintext encrypted with real_key gives stegotext:", end="\n\n")
+print(stegotext, end="\n\n\n\n\n\n")
 
-s[1] = bs.pk2s(p[1], k[1])
-print("p[1] encrypted with k[1] gives s[1]:", end="\n\n")
-print(s[1], end="\n\n\n\n\n\n")
+real_decrypted_plaintext = bs.sk2p(stegotext, real_key)
+print("stegotext decrypted with real_key gives real_decrypted_plaintext:", end="\n\n")
+print(real_decrypted_plaintext, end="\n\n\n\n\n\n")
 
-s[2] = bs.pk2s(p[1], k[2])
-print("p[1] encrypted with k[2] gives s[2]:", end="\n\n")
-print(s[2], end="\n\n\n\n\n\n")
-
-dp[1] = bs.sk2p(s[1], k[1])
-print("s[1] decrypted with k[1] gives dp[1]:", end="\n\n")
-print(dp[1], end="\n\n\n\n\n\n")
-
-dp[2] = bs.sk2p(s[2], k[2])
-print("s[2] decrypted with k[2] gives dp[2]:", end="\n\n")
-print(dp[2], end="\n\n\n\n\n\n")
-
-fdp[1] = bs.sk2p(s[1], k[3])
-print("s[1] decrypted with k[3] gives fdp[1]:", end="\n\n")
-print(fdp[1], end="\n\n\n\n\n\n")
+false_decrypted_plaintext = bs.sk2p(stegotext, false_key)
+print("stegotext decrypted with false_key gives false_decrypted_plaintext:", end="\n\n")
+print(false_decrypted_plaintext, end="\n\n\n\n\n\n")
